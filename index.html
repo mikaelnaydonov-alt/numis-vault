@@ -427,6 +427,17 @@
         pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
+      // Deletes an empire, its map polygons, and ALL attached coins
+      const handleDeleteHistoricalEntity = (entityId) => {
+        const updatedEntities = (vaultData.historicalEntities || []).filter(e => e.id !== entityId);
+        const updatedCoins = (vaultData.coins || []).filter(c => c.entityId !== entityId);
+        pushToCloud({
+          ...vaultData,
+          historicalEntities: updatedEntities,
+          coins: updatedCoins
+        });
+      };
+
       const handleAddHistoricalCoin = (entityId, coinInfo) => {
         const newCoin = {
           ...coinInfo,
@@ -664,6 +675,7 @@
                 scrubberYear={scrubberYear}
                 focusTarget={mapFocusTarget}
                 onSaveEntity={handleSaveHistoricalEntity}
+                onDeleteEntity={handleDeleteHistoricalEntity}
                 onAddHistoricalCoin={handleAddHistoricalCoin}
               />
             )}
@@ -796,7 +808,7 @@
       );
     }
 
-    function HistoricalStudio({ entities, coins, scrubberYear, focusTarget, onSaveEntity, onAddHistoricalCoin }) {
+    function HistoricalStudio({ entities, coins, scrubberYear, focusTarget, onSaveEntity, onDeleteEntity, onAddHistoricalCoin }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
       const isVertexModeRef = useRef(false);
@@ -806,6 +818,9 @@
 
       const [closedPolygons, setClosedPolygons] = useState([]);
       const [inspectingEntity, setInspectingEntity] = useState(null);
+
+      // Active empire to append multi-continent territories to
+      const [activeAppendingEntityId, setActiveAppendingEntityId] = useState(null);
 
       const [colorPaletteModalEntity, setColorPaletteModalEntity] = useState(null);
       const [tempColor, setTempColor] = useState("#ffd600");
@@ -828,13 +843,14 @@
       const [confirmedMint, setConfirmedMint] = useState(null);
 
       const [metaModalOpen, setMetaModalOpen] = useState(false);
+      // Clean, blank default state - No prefilled text or suggestions to delete
       const [entityMeta, setEntityMeta] = useState({
         id: "",
-        name: "Polish - Lithuanian Commonwealth",
-        ruler: "Sigismund III Vasa",
-        startYear: "1588",
-        endYear: "1621",
-        mintCity: "Vilnius / Kraków",
+        name: "",
+        ruler: "",
+        startYear: "",
+        endYear: "",
+        mintCity: "",
         bgColor: "#ffd600",
         striped: false
       });
@@ -953,7 +969,7 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        // Integer date comparison preventing string comparison bugs
+        // Strict numeric timeline boundary comparison
         const visibleEntities = (entities || []).filter(e => {
           const start = parseInt(e.startYear, 10);
           const end = parseInt(e.endYear, 10);
@@ -988,7 +1004,7 @@
             });
           });
 
-          if (isCurrentActiveInScrubber) {
+          if (isCurrentActiveInScrubber || activeAppendingEntityId) {
             closedPolygons.forEach((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
@@ -1061,7 +1077,7 @@
 
       useEffect(() => {
         updateDynamicOverlay();
-      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint, entityMeta]);
+      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint, entityMeta, activeAppendingEntityId]);
 
       useEffect(() => {
         if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
@@ -1106,6 +1122,30 @@
           return;
         }
 
+        // If appending a new overseas territory to an existing empire
+        if (activeAppendingEntityId) {
+          const targetEntity = (entities || []).find(e => e.id === activeAppendingEntityId);
+          if (targetEntity) {
+            const newPoly = {
+              points: currentVertices,
+              bgColor: targetEntity.polygons?.[0]?.bgColor || "#ffd600",
+              striped: targetEntity.polygons?.[0]?.striped || false,
+              stripeColor: "#ff1744"
+            };
+            const updated = {
+              ...targetEntity,
+              polygons: [...(targetEntity.polygons || []), newPoly]
+            };
+            onSaveEntity(updated);
+            if (inspectingEntity?.id === updated.id) setInspectingEntity(updated);
+            setCurrentVertices([]);
+            setIsVertexMode(false);
+            setActiveAppendingEntityId(null);
+            alert(`Added new territory to ${targetEntity.name}!`);
+            return;
+          }
+        }
+
         const newPoly = {
           points: currentVertices,
           bgColor: entityMeta.bgColor || "#ffd600",
@@ -1141,6 +1181,7 @@
         onSaveEntity(fullEntity);
         setClosedPolygons([]);
         setConfirmedMint(null);
+        setEntityMeta({ id: "", name: "", ruler: "", startYear: "", endYear: "", mintCity: "", bgColor: "#ffd600", striped: false });
         alert(`Saved ${entityMeta.name} to Historical Vault!`);
       };
 
@@ -1165,6 +1206,25 @@
         onSaveEntity(updated);
         if (inspectingEntity?.id === updated.id) setInspectingEntity(updated);
         setColorPaletteModalEntity(null);
+      };
+
+      // Handler for deleting the empire and its associated assets
+      const handleDeleteEmpire = (entityToDelete) => {
+        if (!entityToDelete) return;
+        const confirmDelete = window.confirm(`Are you sure you want to permanently delete "${entityToDelete.name}"?\n\nThis will remove all associated boundaries, territories across all continents, and all attached coins.`);
+        if (confirmDelete) {
+          onDeleteEntity(entityToDelete.id);
+          setInspectingEntity(null);
+          setColorPaletteModalEntity(null);
+        }
+      };
+
+      // Starts territory append mode on a specific entity
+      const handleStartAddTerritory = (entity) => {
+        setActiveAppendingEntityId(entity.id);
+        setInspectingEntity(null);
+        setIsVertexMode(true);
+        alert(`Tap on the map to draw new detached territory for "${entity.name}". Tap "Close Shape" when finished.`);
       };
 
       const activeTimelineEntities = useMemo(() => {
@@ -1208,6 +1268,13 @@
                 Save Empire
               </button>
             )}
+            {activeAppendingEntityId && (
+              <button 
+                onClick={() => { setActiveAppendingEntityId(null); setIsVertexMode(false); setCurrentVertices([]); }}
+                className="bg-red-500/80 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-lg">
+                Cancel Append
+              </button>
+            )}
           </div>
 
           <div className="absolute right-3 top-3 z-30 flex flex-col gap-1.5">
@@ -1243,7 +1310,7 @@
                     <span className="text-[10px] text-amber-400">ⓘ</span>
                   </div>
                   <div className="text-[10px] text-slate-400">
-                    {activeTimelineEntities.ruler} ({formatYearDisplay(activeTimelineEntities.startYear)} – {formatYearDisplay(activeTimelineEntities.endYear)})
+                    {activeTimelineEntities.ruler ? `${activeTimelineEntities.ruler} • ` : ""}({formatYearDisplay(activeTimelineEntities.startYear)} – {formatYearDisplay(activeTimelineEntities.endYear)})
                   </div>
                 </div>
 
@@ -1328,6 +1395,7 @@
             </div>
           )}
 
+          {/* Clean Setup Modal - Starts Completely Blank */}
           {metaModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
@@ -1343,7 +1411,7 @@
                       required 
                       value={entityMeta.name} 
                       onChange={e => setEntityMeta({...entityMeta, name: e.target.value})}
-                      placeholder="e.g. Polish - Lithuanian Commonwealth" 
+                      placeholder="" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1355,7 +1423,7 @@
                         type="number" 
                         value={entityMeta.startYear} 
                         onChange={e => setEntityMeta({...entityMeta, startYear: e.target.value})}
-                        placeholder="1588"
+                        placeholder=""
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1365,7 +1433,7 @@
                         type="number" 
                         value={entityMeta.endYear} 
                         onChange={e => setEntityMeta({...entityMeta, endYear: e.target.value})}
-                        placeholder="1621"
+                        placeholder=""
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1376,7 +1444,7 @@
                     <input 
                       value={entityMeta.ruler} 
                       onChange={e => setEntityMeta({...entityMeta, ruler: e.target.value})}
-                      placeholder="e.g. Sigismund III Vasa" 
+                      placeholder="" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1386,7 +1454,7 @@
                     <input 
                       value={entityMeta.mintCity} 
                       onChange={e => setEntityMeta({...entityMeta, mintCity: e.target.value})}
-                      placeholder="e.g. Vilnius / Kraków" 
+                      placeholder="" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1473,6 +1541,7 @@
             </div>
           )}
 
+          {/* Empire Inspector with Add Territory & Delete Options */}
           {inspectingEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
@@ -1492,6 +1561,20 @@
                   <div><span className="text-slate-400">Ruler:</span> <span className="text-white font-semibold">{inspectingEntity.ruler || "—"}</span></div>
                   <div><span className="text-slate-400">Era:</span> <span className="text-amber-400 font-semibold">{formatYearDisplay(inspectingEntity.startYear)} – {formatYearDisplay(inspectingEntity.endYear)}</span></div>
                   <div className="col-span-2"><span className="text-slate-400">Mint:</span> <span className="text-white">{inspectingEntity.mint?.city || "—"} ({inspectingEntity.mint?.country || "—"})</span></div>
+                </div>
+
+                {/* Multi-Continent Add Territory Button */}
+                <div className="flex items-center justify-between bg-[#10162a] p-2.5 rounded-xl border border-slate-800">
+                  <div>
+                    <div className="text-xs font-bold text-white">Territories / Shapes ({inspectingEntity.polygons?.length || 0})</div>
+                    <div className="text-[10px] text-slate-400">Add detached regions, exclaves, or other continents</div>
+                  </div>
+                  <button 
+                    onClick={() => handleStartAddTerritory(inspectingEntity)}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[11px] px-3 py-1.5 rounded-lg shadow flex items-center gap-1">
+                    <span>+</span>
+                    <span>Add Territory</span>
+                  </button>
                 </div>
 
                 <div>
@@ -1555,7 +1638,7 @@
                         <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center">
                           <div>
                             <div className="text-white font-bold">{coin.denomination}</div>
-                            <div className="text-[10px] text-slate-400">{coin.ruler} • {formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}</div>
+                            <div className="text-[10px] text-slate-400">{coin.ruler ? `${coin.ruler} • ` : ""}{formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}</div>
                           </div>
                           <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
                             {coin.grade || "UNC"}
@@ -1566,10 +1649,21 @@
                   </div>
                 </div>
 
+                {/* Permanent Empire Deletion Button */}
+                <div className="pt-2 border-t border-slate-800/80">
+                  <button 
+                    onClick={() => handleDeleteEmpire(inspectingEntity)}
+                    className="w-full py-2 bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-400 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5">
+                    <span>🗑</span>
+                    <span>Delete Empire & All Associated Coins</span>
+                  </button>
+                </div>
+
               </div>
             </div>
           )}
 
+          {/* Add Historical Coin Modal - Blank Inputs Without Presets */}
           {isAddingCoinForEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
@@ -1594,12 +1688,12 @@
                 }} className="space-y-2.5 text-xs">
                   
                   <div>
-                    <label className="text-slate-400 block mb-1">Denomination * (e.g. 6 Groschen, Denarius)</label>
+                    <label className="text-slate-400 block mb-1">Denomination *</label>
                     <input 
                       required 
                       value={historicalCoinForm.denomination} 
                       onChange={e => setHistoricalCoinForm({...historicalCoinForm, denomination: e.target.value})}
-                      placeholder="e.g. 6 Groschen" 
+                      placeholder="" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1611,7 +1705,7 @@
                         type="text"
                         value={historicalCoinForm.year} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, year: e.target.value})}
-                        placeholder="e.g. 1588-1621" 
+                        placeholder="" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1620,7 +1714,7 @@
                       <input 
                         value={historicalCoinForm.grade} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, grade: e.target.value})}
-                        placeholder="VF / XF" 
+                        placeholder="" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1632,7 +1726,7 @@
                       <input 
                         value={historicalCoinForm.ruler} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, ruler: e.target.value})}
-                        placeholder={isAddingCoinForEntity.ruler || "Sigismund III"} 
+                        placeholder="" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1641,7 +1735,7 @@
                       <input 
                         value={historicalCoinForm.mint} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, mint: e.target.value})}
-                        placeholder={isAddingCoinForEntity.mint?.city || "Kraków"} 
+                        placeholder="" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1652,7 +1746,7 @@
                     <input 
                       value={historicalCoinForm.notes} 
                       onChange={e => setHistoricalCoinForm({...historicalCoinForm, notes: e.target.value})}
-                      placeholder="e.g. Crowned bust, acquired from auction" 
+                      placeholder="" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1847,22 +1941,22 @@
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="text-slate-400 block mb-1">Denomination *</label>
-                  <input required value={formData.denomination} onChange={e => setFormData({...formData, denomination: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                  <input required value={formData.denomination} onChange={e => setFormData({...formData, denomination: e.target.value})} placeholder="" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Year / Range (e.g. 1588-1621)</label>
-                  <input type="text" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                  <label className="text-slate-400 block mb-1">Year / Range</label>
+                  <input type="text" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="text-slate-400 block mb-1">Mint City / Mintmark</label>
-                  <input value={formData.mint} onChange={e => setFormData({...formData, mint: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                  <input value={formData.mint} onChange={e => setFormData({...formData, mint: e.target.value})} placeholder="" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
                 <div>
                   <label className="text-slate-400 block mb-1">Ruler / Head of State</label>
-                  <input value={formData.ruler} onChange={e => setFormData({...formData, ruler: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                  <input value={formData.ruler} onChange={e => setFormData({...formData, ruler: e.target.value})} placeholder="" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
               </div>
 
@@ -1881,7 +1975,7 @@
 
               <div>
                 <label className="text-slate-400 block mb-1">Notes</label>
-                <input value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="e.g. Acquired from coin fair" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                <input value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
               </div>
 
               <button type="submit" className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
