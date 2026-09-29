@@ -33,6 +33,13 @@
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Critical for iOS drawing */
+    .map-canvas-touch {
+      touch-action: none !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+    }
   </style>
 </head>
 <body>
@@ -173,7 +180,6 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      // Scrubber for Historical Timeline
       const [scrubberYear, setScrubberYear] = useState(1800);
 
       useEffect(() => {
@@ -444,7 +450,7 @@
         const projection = d3.geoNaturalEarth1().scale(150).translate([width / 2, height / 1.9]);
         const path = d3.geoPath().projection(projection);
 
-        const zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", (e) => g.attr("transform", e.transform));
+        const zoom = d3.zoom().scaleExtent([1, 250]).on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
 
         Promise.all([
@@ -470,7 +476,6 @@
             })
             .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
 
-          // Micro-states
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
@@ -484,7 +489,6 @@
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
 
-          // Striped Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
@@ -506,44 +510,57 @@
       );
     }
 
-    // --- Dedicated Historical Cartographer Studio with Ocean Mask & Raw Drawing ---
+    // --- Dedicated Historical Cartographer Studio (250x Zoom & Direct Raw Tracing) ---
     function HistoricalStudio({ entities, scrubberYear, onSaveEntity }) {
       const svgRef = useRef(null);
-      const [isDrawing, setIsDrawing] = useState(false);
+      const isDrawingRef = useRef(false);
+      const [isDrawingState, setIsDrawingState] = useState(false);
+      
       const [rawPoints, setRawPoints] = useState([]);
+      const rawPointsRef = useRef([]);
+      
       const [closedPolygons, setClosedPolygons] = useState([]);
-
       const [selectedPolygonIndex, setSelectedPolygonIndex] = useState(null);
       const [customizerOpen, setCustomizerOpen] = useState(false);
 
-      // Overlap inspector modal state
       const [inspectingEntity, setInspectingEntity] = useState(null);
 
-      // Interactive Mint Placement State
+      // Mint placement state
       const [placingMint, setPlacingMint] = useState(false);
+      const placingMintRef = useRef(false);
       const [mintCandidate, setMintCandidate] = useState(null);
       const [mintCandidateCountry, setMintCandidateCountry] = useState("");
       const [confirmedMint, setConfirmedMint] = useState(null);
 
-      const [metaModalOpen, setMetaModalOpen] = useState(true);
+      const [metaModalOpen, setMetaModalOpen] = useState(false);
       const [entityMeta, setEntityMeta] = useState({
-        name: "",
-        ruler: "",
-        startYear: "",
-        endYear: "",
-        mintCity: ""
+        name: "Polish - Lithuanian Commonwealth",
+        ruler: "Sigismund III Vasa",
+        startYear: "1588",
+        endYear: "1621",
+        mintCity: "Vilnius / Kraków"
       });
 
       const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 250]));
       const worldGeoRef = useRef(null);
+      const currentTransformRef = useRef(d3.zoomIdentity);
+      const zoomBehaviorRef = useRef(null);
 
       useEffect(() => {
-        const svg = d3.select(svgRef.current);
+        isDrawingRef.current = isDrawingState;
+      }, [isDrawingState]);
+
+      useEffect(() => {
+        placingMintRef.current = placingMint;
+      }, [placingMint]);
+
+      useEffect(() => {
+        const svgEl = svgRef.current;
+        const svg = d3.select(svgEl);
         svg.selectAll("*").remove();
 
         const defs = svg.append("defs");
 
-        // Custom hatch patterns for closed polygons
         closedPolygons.forEach((poly, idx) => {
           if (poly.striped) {
             const pat = defs.append("pattern")
@@ -558,22 +575,30 @@
           }
         });
 
-        // Layer Ordering:
-        // 1. Base Map Background
-        // 2. Empire Drawing Layer (Historical Polygons)
-        // 3. Ocean Mask Layer (Covers drawings that spill into the sea)
-        // 4. Country Borders / Mint Pin Layer
         const gRoot = svg.append("g").attr("id", "studio-root");
         const gBase = gRoot.append("g").attr("id", "layer-base");
         const gEmpire = gRoot.append("g").attr("id", "layer-empires");
         const gOceanMask = gRoot.append("g").attr("id", "layer-ocean-mask");
         const gBorders = gRoot.append("g").attr("id", "layer-borders");
+        const gLiveStroke = gRoot.append("g").attr("id", "layer-live-stroke");
 
         const path = d3.geoPath().projection(projectionRef.current);
 
-        const zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", (e) => {
-          if (!isDrawing) gRoot.attr("transform", e.transform);
-        });
+        // Zoom up to 250x! Allows two-finger pan/zoom even when draw mode is active
+        const zoom = d3.zoom()
+          .scaleExtent([1, 250])
+          .filter((event) => {
+            // If drawing, ignore single-finger touch so pointer can draw; allow pinch/two-finger or wheel
+            if (isDrawingRef.current && event.type === 'touchstart' && event.touches.length === 1) return false;
+            if (isDrawingRef.current && event.type === 'mousedown') return false;
+            return true;
+          })
+          .on("zoom", (e) => {
+            currentTransformRef.current = e.transform;
+            gRoot.attr("transform", e.transform);
+          });
+
+        zoomBehaviorRef.current = zoom;
         svg.call(zoom);
 
         Promise.all([
@@ -582,26 +607,23 @@
         ]).then(([atlasData, tsvData]) => {
           const land = topojson.feature(atlasData, atlasData.objects.land);
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
-          
           worldGeoRef.current = { features: countries, tsv: tsvData, land: land };
 
-          // 1. Dark Dry Land Base
+          // Land background
           gBase.append("path")
             .datum(land)
             .attr("d", path)
             .attr("fill", "#0b0f1d");
 
-          // 3. Ocean Mask: Inverts land so water covers freehand spills
-          // Creates a full world bounding box, subtracting land polygons
-          const sphere = { type: "Sphere" };
+          // Ocean mask outline
           gOceanMask.append("path")
-            .datum(sphere)
+            .datum({ type: "Sphere" })
             .attr("d", path)
             .attr("fill", "none")
             .attr("stroke", "#192238")
             .attr("stroke-width", 0.5);
 
-          // Render ghost modern country borders on dry land
+          // Country borders
           gBorders.selectAll(".ghost-country")
             .data(countries)
             .enter().append("path")
@@ -611,11 +633,28 @@
             .attr("stroke-width", 0.4);
         });
 
-        // Pointer event for zero-decimation freehand drawing
-        svg.on("pointerdown", (event) => {
-          if (placingMint) {
-            const [mx, my] = d3.pointer(event, gRoot.node());
-            const coords = projectionRef.current.invert([mx, my]);
+        // Inverse transform helper: converts screen click/touch to true map geo coordinates
+        const getGeoFromEvent = (event) => {
+          const rect = svgEl.getBoundingClientRect();
+          const clientX = event.clientX || (event.touches && event.touches[0] ? event.touches[0].clientX : 0);
+          const clientY = event.clientY || (event.touches && event.touches[0] ? event.touches[0].clientY : 0);
+
+          // Map SVG viewBox coordinates
+          const svgX = ((clientX - rect.left) / rect.width) * 800;
+          const svgY = ((clientY - rect.top) / rect.height) * 480;
+
+          // Invert active D3 Zoom Transform
+          const transform = currentTransformRef.current;
+          const transformedX = (svgX - transform.x) / transform.k;
+          const transformedY = (svgY - transform.y) / transform.k;
+
+          return projectionRef.current.invert([transformedX, transformedY]);
+        };
+
+        // Pointer event engine with raw coordinates
+        const onPointerDown = (e) => {
+          if (placingMintRef.current) {
+            const coords = getGeoFromEvent(e);
             if (coords) {
               setMintCandidate(coords);
               setMintCandidateCountry(detectCountry(coords));
@@ -623,34 +662,57 @@
             return;
           }
 
-          if (!isDrawing) return;
-          const [mx, my] = d3.pointer(event, gRoot.node());
-          const coords = projectionRef.current.invert([mx, my]);
-          if (coords) setRawPoints([coords]);
-        });
+          if (!isDrawingRef.current) return;
+          if (e.touches && e.touches.length > 1) return; // Allow pinch zoom
 
-        svg.on("pointermove", (event) => {
-          if (!isDrawing || rawPoints.length === 0) return;
-          const [mx, my] = d3.pointer(event, gRoot.node());
-          const coords = projectionRef.current.invert([mx, my]);
-          // ZERO DECIMATION: Add every single coordinate point
-          if (coords) setRawPoints(prev => [...prev, coords]);
-        });
+          const coords = getGeoFromEvent(e);
+          if (coords) {
+            rawPointsRef.current = [coords];
+            setRawPoints([coords]);
+          }
+        };
 
-        svg.on("pointerup", () => {
-          if (!isDrawing || rawPoints.length < 3) return;
+        const onPointerMove = (e) => {
+          if (!isDrawingRef.current || rawPointsRef.current.length === 0) return;
+          if (e.touches && e.touches.length > 1) return;
+
+          const coords = getGeoFromEvent(e);
+          if (coords) {
+            rawPointsRef.current.push(coords);
+            setRawPoints([...rawPointsRef.current]);
+          }
+        };
+
+        const onPointerUp = () => {
+          if (!isDrawingRef.current || rawPointsRef.current.length < 3) {
+            rawPointsRef.current = [];
+            setRawPoints([]);
+            return;
+          }
+
           const newPoly = {
-            points: rawPoints,
+            points: [...rawPointsRef.current],
             bgColor: "#ffd600",
             striped: false,
             stripeColor: "#ff1744"
           };
           setClosedPolygons(prev => [...prev, newPoly]);
+          rawPointsRef.current = [];
           setRawPoints([]);
-          setIsDrawing(false);
-        });
+          setIsDrawingState(false);
+        };
 
-      }, [isDrawing, closedPolygons, placingMint]);
+        svgEl.addEventListener("pointerdown", onPointerDown);
+        svgEl.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+
+        return () => {
+          svgEl.removeEventListener("pointerdown", onPointerDown);
+          svgEl.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+        };
+
+      }, [closedPolygons]);
 
       const detectCountry = (coords) => {
         if (!worldGeoRef.current || !coords) return "Unknown Territory / Sea";
@@ -660,20 +722,6 @@
           return item ? item.name : "Sovereign Territory";
         }
         return "Coastal / Ocean Waters";
-      };
-
-      const detectOverlappingCountries = (polyPoints) => {
-        if (!worldGeoRef.current || !polyPoints || polyPoints.length === 0) return [];
-        const overlaps = new Set();
-        // Check intersections with modern nation centroids & sample vertices
-        worldGeoRef.current.features.forEach(feat => {
-          const center = d3.geoCentroid(feat);
-          if (d3.polygonContains(polyPoints, center)) {
-            const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === feat.id);
-            if (item) overlaps.add(item.name);
-          }
-        });
-        return Array.from(overlaps);
       };
 
       const handleSaveCompleteEntity = () => {
@@ -700,18 +748,29 @@
         alert(`Saved ${entityMeta.name} to Historical Vault!`);
       };
 
-      // Filter entities visible under current timeline scrubber year
       const visibleHistoricalEntities = useMemo(() => {
         return (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
       }, [entities, scrubberYear]);
 
+      // Quick Zoom Helper
+      const handleZoomStep = (direction) => {
+        if (!svgRef.current || !zoomBehaviorRef.current) return;
+        d3.select(svgRef.current).transition().duration(250).call(
+          zoomBehaviorRef.current.scaleBy,
+          direction === "in" ? 1.8 : 0.55
+        );
+      };
+
       return (
-        <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col">
+        <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col select-none">
 
           {/* SVG Map Canvas */}
-          <svg ref={svgRef} viewBox="0 0 800 480" className="w-full h-full object-contain">
+          <svg 
+            ref={svgRef} 
+            viewBox="0 0 800 480" 
+            className="w-full h-full object-contain map-canvas-touch">
             
-            {/* Render Saved Historical Entities Synced to Scrubber */}
+            {/* Render Saved Historical Entities */}
             {visibleHistoricalEntities.map((ent) => (
               <g key={ent.id} onClick={() => setInspectingEntity(ent)} className="cursor-pointer">
                 {(ent.polygons || []).map((poly, pIdx) => {
@@ -738,7 +797,7 @@
               </g>
             ))}
 
-            {/* Render Currently Active Drawing Session Polygons */}
+            {/* Currently Active Closed Polygons */}
             {closedPolygons.map((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
@@ -759,17 +818,19 @@
               );
             })}
 
-            {/* Zero-Decimation In-Progress Finger Stroke */}
+            {/* Raw Finger Line (Rendered in real-time under transform) */}
             {rawPoints.length > 0 && (
               <path 
                 d={d3.line()(rawPoints.map(p => projectionRef.current(p)))} 
                 fill="none" 
                 stroke="#39ff14" 
-                strokeWidth={2} 
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             )}
 
-            {/* Interactive Mint Placement Crosshair & Confirmation Target */}
+            {/* Mint Candidate Crosshair */}
             {mintCandidate && (
               <g transform={`translate(${projectionRef.current(mintCandidate)[0]}, ${projectionRef.current(mintCandidate)[1]})`}>
                 <circle r={9} fill="none" stroke="#ff1744" strokeWidth={2} className="animate-ping" />
@@ -778,6 +839,7 @@
               </g>
             )}
 
+            {/* Confirmed Mint Pin */}
             {confirmedMint && !mintCandidate && (
               <g transform={`translate(${projectionRef.current(confirmedMint.coords)[0]}, ${projectionRef.current(confirmedMint.coords)[1]})`}>
                 <circle r={6} fill="#ff1744" filter="drop-shadow(0 0 6px #ff1744)" />
@@ -786,15 +848,15 @@
             )}
           </svg>
 
-          {/* Floating Top Entity Details Bar */}
+          {/* Floating Top Entity Details */}
           <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
             <div className="flex-1 mr-2">
               <div className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                {entityMeta.name || "Untitled Entity"}
+                {entityMeta.name}
               </div>
               <div className="text-[10px] text-slate-400">
-                {entityMeta.ruler || "Ruler"} • {entityMeta.startYear || "Year"} to {entityMeta.endYear || "Year"}
+                {entityMeta.ruler} • {entityMeta.startYear} to {entityMeta.endYear}
               </div>
             </div>
 
@@ -812,31 +874,43 @@
             </div>
           </div>
 
+          {/* Dedicated Zoom Buttons (Allows zoom to 250x without resetting) */}
+          <div className="absolute right-3 top-16 z-30 flex flex-col gap-1.5">
+            <button 
+              onClick={() => handleZoomStep("in")} 
+              className="w-8 h-8 rounded-lg bg-[#0e1424]/90 border border-slate-700 text-white font-black text-base shadow-lg flex items-center justify-center active:scale-95">
+              +
+            </button>
+            <button 
+              onClick={() => handleZoomStep("out")} 
+              className="w-8 h-8 rounded-lg bg-[#0e1424]/90 border border-slate-700 text-white font-black text-base shadow-lg flex items-center justify-center active:scale-95">
+              −
+            </button>
+          </div>
+
           {/* Bottom Floating Control Bar */}
           <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
             
-            {/* Mint Location Button */}
             <div className="pointer-events-auto">
               <button 
-                onClick={() => { setPlacingMint(!placingMint); setIsDrawing(false); }}
+                onClick={() => { setPlacingMint(!placingMint); setIsDrawingState(false); }}
                 className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg ${placingMint ? "bg-red-500 text-white animate-pulse" : "bg-[#101526] border border-slate-700 text-slate-200"}`}>
                 <span>📍</span>
                 <span>{confirmedMint ? "Mint Placed" : "Place Mint"}</span>
               </button>
             </div>
 
-            {/* Zero-Decimation Pencil Drawing Button */}
             <div className="pointer-events-auto flex items-center gap-2">
               <button 
-                onClick={() => { setIsDrawing(!isDrawing); setPlacingMint(false); }}
-                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isDrawing ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
-                <span>✏️</span>
-                <span>{isDrawing ? "Tracing Border..." : "Draw Empire"}</span>
+                onClick={() => { setIsDrawingState(!isDrawingState); setPlacingMint(false); }}
+                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isDrawingState ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
+                <span>✏️️</span>
+                <span>{isDrawingState ? "Tracing (Drag Finger)..." : "Draw Empire"}</span>
               </button>
             </div>
           </div>
 
-          {/* Interactive Mint Confirmation Dialog */}
+          {/* Mint Confirmation Dialog */}
           {placingMint && mintCandidate && (
             <div className="absolute bottom-16 inset-x-4 z-40 bg-[#0c1222f6] border border-red-500/60 p-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between">
               <div>
@@ -862,7 +936,7 @@
             </div>
           )}
 
-          {/* Initial Info Setup Modal */}
+          {/* Edit Info Modal */}
           {metaModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
@@ -890,7 +964,6 @@
                         type="number" 
                         value={entityMeta.startYear} 
                         onChange={e => setEntityMeta({...entityMeta, startYear: e.target.value})}
-                        placeholder="e.g. 1569" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -900,7 +973,6 @@
                         type="number" 
                         value={entityMeta.endYear} 
                         onChange={e => setEntityMeta({...entityMeta, endYear: e.target.value})}
-                        placeholder="e.g. 1795" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -911,7 +983,6 @@
                     <input 
                       value={entityMeta.ruler} 
                       onChange={e => setEntityMeta({...entityMeta, ruler: e.target.value})}
-                      placeholder="e.g. Sigismund III Vasa" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -921,7 +992,6 @@
                     <input 
                       value={entityMeta.mintCity} 
                       onChange={e => setEntityMeta({...entityMeta, mintCity: e.target.value})}
-                      placeholder="e.g. Kraków / Vilnius" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -929,14 +999,14 @@
                   <button 
                     onClick={() => setMetaModalOpen(false)} 
                     className="w-full py-2.5 bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
-                    Continue to Map & Drawing
+                    Done
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Polygon Color & Striping Customizer */}
+          {/* Polygon Customizer Drawer */}
           {customizerOpen && selectedPolygonIndex !== null && (
             <div className="fixed inset-x-0 bottom-0 z-50 bg-[#0d1324] border-t border-slate-700 rounded-t-3xl p-4 max-h-[60vh] overflow-y-auto hide-scrollbar space-y-3 shadow-2xl">
               <div className="flex items-center justify-between pb-1 border-b border-slate-800">
@@ -996,42 +1066,11 @@
             </div>
           )}
 
-          {/* Overlapping Modern Nations Inspector Modal */}
-          {inspectingEntity && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h3 className="text-xs font-bold text-white">{inspectingEntity.name}</h3>
-                  <button onClick={() => setInspectingEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
-                </div>
-
-                <div className="text-xs space-y-1 bg-[#12182b] p-2.5 rounded-xl border border-slate-800">
-                  <div><span className="text-slate-400">Ruler:</span> {inspectingEntity.ruler || "—"}</div>
-                  <div><span className="text-slate-400">Timeline:</span> {inspectingEntity.startYear} – {inspectingEntity.endYear}</div>
-                  {inspectingEntity.mint && (
-                    <div><span className="text-slate-400">Mint:</span> {inspectingEntity.mint.city} ({inspectingEntity.mint.country})</div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-cyan-400 block mb-1.5">Overlapping Modern Countries:</label>
-                  <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto hide-scrollbar">
-                    {detectOverlappingCountries(inspectingEntity.polygons?.[0]?.points).map((country, idx) => (
-                      <span key={idx} className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-[10px] text-slate-300">
-                        {country}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
       );
     }
 
-    // --- Vault Cards Tab (Text-Only Lightweight) ---
+    // --- Vault Cards Tab ---
     function CollectionVault({ coins, onDeleteCoin, onEditCoin, onAddClick }) {
       const [query, setQuery] = useState("");
 
