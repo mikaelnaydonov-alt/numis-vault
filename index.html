@@ -475,6 +475,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
 
+          // Micro-states
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
@@ -488,6 +489,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
 
+          // Striped Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
@@ -509,7 +511,7 @@
       );
     }
 
-    // --- Dedicated Historical Cartographer Studio (Vertex Pinning with Ocean Mask) ---
+    // --- Dedicated Historical Cartographer Studio with Locked Coordinate Hierarchy ---
     function HistoricalStudio({ entities, scrubberYear, onSaveEntity }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
@@ -542,7 +544,6 @@
 
       const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 250]));
       const worldGeoRef = useRef(null);
-      const currentTransformRef = useRef(d3.zoomIdentity);
       const zoomBehaviorRef = useRef(null);
 
       useEffect(() => {
@@ -579,30 +580,25 @@
           }
         });
 
-        // Layer ordering:
-        // 1. Dry Land Base
-        // 2. Empire Polygons Layer (Saved & Current)
-        // 3. Ocean Mask Layer (Covers sea spills like Gdańsk Bay)
-        // 4. Coastlines & Modern Country Borders
+        // Hierarchy inside studio-root:
+        // Everything lives inside studio-root so D3 Zoom transforms everything together
         const gRoot = svg.append("g").attr("id", "studio-root");
         const gBase = gRoot.append("g").attr("id", "layer-base");
         const gEmpire = gRoot.append("g").attr("id", "layer-empires");
         const gOceanMask = gRoot.append("g").attr("id", "layer-ocean-mask");
         const gBorders = gRoot.append("g").attr("id", "layer-borders");
+        const gActiveDraw = gRoot.append("g").attr("id", "layer-active-draw");
 
         const path = d3.geoPath().projection(projectionRef.current);
 
-        // Smooth zoom up to 250x
         const zoom = d3.zoom()
           .scaleExtent([1, 250])
           .filter((event) => {
-            // In vertex/mint mode, ignore single tap/click so it places a point; allow two-finger pinch or wheel
             if ((isVertexModeRef.current || placingMintRef.current) && event.type === 'touchstart' && event.touches.length === 1) return false;
             if ((isVertexModeRef.current || placingMintRef.current) && event.type === 'mousedown') return false;
             return true;
           })
           .on("zoom", (e) => {
-            currentTransformRef.current = e.transform;
             gRoot.attr("transform", e.transform);
           });
 
@@ -617,14 +613,13 @@
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
           worldGeoRef.current = { features: countries, tsv: tsvData, land: land };
 
-          // 1. Dry land background
+          // Dry land
           gBase.append("path")
             .datum(land)
             .attr("d", path)
             .attr("fill", "#0c1120");
 
-          // 3. Ocean mask: clips polygons that cut across bays/seas
-          // The background of the map is dark ocean (#05070d), land is #0c1120
+          // Ocean mask
           gOceanMask.append("path")
             .datum({ type: "Sphere" })
             .attr("d", path)
@@ -632,7 +627,7 @@
             .attr("stroke", "#1e293b")
             .attr("stroke-width", 0.5);
 
-          // 4. Country border outlines
+          // Country borders
           gBorders.selectAll(".ghost-country")
             .data(countries)
             .enter().append("path")
@@ -642,39 +637,23 @@
             .attr("stroke-width", 0.4);
         });
 
-        // Inverse coordinate transform
-        const getGeoFromEvent = (event) => {
-          const rect = svgEl.getBoundingClientRect();
-          const clientX = event.clientX || (event.touches && event.touches[0] ? event.touches[0].clientX : 0);
-          const clientY = event.clientY || (event.touches && event.touches[0] ? event.touches[0].clientY : 0);
-
-          const svgX = ((clientX - rect.left) / rect.width) * 800;
-          const svgY = ((clientY - rect.top) / rect.height) * 480;
-
-          const transform = currentTransformRef.current;
-          const transformedX = (svgX - transform.x) / transform.k;
-          const transformedY = (svgY - transform.y) / transform.k;
-
-          return projectionRef.current.invert([transformedX, transformedY]);
-        };
-
+        // Exact transformed pointer resolution using d3.pointer on gRootNode
         const handlePointerClick = (e) => {
-          // If placing mint pin
+          const gRootNode = d3.select("#studio-root").node();
+          if (!gRootNode) return;
+
+          const [transformedX, transformedY] = d3.pointer(e, gRootNode);
+          const coords = projectionRef.current.invert([transformedX, transformedY]);
+          if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
+
           if (placingMintRef.current) {
-            const coords = getGeoFromEvent(e);
-            if (coords) {
-              setMintCandidate(coords);
-              setMintCandidateCountry(detectCountry(coords));
-            }
+            setMintCandidate(coords);
+            setMintCandidateCountry(detectCountry(coords));
             return;
           }
 
-          // If adding boundary vertices
           if (isVertexModeRef.current) {
-            const coords = getGeoFromEvent(e);
-            if (coords) {
-              setCurrentVertices(prev => [...prev, coords]);
-            }
+            setCurrentVertices(prev => [...prev, coords]);
           }
         };
 
@@ -682,6 +661,93 @@
         return () => svgEl.removeEventListener("click", handlePointerClick);
 
       }, [closedPolygons]);
+
+      // Synchronize active drawing layers directly inside #layer-active-draw
+      useEffect(() => {
+        const gActive = d3.select("#layer-active-draw");
+        if (gActive.empty()) return;
+        gActive.selectAll("*").remove();
+
+        // 1. Saved entities visible under scrubber
+        const visibleHistoricalEntities = (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+        visibleHistoricalEntities.forEach(ent => {
+          const gEnt = gActive.append("g").attr("class", "cursor-pointer").on("click", () => setInspectingEntity(ent));
+          (ent.polygons || []).forEach(poly => {
+            const pts = poly.points.map(p => projectionRef.current(p));
+            const d = d3.line().curve(d3.curveLinearClosed)(pts);
+            gEnt.append("path")
+              .attr("d", d)
+              .attr("fill", poly.bgColor || "#00f0ff")
+              .attr("fill-opacity", 0.6)
+              .attr("stroke", poly.bgColor || "#00f0ff")
+              .attr("stroke-width", 1.5);
+          });
+
+          if (ent.mint && ent.mint.coords) {
+            const [mx, my] = projectionRef.current(ent.mint.coords);
+            const gMint = gEnt.append("g").attr("transform", `translate(${mx}, ${my})`);
+            gMint.append("circle").attr("r", 5).attr("fill", "#ff1744").style("filter", "drop-shadow(0 0 6px #ff1744)");
+            gMint.append("circle").attr("r", 2).attr("fill", "#ffffff");
+          }
+        });
+
+        // 2. Closed polygons in current editing session
+        closedPolygons.forEach((poly, idx) => {
+          const pts = poly.points.map(p => projectionRef.current(p));
+          const d = d3.line().curve(d3.curveLinearClosed)(pts);
+          gActive.append("path")
+            .attr("d", d)
+            .attr("fill", poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor)
+            .attr("fill-opacity", 0.65)
+            .attr("stroke", poly.bgColor || "#ffd600")
+            .attr("stroke-width", 1.5)
+            .attr("class", "cursor-pointer")
+            .on("click", () => {
+              setSelectedPolygonIndex(idx);
+              setCustomizerOpen(true);
+            });
+        });
+
+        // 3. In-progress perimeter line & dots
+        if (currentVertices.length > 0) {
+          const pts = currentVertices.map(p => projectionRef.current(p));
+          gActive.append("path")
+            .attr("d", d3.line()(pts))
+            .attr("fill", "none")
+            .attr("stroke", "#39ff14")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "4,4");
+
+          currentVertices.forEach((p, idx) => {
+            const [cx, cy] = projectionRef.current(p);
+            gActive.append("circle")
+              .attr("cx", cx)
+              .attr("cy", cy)
+              .attr("r", 3.5)
+              .attr("fill", idx === 0 ? "#ff007f" : "#39ff14")
+              .attr("stroke", "#ffffff")
+              .attr("stroke-width", 1);
+          });
+        }
+
+        // 4. Candidate mint pin
+        if (mintCandidate) {
+          const [cx, cy] = projectionRef.current(mintCandidate);
+          const gCandidate = gActive.append("g").attr("transform", `translate(${cx}, ${cy})`);
+          gCandidate.append("circle").attr("r", 8).attr("fill", "none").attr("stroke", "#ff1744").attr("stroke-width", 2);
+          gCandidate.append("circle").attr("r", 4.5).attr("fill", "#ff1744");
+          gCandidate.append("circle").attr("r", 1.5).attr("fill", "#ffffff");
+        }
+
+        // 5. Confirmed mint pin
+        if (confirmedMint && !mintCandidate) {
+          const [cx, cy] = projectionRef.current(confirmedMint.coords);
+          const gPin = gActive.append("g").attr("transform", `translate(${cx}, ${cy})`);
+          gPin.append("circle").attr("r", 6).attr("fill", "#ff1744").style("filter", "drop-shadow(0 0 6px #ff1744)");
+          gPin.append("circle").attr("r", 2).attr("fill", "#ffffff");
+        }
+
+      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint]);
 
       const detectCountry = (coords) => {
         if (!worldGeoRef.current || !coords) return "Coastal / Ocean Waters";
@@ -735,10 +801,6 @@
         alert(`Saved ${entityMeta.name} to Historical Vault!`);
       };
 
-      const visibleHistoricalEntities = useMemo(() => {
-        return (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
-      }, [entities, scrubberYear]);
-
       const handleZoomStep = (direction) => {
         if (!svgRef.current || !zoomBehaviorRef.current) return;
         d3.select(svgRef.current).transition().duration(250).call(
@@ -750,103 +812,11 @@
       return (
         <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col select-none">
 
-          {/* SVG Map Canvas */}
+          {/* Master SVG Canvas */}
           <svg 
             ref={svgRef} 
             viewBox="0 0 800 480" 
             className="w-full h-full object-contain map-canvas-touch">
-            
-            {/* Render Saved Historical Entities Synced to Scrubber */}
-            {visibleHistoricalEntities.map((ent) => (
-              <g key={ent.id} onClick={() => setInspectingEntity(ent)} className="cursor-pointer">
-                {(ent.polygons || []).map((poly, pIdx) => {
-                  const pts = poly.points.map(p => projectionRef.current(p));
-                  const d = d3.line().curve(d3.curveLinearClosed)(pts);
-                  return (
-                    <path
-                      key={pIdx}
-                      d={d}
-                      fill={poly.bgColor || "#00f0ff"}
-                      fillOpacity={0.6}
-                      stroke={poly.bgColor || "#00f0ff"}
-                      strokeWidth={1.5}
-                    />
-                  );
-                })}
-
-                {ent.mint && (
-                  <g transform={`translate(${projectionRef.current(ent.mint.coords)[0]}, ${projectionRef.current(ent.mint.coords)[1]})`}>
-                    <circle r={5} fill="#ff1744" filter="drop-shadow(0 0 6px #ff1744)" />
-                    <circle r={2} fill="#ffffff" />
-                  </g>
-                )}
-              </g>
-            ))}
-
-            {/* Currently Active Closed Polygons */}
-            {closedPolygons.map((poly, idx) => {
-              const pts = poly.points.map(p => projectionRef.current(p));
-              const d = d3.line().curve(d3.curveLinearClosed)(pts);
-              return (
-                <path
-                  key={idx}
-                  d={d}
-                  fill={poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor}
-                  fillOpacity={0.65}
-                  stroke={poly.bgColor || "#ffd600"}
-                  strokeWidth={1.5}
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setSelectedPolygonIndex(idx);
-                    setCustomizerOpen(true);
-                  }}
-                />
-              );
-            })}
-
-            {/* In-Progress Connect-the-Dots Perimeter Line */}
-            {currentVertices.length > 0 && (
-              <g>
-                <path 
-                  d={d3.line()(currentVertices.map(p => projectionRef.current(p)))} 
-                  fill="none" 
-                  stroke="#39ff14" 
-                  strokeWidth={2}
-                  strokeDasharray="4,4"
-                />
-                {currentVertices.map((p, idx) => {
-                  const [cx, cy] = projectionRef.current(p);
-                  return (
-                    <circle 
-                      key={idx} 
-                      cx={cx} 
-                      cy={cy} 
-                      r={3.5} 
-                      fill={idx === 0 ? "#ff007f" : "#39ff14"} 
-                      stroke="#ffffff" 
-                      strokeWidth={1}
-                    />
-                  );
-                })}
-              </g>
-            )}
-
-            {/* Mint Candidate Crosshair */}
-            {mintCandidate && (
-              <g transform={`translate(${projectionRef.current(mintCandidate)[0]}, ${projectionRef.current(mintCandidate)[1]})`}>
-                <circle r={9} fill="none" stroke="#ff1744" strokeWidth={2} className="animate-ping" />
-                <circle r={5} fill="#ff1744" />
-                <circle r={1.5} fill="#ffffff" />
-              </g>
-            )}
-
-            {/* Confirmed Mint Pin */}
-            {confirmedMint && !mintCandidate && (
-              <g transform={`translate(${projectionRef.current(confirmedMint.coords)[0]}, ${projectionRef.current(confirmedMint.coords)[1]})`}>
-                <circle r={6} fill="#ff1744" filter="drop-shadow(0 0 6px #ff1744)" />
-                <circle r={2} fill="#ffffff" />
-              </g>
-            )}
           </svg>
 
           {/* Floating Top Entity Details */}
@@ -875,7 +845,7 @@
             </div>
           </div>
 
-          {/* Zoom Buttons (Allows 250x magnification) */}
+          {/* Zoom Buttons */}
           <div className="absolute right-3 top-16 z-30 flex flex-col gap-1.5">
             <button 
               onClick={() => handleZoomStep("in")} 
@@ -922,7 +892,7 @@
                 onClick={() => { setIsVertexMode(!isVertexMode); setPlacingMint(false); }}
                 className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isVertexMode ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
                 <span>📍</span>
-                <span>{isVertexMode ? "Tap Map to Place Dots" : "Start Boundary"}</span>
+                <span>{isVertexMode ? "Tap to Add Dots" : "Start Boundary"}</span>
               </button>
             </div>
           </div>
@@ -1080,6 +1050,47 @@
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Overlapping Modern Nations Modal */}
+          {inspectingEntity && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-xs font-bold text-white">{inspectingEntity.name}</h3>
+                  <button onClick={() => setInspectingEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                </div>
+
+                <div className="text-xs space-y-1 bg-[#12182b] p-2.5 rounded-xl border border-slate-800">
+                  <div><span className="text-slate-400">Ruler:</span> {inspectingEntity.ruler || "—"}</div>
+                  <div><span className="text-slate-400">Timeline:</span> {inspectingEntity.startYear} – {inspectingEntity.endYear}</div>
+                  {inspectingEntity.mint && (
+                    <div><span className="text-slate-400">Mint:</span> {inspectingEntity.mint.city} ({inspectingEntity.mint.country})</div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-cyan-400 block mb-1.5">Overlapping Modern Countries:</label>
+                  <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto hide-scrollbar">
+                    {inspectingEntity.polygons && inspectingEntity.polygons[0] ? (
+                      worldGeoRef.current.features.filter(feat => {
+                        const center = d3.geoCentroid(feat);
+                        return d3.polygonContains(inspectingEntity.polygons[0].points, center);
+                      }).map((feat, idx) => {
+                        const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === feat.id);
+                        return (
+                          <span key={idx} className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-[10px] text-slate-300">
+                            {item ? item.name : "Territory"}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-xs text-slate-500">None detected</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
