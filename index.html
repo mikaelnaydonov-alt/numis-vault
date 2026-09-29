@@ -51,7 +51,10 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
 
-    // === MASTER OPTION 2 SLOT ===
+    // ==========================================
+    // 1. MASTER VAULT SLOT (PASTE EXPORT HERE)
+    // ==========================================
+    const VAULT_VERSION = 1; // Bump this number (e.g. 2, 3) whenever you commit new coins to force refresh on all phones!
     const DEFAULT_VAULT = { coins: [], historicalEntities: [] };
 
     const PALETTE_64 = [
@@ -174,8 +177,19 @@
 
     function App() {
       const [view, setView] = useState("map"); // "map" | "vault" | "historical"
+
+      // Guaranteed Master Sync Engine
       const [vaultData, setVaultData] = useState(() => {
-        const saved = localStorage.getItem("misha_master_vault_v4");
+        const savedVer = localStorage.getItem("misha_vault_ver");
+        const saved = localStorage.getItem("misha_master_vault_v5");
+
+        // If GitHub code has newer version, always adopt GitHub master data:
+        if (savedVer === null || parseInt(savedVer) < VAULT_VERSION) {
+          localStorage.setItem("misha_vault_ver", VAULT_VERSION.toString());
+          localStorage.setItem("misha_master_vault_v5", JSON.stringify(DEFAULT_VAULT));
+          return DEFAULT_VAULT;
+        }
+
         if (saved) return JSON.parse(saved);
         return DEFAULT_VAULT;
       });
@@ -185,12 +199,10 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
       const [lightboxImg, setLightboxImg] = useState(null);
-
       const [showTerritories, setShowTerritories] = useState(false);
-      const [timelineYear, setTimelineYear] = useState(2026);
 
       useEffect(() => {
-        localStorage.setItem("misha_master_vault_v4", JSON.stringify(vaultData));
+        localStorage.setItem("misha_master_vault_v5", JSON.stringify(vaultData));
       }, [vaultData]);
 
       const sovereignCount = useMemo(() => {
@@ -230,7 +242,7 @@
 
       const handleExport = () => {
         navigator.clipboard.writeText(JSON.stringify(vaultData, null, 2));
-        alert("Full Vault JSON copied! Paste it into DEFAULT_VAULT in index.html on GitHub.");
+        alert("Full Vault JSON copied! Paste it into DEFAULT_VAULT on line 46 of index.html in GitHub.");
       };
 
       const handleImport = (jsonStr) => {
@@ -256,7 +268,7 @@
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
                 MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span>
               </h1>
-              <p className="text-[10px] text-slate-400">Numismatic & Historical Studio</p>
+              <p className="text-[10px] text-slate-400">Personal Numismatic & Historical Archive</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -332,7 +344,7 @@
             </div>
           )}
 
-          {/* Main Display Area */}
+          {/* Main Views */}
           <main className="flex-1 overflow-hidden relative">
             {view === "map" && (
               <InteractiveWorldMap 
@@ -399,7 +411,7 @@
       );
     }
 
-    // --- Modern Map Engine ---
+    // --- Interactive Modern World Map Engine ---
     function InteractiveWorldMap({ coins, onSelectModernCountry }) {
       const svgRef = useRef(null);
 
@@ -514,7 +526,6 @@
       const [pinCityName, setPinCityName] = useState("");
       const [pinCountryOverlap, setPinCountryOverlap] = useState("");
 
-      // Historical Entity Details
       const [entityMeta, setEntityMeta] = useState({
         name: "",
         ruler: "",
@@ -531,7 +542,6 @@
 
         const defs = svg.append("defs");
 
-        // Dynamic Pattern Generator for Custom Colors & Stripes
         closedPolygons.forEach((poly, idx) => {
           if (poly.striped) {
             const pat = defs.append("pattern")
@@ -552,7 +562,6 @@
         const zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
 
-        // Load Ghosted Modern World Layer
         Promise.all([
           d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
           d3.tsv("https://unpkg.com/world-atlas@1.1.4/world/110m.tsv")
@@ -572,7 +581,6 @@
             .attr("opacity", 0.85);
         });
 
-        // Click to place points when in Draw Mode
         svg.on("click", (event) => {
           if (!isDrawing) return;
           const [mx, my] = d3.pointer(event, g.node());
@@ -582,7 +590,6 @@
 
       }, [isDrawing, closedPolygons]);
 
-      // Detect Geolocation for Mint Pin
       const detectCountry = (coords) => {
         if (!worldGeoRef.current || !coords) return "International Waters / Unknown";
         const found = worldGeoRef.current.features.find(feature => d3.geoContains(feature, coords));
@@ -671,7 +678,6 @@
           </div>
 
           <svg ref={svgRef} viewBox="0 0 800 480" className="w-full h-full object-contain">
-            {/* Render Closed Polygons */}
             {closedPolygons.map((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
@@ -692,7 +698,6 @@
               );
             })}
 
-            {/* Currently Drawing Points */}
             {currentPoints.length > 0 && (
               <g>
                 <path 
@@ -709,7 +714,6 @@
               </g>
             )}
 
-            {/* Mint Pin */}
             {pinPosition && (
               <g transform={`translate(${projectionRef.current(pinPosition)[0]}, ${projectionRef.current(pinPosition)[1]})`}>
                 <circle r={5} fill="#ff1744" filter="drop-shadow(0 0 5px #ff1744)" />
@@ -779,7 +783,6 @@
                 <button onClick={() => setCustomizerOpen(false)} className="text-slate-400 hover:text-white font-bold text-sm">✕</button>
               </div>
 
-              {/* Striping Toggle */}
               <div className="flex items-center justify-between bg-[#12192e] p-2.5 rounded-xl border border-slate-800">
                 <div>
                   <div className="text-xs font-semibold text-white">Diagonal Striped Hatching</div>
@@ -796,7 +799,6 @@
                 />
               </div>
 
-              {/* Background Color Grid (64 Colors) */}
               <div>
                 <label className="text-[11px] font-bold text-slate-300 block mb-1">Fill Background Color (64 Options):</label>
                 <div className="grid grid-cols-8 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
@@ -813,7 +815,6 @@
                 </div>
               </div>
 
-              {/* Stripe Color Grid if enabled */}
               {closedPolygons[selectedPolygonIndex]?.striped && (
                 <div>
                   <label className="text-[11px] font-bold text-red-400 block mb-1">Stripe Line Color:</label>
@@ -838,7 +839,7 @@
       );
     }
 
-    // --- Vault Cards & Edit Functionality ---
+    // --- Vault Cards Tab ---
     function CollectionVault({ coins, onDeleteCoin, onEditCoin, onOpenImage, onAddClick }) {
       const [query, setQuery] = useState("");
 
@@ -1090,7 +1091,7 @@
       );
     }
 
-    // --- Option 2 Sync Modal ---
+    // --- Master Sync Modal ---
     function SyncModal({ data, onExport, onImport, onClose }) {
       const [importVal, setImportVal] = useState("");
 
@@ -1111,12 +1112,12 @@
                 Copy Full Vault JSON to Clipboard
               </button>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                Copies all coins, custom drawn historical entities, striped polygons, and mint pins. Paste into line 38 of <code>index.html</code> on GitHub to lock in your live site!
+                Copies all coins, pictures, custom drawn historical entities, striped polygons, and mint pins. Paste into <code>DEFAULT_VAULT</code> on line 46 in GitHub!
               </p>
             </div>
 
             <div className="pt-2 border-t border-slate-800 space-y-2">
-              <label className="text-[11px] text-slate-300 font-semibold block">Import Collection Data:</label>
+              <label className="text-[11px] text-slate-300 font-semibold block">Direct Device Import:</label>
               <textarea 
                 rows="3" 
                 placeholder="Paste JSON string here..." 
