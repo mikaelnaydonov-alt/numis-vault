@@ -444,7 +444,7 @@
         if (coin.isHistorical) {
           const matchedEntity = (vaultData.historicalEntities || []).find(e => e.id === coin.entityId);
           if (matchedEntity) {
-            setScrubberYear(matchedEntity.startYear);
+            setScrubberYear(parseInt(matchedEntity.startYear, 10));
             setView("historical");
             const coords = matchedEntity.mint?.coords || matchedEntity.polygons?.[0]?.points?.[0];
             if (coords) setMapFocusTarget({ coords: coords, zoomLevel: 25 });
@@ -554,7 +554,7 @@
                 max="2026" 
                 step="5" 
                 value={scrubberYear} 
-                onChange={e => setScrubberYear(parseInt(e.target.value))}
+                onChange={e => setScrubberYear(parseInt(e.target.value, 10))}
                 className="flex-1 accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
               />
               <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">Timeline Era</span>
@@ -953,8 +953,16 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        const visibleEntities = (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
-        const isCurrentActiveInScrubber = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
+        // Integer date comparison preventing string comparison bugs
+        const visibleEntities = (entities || []).filter(e => {
+          const start = parseInt(e.startYear, 10);
+          const end = parseInt(e.endYear, 10);
+          return !isNaN(start) && !isNaN(end) && scrubberYear >= start && scrubberYear <= end;
+        });
+
+        const currentStart = parseInt(entityMeta.startYear, 10);
+        const currentEnd = parseInt(entityMeta.endYear, 10);
+        const isCurrentActiveInScrubber = !isNaN(currentStart) && !isNaN(currentEnd) && scrubberYear >= currentStart && scrubberYear <= currentEnd;
 
         const gClipped = d3.select("#layer-clipped-empires");
         if (!gClipped.empty()) {
@@ -1120,8 +1128,8 @@
           id: entityMeta.id || Date.now().toString(),
           name: entityMeta.name,
           ruler: entityMeta.ruler,
-          startYear: parseInt(entityMeta.startYear) || -500,
-          endYear: parseInt(entityMeta.endYear) || 2026,
+          startYear: parseInt(entityMeta.startYear, 10) || -500,
+          endYear: parseInt(entityMeta.endYear, 10) || 2026,
           polygons: closedPolygons.map(p => ({ ...p, bgColor: entityMeta.bgColor, striped: entityMeta.striped })),
           mint: confirmedMint ? {
             city: entityMeta.mintCity,
@@ -1160,7 +1168,11 @@
       };
 
       const activeTimelineEntities = useMemo(() => {
-        return (entities || []).find(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+        return (entities || []).find(e => {
+          const start = parseInt(e.startYear, 10);
+          const end = parseInt(e.endYear, 10);
+          return !isNaN(start) && !isNaN(end) && scrubberYear >= start && scrubberYear <= end;
+        });
       }, [entities, scrubberYear]);
 
       const coinsForInspectedEntity = useMemo(() => {
