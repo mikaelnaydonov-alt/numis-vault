@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NumisWorld - Sovereign Coin Vault</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone for inline JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- D3 & TopoJSON for exact political boundaries -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+
+  <style>
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    .neon-cyan { fill: #00f0ff; filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.6)); }
+    .neon-magenta { fill: #ff007f; filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.6)); }
+    .neon-lime { fill: #39ff14; filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.6)); }
+    .neon-amber { fill: #ffaa00; filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.6)); }
+    .neon-purple { fill: #b026ff; filter: drop-shadow(0 0 6px rgba(176, 38, 255, 0.6)); }
+    
+    .border-red-glow {
+      stroke: #ff1744 !important;
+      stroke-width: 2px !important;
+      filter: drop-shadow(0 0 5px #ff1744);
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // 5 Vibrant Neon Palette
+    const NEON_COLORS = [
+      { id: 'cyan', hex: '#00f0ff', name: 'Electric Cyan' },
+      { id: 'magenta', hex: '#ff007f', name: 'Hot Magenta' },
+      { id: 'lime', hex: '#39ff14', name: 'Bright Lime' },
+      { id: 'amber', hex: '#ffaa00', name: 'Solar Amber' },
+      { id: 'purple', hex: '#b026ff', name: 'Vivid Violet' },
+    ];
+
+    // Monetary Unions
+    const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
+    const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
+
+    // Adjacency border map sample for validation (ensures no adjacent country has same neon)
+    const ADJACENCY_MAP = {
+      DZA: ["TUN", "LBY", "NER", "MLI", "MRT", "MAR"],
+      MAR: ["DZA", "MRT", "ESP"],
+      LBY: ["EGY", "SDN", "TCD", "NER", "DZA", "TUN"],
+      EGY: ["LBY", "SDN", "ISR"],
+      SDN: ["EGY", "LBY", "TCD", "CAF", "SSD", "ETH", "ERI"],
+      SSD: ["SDN", "CAF", "COD", "UGA", "KEN", "ETH"],
+      MLI: ["DZA", "NER", "BFA", "CIV", "GIN", "SEN", "MRT"],
+      NER: ["LBY", "TCD", "NGA", "BEN", "BFA", "MLI", "DZA"],
+      BFA: ["MLI", "NER", "BEN", "TGO", "GHA", "CIV"],
+      CIV: ["LBR", "GIN", "MLI", "BFA", "GHA"],
+      SEN: ["MRT", "MLI", "GIN", "GNB", "GMB"],
+      BEN: ["NER", "NGA", "TGO", "BFA"],
+      TGO: ["GHA", "BFA", "BEN"],
+      GNB: ["SEN", "GIN"],
+      USA: ["CAN", "MEX"],
+      MEX: ["USA", "GTM", "BLZ"],
+      CAN: ["USA"],
+      FRA: ["BEL", "LUX", "DEU", "CHE", "ITA", "ESP", "AND", "MCO"],
+      DEU: ["DNK", "POL", "CZE", "AUT", "CHE", "FRA", "LUX", "BEL", "NLD"]
+    };
+
+    // ISO numeric to Alpha-3 and Name mapping
+    const COUNTRY_DATA = {
+      "012": { a3: "DZA", name: "Algeria", flag: "🇩🇿" },
+      "729": { a3: "SDN", name: "Sudan", flag: "🇸🇩" },
+      "728": { a3: "SSD", name: "South Sudan", flag: "🇸🇸" },
+      "818": { a3: "EGY", name: "Egypt", flag: "🇪🇬" },
+      "504": { a3: "MAR", name: "Morocco", flag: "🇲🇦" },
+      "434": { a3: "LBY", name: "Libya", flag: "🇱🇾" },
+      "788": { a3: "TUN", name: "Tunisia", flag: "🇹🇳" },
+      "466": { a3: "MLI", name: "Mali", flag: "🇲🇱" },
+      "562": { a3: "NER", name: "Niger", flag: "🇳🇪" },
+      "854": { a3: "BFA", name: "Burkina Faso", flag: "🇧🇫" },
+      "384": { a3: "CIV", name: "Côte d'Ivoire", flag: "🇨🇮" },
+      "686": { a3: "SEN", name: "Senegal", flag: "🇸🇳" },
+      "204": { a3: "BEN", name: "Benin", flag: "🇧🇯" },
+      "768": { a3: "TGO", name: "Togo", flag: "🇹🇬" },
+      "624": { a3: "GNB", name: "Guinea-Bissau", flag: "🇬🇼" },
+      "840": { a3: "USA", name: "United States", flag: "🇺🇸" },
+      "124": { a3: "CAN", name: "Canada", flag: "🇨🇦" },
+      "484": { a3: "MEX", name: "Mexico", flag: "🇲🇽" },
+      "250": { a3: "FRA", name: "France", flag: "🇫🇷" },
+      "276": { a3: "DEU", name: "Germany", flag: "🇩🇪" },
+      "826": { a3: "GBR", name: "United Kingdom", flag: "🇬🇧" },
+      "380": { a3: "ITA", name: "Italy", flag: "🇮🇹" },
+      "724": { a3: "ESP", name: "Spain", flag: "🇪🇸" },
+    };
+
+    function App() {
+      const [view, setView] = useState("map"); // "map" or "vault"
+      const [coins, setCoins] = useState(() => {
+        const saved = localStorage.getItem("numis_coins_data");
+        return saved ? JSON.parse(saved) : [
+          {
+            id: "1",
+            countryCode: "DZA",
+            countryName: "Algeria",
+            flag: "🇩🇿",
+            denomination: "1 Dinar",
+            year: "2018",
+            ruler: "Abdelaziz Bouteflika",
+            mint: "Algiers",
+            metal: "Stainless Steel",
+            grade: "UNC",
+            inPossession: false, // will have red border!
+            neonColor: "cyan",
+            notes: "Sent from family archive abroad",
+            obverseImage: "",
+            reverseImage: "",
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: "2",
+            countryCode: "SSD",
+            countryName: "South Sudan",
+            flag: "🇸🇸",
+            denomination: "20 Pounds",
+            year: "2015",
+            ruler: "Salva Kiir Mayardit",
+            mint: "South African Mint",
+            metal: "Bi-metallic",
+            grade: "BU",
+            inPossession: true,
+            neonColor: "lime",
+            notes: "Post-2014 benchmark coin",
+            obverseImage: "",
+            reverseImage: "",
+            createdAt: new Date().toISOString()
+          }
+        ];
+      });
+
+      const [selectedCountry, setSelectedCountry] = useState(null);
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [filterPossession, setFilterPossession] = useState("all");
+      const [sortBy, setSortBy] = useState("country");
+
+      // Save to localStorage
+      useEffect(() => {
+        localStorage.setItem("numis_coins_data", JSON.stringify(coins));
+      }, [coins]);
+
+      // Calculate country status (Neon fill + Red border status)
+      const countryCatalogStatus = useMemo(() => {
+        const status = {};
+        coins.forEach(coin => {
+          let targets = [coin.countryCode];
+          if (WEST_AFRICAN_CFA.includes(coin.countryCode) && coin.isUnion) {
+            targets = WEST_AFRICAN_CFA;
+          } else if (EASTERN_CARIBBEAN.includes(coin.countryCode) && coin.isUnion) {
+            targets = EASTERN_CARIBBEAN;
+          }
+          targets.forEach(code => {
+            if (!status[code]) {
+              status[code] = {
+                collected: true,
+                neonColor: coin.neonColor,
+                hasOverseasOnly: !coin.inPossession,
+                count: 1
+              };
+            } else {
+              status[code].count++;
+              if (coin.inPossession) status[code].hasOverseasOnly = false;
+            }
+          });
+        });
+        return status;
+      }, [coins]);
+
+      // Handle Adding Coin
+      const handleSaveCoin = (newCoin) => {
+        // Enforce Adjacency Color Rule
+        const neighbors = ADJACENCY_MAP[newCoin.countryCode] || [];
+        const usedColors = neighbors.map(code => countryCatalogStatus[code]?.neonColor).filter(Boolean);
+        
+        let validColor = newCoin.neonColor;
+        if (usedColors.includes(validColor)) {
+          const available = NEON_COLORS.find(c => !usedColors.includes(c.id));
+          if (available) validColor = available.id;
+        }
+
+        const coinWithColor = { ...newCoin, neonColor: validColor, id: Date.now().toString(), createdAt: new Date().toISOString() };
+        setCoins(prev => [coinWithColor, ...prev]);
+        setIsModalOpen(false);
+      };
+
+      // Filtered & Sorted Vault Coins
+      const vaultCoins = useMemo(() => {
+        return coins
+          .filter(c => {
+            const matchesSearch = c.countryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              c.denomination.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (c.ruler && c.ruler.toLowerCase().includes(searchQuery.toLowerCase())) ||
+              (c.mint && c.mint.toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesPossession = 
+              filterPossession === "all" ? true :
+              filterPossession === "in_hand" ? c.inPossession : !c.inPossession;
+            return matchesSearch && matchesPossession;
+          })
+          .sort((a, b) => {
+            if (sortBy === "year") return (parseInt(b.year) || 0) - (parseInt(a.year) || 0);
+            if (sortBy === "denomination") return a.denomination.localeCompare(b.denomination);
+            return a.countryName.localeCompare(b.countryName);
+          });
+      }, [coins, searchQuery, filterPossession, sortBy]);
+
+      return (
+        <div className="flex flex-col h-screen max-w-md mx-auto sm:max-w-xl md:max-w-4xl bg-[#090b10] border-x border-slate-800">
+          
+          {/* Header */}
+          <header className="p-4 bg-[#0d111a] border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-black tracking-wider text-white flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#00f0ff] inline-block shadow-[0_0_10px_#00f0ff]"></span>
+                NUMIS<span className="text-[#00f0ff]">WORLD</span>
+              </h1>
+              <p className="text-xs text-slate-400">Post-2014 Sovereign World Vault</p>
+            </div>
+            
+            {/* View Switcher Tabs */}
+            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <button 
+                onClick={() => setView("map")} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-[0_0_12px_rgba(0,240,255,0.4)]" : "text-slate-400"}`}>
+                Map
+              </button>
+              <button 
+                onClick={() => setView("vault")} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-[0_0_12px_rgba(0,240,255,0.4)]" : "text-slate-400"}`}>
+                Collection ({coins.length})
+              </button>
+            </div>
+          </header>
+
+          {/* Main Body */}
+          <main className="flex-1 overflow-hidden relative">
+            {view === "map" ? (
+              <InteractiveWorldMap 
+                statusMap={countryCatalogStatus} 
+                onSelectCountry={(country) => {
+                  setSelectedCountry(country);
+                  setIsModalOpen(true);
+                }} 
+              />
+            ) : (
+              <CollectionVault 
+                coins={vaultCoins} 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filterPossession={filterPossession}
+                setFilterPossession={setFilterPossession}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                onAddClick={() => {
+                  setSelectedCountry(null);
+                  setIsModalOpen(true);
+                }}
+              />
+            )}
+          </main>
+
+          {/* Add Coin Modal */}
+          {isModalOpen && (
+            <AddCoinModal 
+              initialCountry={selectedCountry}
+              onClose={() => setIsModalOpen(false)}
+              onSave={handleSaveCoin}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // --- Interactive Vector Political Map Component ---
+    function InteractiveWorldMap({ statusMap, onSelectCountry }) {
+      const svgRef = useRef(null);
+
+      useEffect(() => {
+        const width = 800;
+        const height = 480;
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+
+        const g = svg.append("g");
+        const projection = d3.geoNaturalEarth1().scale(150).translate([width / 2, height / 1.9]);
+        const path = d3.geoPath().projection(projection);
+
+        // Zoom Behavior
+        const zoom = d3.zoom()
+          .scaleExtent([1, 8])
+          .on("zoom", (event) => g.attr("transform", event.transform));
+        svg.call(zoom);
+
+        // Fetch high-res political world atlas with post-2014 sovereign boundaries
+        fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+          .then(res => res.json())
+          .then(data => {
+            const countries = topojson.feature(data, data.objects.countries).features;
+
+            g.selectAll("path")
+              .data(countries)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("class", d => {
+                const info = COUNTRY_DATA[d.id];
+                const code = info ? info.a3 : null;
+                const st = code ? statusMap[code] : null;
+
+                if (!st) return "fill-[#141824] stroke-[#22293a] stroke-[0.5] hover:fill-[#20273a] transition-all cursor-pointer";
+                
+                let classes = `neon-${st.neonColor} cursor-pointer transition-all `;
+                classes += st.hasOverseasOnly ? "border-red-glow" : "stroke-white/30 stroke-[0.5]";
+                return classes;
+              })
+              .on("click", (event, d) => {
+                const info = COUNTRY_DATA[d.id] || { a3: "UNK", name: "Unknown Territory", flag: "🌐" };
+                onSelectCountry(info);
+              });
+          });
+      }, [statusMap]);
+
+      return (
+        <div className="relative w-full h-full bg-[#07090e] flex items-center justify-center overflow-hidden">
+          <svg ref={svgRef} viewBox="0 0 800 480" className="w-full h-full object-contain"></svg>
+          
+          {/* Map Floating Legend */}
+          <div className="absolute bottom-3 left-3 bg-[#0d121df0] p-2.5 rounded-xl border border-slate-800 text-[11px] backdrop-blur-md">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff1744] shadow-[0_0_6px_#ff1744]"></span>
+              <span className="text-slate-300 font-semibold">Red Border = Away / Abroad</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-[#00f0ff]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#ff007f]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#39ff14]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#ffaa00]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#b026ff]"></span>
+              <span className="ml-1">5-Color Adjacency</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Dedicated Collection Vault Component ---
+    function CollectionVault({ coins, searchQuery, setSearchQuery, filterPossession, setFilterPossession, sortBy, setSortBy, onAddClick }) {
+      return (
+        <div className="flex flex-col h-full p-4 overflow-y-auto hide-scrollbar space-y-4">
+          
+          {/* Controls Bar */}
+          <div className="space-y-2">
+            <input 
+              type="text" 
+              placeholder="Search country, ruler, mint, denomination..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#121624] border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#00f0ff]"
+            />
+
+            <div className="flex gap-2 text-xs">
+              <select 
+                value={filterPossession} 
+                onChange={(e) => setFilterPossession(e.target.value)}
+                className="bg-[#121624] border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300">
+                <option value="all">All Locations</option>
+                <option value="in_hand">In Possession</option>
+                <option value="overseas">Abroad (Red Border)</option>
+              </select>
+
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-[#121624] border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300">
+                <option value="country">Sort: Country (A-Z)</option>
+                <option value="year">Sort: Year (Newest)</option>
+                <option value="denomination">Sort: Denomination</option>
+              </select>
+
+              <button 
+                onClick={onAddClick}
+                className="ml-auto bg-[#00f0ff] hover:bg-[#00d0df] text-black font-bold px-3 py-1.5 rounded-lg text-xs shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+                + Add Coin
+              </button>
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
+            {coins.map((coin) => (
+              <div 
+                key={coin.id} 
+                className={`bg-[#0f1422] border rounded-2xl p-3.5 space-y-2 relative transition-all ${!coin.inPossession ? "border-[#ff1744] shadow-[0_0_10px_rgba(255,23,68,0.2)]" : "border-slate-800"}`}>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{coin.flag || "🪙"}</span>
+                    <div>
+                      <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
+                      <p className="text-[11px] text-[#00f0ff] font-semibold">{coin.denomination}</p>
+                    </div>
+                  </div>
+                  {!coin.inPossession && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-400 border border-red-800">
+                      Abroad
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 bg-[#090c14] p-2 rounded-xl text-[11px] text-slate-300">
+                  <div><span className="text-slate-500">Year:</span> {coin.year || "N/A"}</div>
+                  <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
+                  <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "N/A"}</div>
+                  <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "N/A"}</div>
+                </div>
+
+                {/* Photos Thumbnails */}
+                {(coin.obverseImage || coin.reverseImage) && (
+                  <div className="flex gap-2 pt-1">
+                    {coin.obverseImage && <img src={coin.obverseImage} alt="Obverse" className="w-12 h-12 rounded-lg object-cover border border-slate-700" />}
+                    {coin.reverseImage && <img src={coin.reverseImage} alt="Reverse" className="w-12 h-12 rounded-lg object-cover border border-slate-700" />}
+                  </div>
+                )}
+
+                {coin.notes && <p className="text-[11px] text-slate-400 italic">"{coin.notes}"</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // --- Coin Registration Modal with Photo Support ---
+    function AddCoinModal({ initialCountry, onClose, onSave }) {
+      const [formData, setFormData] = useState({
+        countryCode: initialCountry?.a3 || "DZA",
+        countryName: initialCountry?.name || "Algeria",
+        flag: initialCountry?.flag || "🇩🇿",
+        denomination: "",
+        year: "2018",
+        ruler: "",
+        mint: "",
+        metal: "",
+        grade: "UNC",
+        inPossession: true,
+        isUnion: false,
+        neonColor: "cyan",
+        notes: "",
+        obverseImage: "",
+        reverseImage: ""
+      });
+
+      const handleImageUpload = (e, field) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setFormData(prev => ({ ...prev, [field]: reader.result }));
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#0e1320] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto hide-scrollbar space-y-4">
+            
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>{formData.flag}</span> Add Coin: {formData.countryName}
+              </h2>
+              <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-3 text-xs">
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Denomination *</label>
+                  <input required placeholder="e.g. 1 Dinar" value={formData.denomination} onChange={e => setFormData({...formData, denomination: e.target.value})} className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white" />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Year (Post-2014 preferred)</label>
+                  <input placeholder="2018" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Ruler / Head of State</label>
+                  <input placeholder="e.g. Abdelaziz Bouteflika" value={formData.ruler} onChange={e => setFormData({...formData, ruler: e.target.value})} className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white" />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Mint Location / Mintmark</label>
+                  <input placeholder="e.g. Algiers" value={formData.mint} onChange={e => setFormData({...formData, mint: e.target.value})} className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white" />
+                </div>
+              </div>
+
+              {/* Physical Location Switch (Red Border) */}
+              <div className="p-3 bg-[#131929] rounded-xl border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-white">In Physical Possession</div>
+                  <div className="text-[11px] text-slate-400">If unchecked, marked with red border on map</div>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={formData.inPossession} 
+                  onChange={e => setFormData({...formData, inPossession: e.target.checked})} 
+                  className="w-5 h-5 accent-[#00f0ff]" 
+                />
+              </div>
+
+              {/* Monetary Union Toggle */}
+              {(WEST_AFRICAN_CFA.includes(formData.countryCode) || EASTERN_CARIBBEAN.includes(formData.countryCode)) && (
+                <div className="p-3 bg-[#131929] rounded-xl border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold text-amber-400">Currency Union Detected</div>
+                    <div className="text-[11px] text-slate-400">Color all member states together</div>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isUnion} 
+                    onChange={e => setFormData({...formData, isUnion: e.target.checked})} 
+                    className="w-5 h-5 accent-amber-500" 
+                  />
+                </div>
+              )}
+
+              {/* Photo Uploads */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-400 block mb-1">Front (Obverse) Photo</label>
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'obverseImage')} className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-slate-800 file:text-white" />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Back (Reverse) Photo</label>
+                  <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'reverseImage')} className="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-slate-800 file:text-white" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1">Acquisition Notes</label>
+                <textarea rows="2" placeholder="Where acquired, price, provenance..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white" />
+              </div>
+
+              <button type="submit" className="w-full py-3 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                Save Coin to Vault
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
