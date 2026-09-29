@@ -51,11 +51,9 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
 
-    // ==========================================
-    // 1. MASTER VAULT SLOT (PASTE EXPORT HERE)
-    // ==========================================
-    const VAULT_VERSION = 1; // Bump this number (e.g. 2, 3) whenever you commit new coins to force refresh on all phones!
-    const DEFAULT_VAULT = { coins: [], historicalEntities: [] };
+    // === LIVE CLOUD SYNC CONFIG ===
+    const BIN_ID = "6abc1b08ac6210605a031f30";
+    const API_KEY = "$2a$10$2oCVpwPkbYGZxv1JB6qPNuTnfF/9p4UT0f8.rSNqGAy5bq4WmEjey";
 
     const PALETTE_64 = [
       "#00f0ff","#ff007f","#39ff14","#ffaa00","#b026ff","#ff1744","#00e5ff","#76ff03",
@@ -176,34 +174,50 @@
     ];
 
     function App() {
-      const [view, setView] = useState("map"); // "map" | "vault" | "historical"
-
-      // Guaranteed Master Sync Engine
-      const [vaultData, setVaultData] = useState(() => {
-        const savedVer = localStorage.getItem("misha_vault_ver");
-        const saved = localStorage.getItem("misha_master_vault_v5");
-
-        // If GitHub code has newer version, always adopt GitHub master data:
-        if (savedVer === null || parseInt(savedVer) < VAULT_VERSION) {
-          localStorage.setItem("misha_vault_ver", VAULT_VERSION.toString());
-          localStorage.setItem("misha_master_vault_v5", JSON.stringify(DEFAULT_VAULT));
-          return DEFAULT_VAULT;
-        }
-
-        if (saved) return JSON.parse(saved);
-        return DEFAULT_VAULT;
-      });
+      const [view, setView] = useState("map");
+      const [isSyncing, setIsSyncing] = useState(false);
+      const [vaultData, setVaultData] = useState({ coins: [], historicalEntities: [] });
 
       const [selectedCountry, setSelectedCountry] = useState(null);
       const [editingCoin, setEditingCoin] = useState(null);
       const [isModalOpen, setIsModalOpen] = useState(false);
-      const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
       const [lightboxImg, setLightboxImg] = useState(null);
       const [showTerritories, setShowTerritories] = useState(false);
 
+      // Fetch Latest Data from JSONBin on Launch
       useEffect(() => {
-        localStorage.setItem("misha_master_vault_v5", JSON.stringify(vaultData));
-      }, [vaultData]);
+        setIsSyncing(true);
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { "X-Master-Key": API_KEY }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.record) {
+              setVaultData({
+                coins: data.record.coins || [],
+                historicalEntities: data.record.historicalEntities || []
+              });
+            }
+          })
+          .catch(err => console.error("Cloud fetch error:", err))
+          .finally(() => setIsSyncing(false));
+      }, []);
+
+      // Auto-Sync to JSONBin whenever data updates
+      const pushToCloud = (updated) => {
+        setVaultData(updated);
+        setIsSyncing(true);
+        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+          },
+          body: JSON.stringify(updated)
+        })
+          .catch(err => console.error("Cloud save error:", err))
+          .finally(() => setIsSyncing(false));
+      };
 
       const sovereignCount = useMemo(() => {
         const set = new Set();
@@ -216,46 +230,28 @@
       const sovereignPercent = ((sovereignCount / 195) * 100).toFixed(2);
 
       const handleSaveCoin = (coin) => {
-        setVaultData(prev => {
-          const list = prev.coins || [];
-          if (editingCoin) {
-            return { ...prev, coins: list.map(c => c.id === editingCoin.id ? { ...coin, id: c.id } : c) };
-          }
-          return { ...prev, coins: [{ ...coin, id: Date.now().toString(), createdAt: new Date().toISOString() }, ...list] };
-        });
+        const list = vaultData.coins || [];
+        let updatedList;
+        if (editingCoin) {
+          updatedList = list.map(c => c.id === editingCoin.id ? { ...coin, id: c.id } : c);
+        } else {
+          updatedList = [{ ...coin, id: Date.now().toString(), createdAt: new Date().toISOString() }, ...list];
+        }
+        pushToCloud({ ...vaultData, coins: updatedList });
         setIsModalOpen(false);
         setEditingCoin(null);
       };
 
       const handleDeleteCoin = (id) => {
-        if (window.confirm("Delete this coin?")) {
-          setVaultData(prev => ({ ...prev, coins: (prev.coins || []).filter(c => c.id !== id) }));
+        if (window.confirm("Delete this coin from vault?")) {
+          const updatedList = (vaultData.coins || []).filter(c => c.id !== id);
+          pushToCloud({ ...vaultData, coins: updatedList });
         }
       };
 
       const handleSaveHistoricalEntity = (entity) => {
-        setVaultData(prev => ({
-          ...prev,
-          historicalEntities: [entity, ...(prev.historicalEntities || []).filter(e => e.id !== entity.id)]
-        }));
-      };
-
-      const handleExport = () => {
-        navigator.clipboard.writeText(JSON.stringify(vaultData, null, 2));
-        alert("Full Vault JSON copied! Paste it into DEFAULT_VAULT on line 46 of index.html in GitHub.");
-      };
-
-      const handleImport = (jsonStr) => {
-        try {
-          const parsed = JSON.parse(jsonStr);
-          if (parsed && (parsed.coins || parsed.historicalEntities)) {
-            setVaultData(parsed);
-            setIsSyncModalOpen(false);
-            alert("Vault updated successfully!");
-          }
-        } catch (e) {
-          alert("Invalid JSON format.");
-        }
+        const updatedEntities = [entity, ...(vaultData.historicalEntities || []).filter(e => e.id !== entity.id)];
+        pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
       return (
@@ -268,33 +264,28 @@
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
                 MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span>
               </h1>
-              <p className="text-[10px] text-slate-400">Personal Numismatic & Historical Archive</p>
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <span>Cloud Synced</span>
+                {isSyncing && <span className="text-cyan-400 animate-pulse font-bold">• Saving...</span>}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
               <button 
-                onClick={() => setIsSyncModalOpen(true)}
-                className="px-2 py-1 bg-[#121728] border border-slate-700 text-[#00f0ff] rounded-lg text-xs font-semibold">
-                ⇄ Sync
+                onClick={() => setView("map")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+                Map
               </button>
-
-              <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                <button 
-                  onClick={() => setView("map")} 
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                  Map
-                </button>
-                <button 
-                  onClick={() => setView("vault")} 
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                  Vault ({(vaultData.coins || []).length})
-                </button>
-                <button 
-                  onClick={() => setView("historical")} 
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "historical" ? "bg-amber-400 text-black shadow-md" : "text-amber-400/70"}`}>
-                  Historical
-                </button>
-              </div>
+              <button 
+                onClick={() => setView("vault")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+                Vault ({(vaultData.coins || []).length})
+              </button>
+              <button 
+                onClick={() => setView("historical")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "historical" ? "bg-amber-400 text-black shadow-md" : "text-amber-400/70"}`}>
+                Historical
+              </button>
             </div>
           </header>
 
@@ -344,7 +335,7 @@
             </div>
           )}
 
-          {/* Main Views */}
+          {/* Main Area */}
           <main className="flex-1 overflow-hidden relative">
             {view === "map" && (
               <InteractiveWorldMap 
@@ -389,15 +380,6 @@
               editingCoin={editingCoin}
               onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
               onSave={handleSaveCoin}
-            />
-          )}
-
-          {isSyncModalOpen && (
-            <SyncModal 
-              data={vaultData}
-              onExport={handleExport}
-              onImport={handleImport}
-              onClose={() => setIsSyncModalOpen(false)}
             />
           )}
 
@@ -520,8 +502,7 @@
       const [selectedPolygonIndex, setSelectedPolygonIndex] = useState(null);
       const [customizerOpen, setCustomizerOpen] = useState(false);
 
-      // Draggable Mint Pin State
-      const [pinPosition, setPinPosition] = useState(null); // [lng, lat]
+      const [pinPosition, setPinPosition] = useState(null);
       const [pinConfirmed, setPinConfirmed] = useState(false);
       const [pinCityName, setPinCityName] = useState("");
       const [pinCountryOverlap, setPinCountryOverlap] = useState("");
@@ -645,7 +626,6 @@
       return (
         <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col">
           
-          {/* Top Bar Studio Control */}
           <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
             <input 
               type="text" 
@@ -1086,51 +1066,6 @@
                 Save Coin to Vault
               </button>
             </form>
-          </div>
-        </div>
-      );
-    }
-
-    // --- Master Sync Modal ---
-    function SyncModal({ data, onExport, onImport, onClose }) {
-      const [importVal, setImportVal] = useState("");
-
-      return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0e1424] border border-slate-700 rounded-2xl w-full max-w-md p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-              <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>⇄</span> Master Cloud Sync (Option 2)
-              </h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-white text-sm">✕</button>
-            </div>
-
-            <div className="space-y-1.5">
-              <button 
-                onClick={onExport} 
-                className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs">
-                Copy Full Vault JSON to Clipboard
-              </button>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
-                Copies all coins, pictures, custom drawn historical entities, striped polygons, and mint pins. Paste into <code>DEFAULT_VAULT</code> on line 46 in GitHub!
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 space-y-2">
-              <label className="text-[11px] text-slate-300 font-semibold block">Direct Device Import:</label>
-              <textarea 
-                rows="3" 
-                placeholder="Paste JSON string here..." 
-                value={importVal} 
-                onChange={e => setImportVal(e.target.value)} 
-                className="w-full bg-[#141b2e] border border-slate-700 rounded-xl p-2 text-[10px] text-white focus:outline-none focus:border-[#00f0ff]" 
-              />
-              <button 
-                onClick={() => onImport(importVal)} 
-                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs border border-slate-700">
-                Load Imported Vault
-              </button>
-            </div>
           </div>
         </div>
       );
