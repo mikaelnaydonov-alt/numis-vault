@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Misha’s Coin Vault</title>
-
-  <!-- External CDNs -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -20,28 +19,17 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: manipulation;
     }
-    .neon-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.75)); }
-    .neon-magenta { fill: #ff007f !important; filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.75)); }
-    .neon-lime { fill: #39ff14 !important; filter: drop-shadow(0 0 6px rgba(57, 255, 20, 0.75)); }
-    .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.75)); }
-    .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 6px rgba(176, 38, 255, 0.75)); }
-
+    .neon-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.6)); }
+    .neon-magenta { fill: #ff007f !important; filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.6)); }
+    .neon-lime { fill: #39ff14 !important; filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.6)); }
+    .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.6)); }
+    .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.6)); }
+    
     .border-red-glow {
       stroke: #ff1744 !important;
-      stroke-width: 1.5px !important;
-      filter: drop-shadow(0 0 4px #ff1744);
+      stroke-width: 0.9px !important;
+      filter: drop-shadow(0 0 2px #ff1744);
     }
-
-    /* Coin Geometric Masks */
-    .coin-mask-round { border-radius: 9999px; }
-    .coin-mask-scalloped {
-      clip-path: polygon(50% 0%, 63% 4%, 75% 0%, 82% 10%, 93% 10%, 95% 22%, 100% 30%, 98% 42%, 100% 50%, 98% 58%, 100% 70%, 95% 78%, 93% 90%, 82% 90%, 75% 100%, 63% 96%, 50% 100%, 37% 96%, 25% 100%, 18% 90%, 7% 90%, 5% 78%, 0% 70%, 2% 58%, 0% 50%, 2% 42%, 0% 30%, 5% 22%, 7% 10%, 18% 10%, 25% 0%, 37% 4%);
-    }
-    .coin-mask-heptagon { clip-path: polygon(50% 0%, 90% 20%, 100% 65%, 75% 100%, 25% 100%, 0% 65%, 10% 20%); }
-    .coin-mask-octagon { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
-    .coin-mask-decagon { clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 95% 70%, 70% 95%, 30% 95%, 5% 70%, 0% 35%, 20% 10%, 50% 0%); }
-    .coin-mask-dodecagon { clip-path: polygon(50% 0%, 75% 7%, 93% 25%, 100% 50%, 93% 75%, 75% 93%, 50% 100%, 25% 93%, 7% 75%, 0% 50%, 7% 25%, 25% 7%); }
-    .coin-mask-square { border-radius: 14px; }
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -53,14 +41,23 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
 
-    // === CLOUD SYNC SETTINGS ===
     const BIN_ID = "6abc1b08ac6210605a031f30";
     const API_KEY = "$2a$10$2oCVpwPkbYGZxv1JB6qPNuTnfF/9p4UT0f8.rSNqGAy5bq4WmEjey";
+
+    const PALETTE_64 = [
+      "#00f0ff","#ff007f","#39ff14","#ffaa00","#b026ff","#ff1744","#00e5ff","#76ff03",
+      "#ffd600","#ff3d00","#d500f9","#651fff","#2979ff","#00b0ff","#00e676","#1de9b6",
+      "#ff9100","#ff5252","#ff4081","#e040fb","#7c4dff","#536dfe","#448aff","#40c4ff",
+      "#18ffff","#64ffda","#69f0ae","#b2ff59","#eeff41","#ffff00","#ffd740","#ffab40",
+      "#ff6e40","#e64a19","#5d4037","#78909c","#c2185b","#7b1fa2","#512da8","#303f9f",
+      "#1976d2","#0288d1","#0097a7","#00796b","#388e3c","#689f38","#afb42b","#fbc02d",
+      "#ffa000","#f57c00","#e65100","#bf360c","#4e342e","#37474f","#d32f2f","#c51162",
+      "#aa00ff","#6200ea","#304ffe","#2962ff","#0091ea","#00b8d4","#00bfa5","#00c853"
+    ];
 
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
 
-    // 14 Non-Sovereign Territories & Dependencies (Macau completely removed)
     const TERRITORIES_LIST = [
       { code: "ABW", name: "Aruba", mother: "NLD", coords: [-69.968, 12.521] },
       { code: "CUW", name: "Curaçao", mother: "NLD", coords: [-68.990, 12.169] },
@@ -78,7 +75,6 @@
       { code: "HKG", name: "Hong Kong", mother: "CHN", coords: [114.169, 22.319] }
     ];
 
-    // Micro-states rendered as interactive clickable pins on the map
     const MICRO_STATES = [
       { a3: "TUV", name: "Tuvalu", coords: [179.196, -8.517] },
       { a3: "NRU", name: "Nauru", coords: [166.931, -0.522] },
@@ -98,7 +94,6 @@
       { a3: "SYC", name: "Seychelles", coords: [55.491, -4.679] }
     ];
 
-    // Complete ISO-3166-1 sovereign nation registry (195 sovereign states)
     const SOVEREIGN_LIST = [
       { a3: "AFG", name: "Afghanistan" }, { a3: "ALB", name: "Albania" }, { a3: "DZA", name: "Algeria" },
       { a3: "AND", name: "Andorra" }, { a3: "AGO", name: "Angola" }, { a3: "ATG", name: "Antigua and Barbuda" },
@@ -167,177 +162,101 @@
       { a3: "YEM", name: "Yemen" }, { a3: "ZMB", name: "Zambia" }, { a3: "ZWE", name: "Zimbabwe" }
     ];
 
-    // Helper: Downscale image to lightweight 300x300 JPEG (~15-25KB)
-    function downscaleBase64(dataUrl, callback) {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxDim = 300;
-        let width = img.width;
-        let height = img.height;
-        if (width > height && width > maxDim) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else if (height > maxDim) {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL("image/jpeg", 0.7));
-      };
-      img.src = dataUrl;
-    }
-
     function App() {
-      const [view, setView] = useState("map"); // "map" | "vault"
-      const [coins, setCoins] = useState(() => {
-        const cached = localStorage.getItem("misha_master_vault_coins_v7");
-        return cached ? JSON.parse(cached) : [];
-      });
-
-      const [syncStatus, setSyncStatus] = useState("idle"); // "idle" | "syncing" | "success" | "error"
-      const [syncMessage, setSyncMessage] = useState("");
+      const [view, setView] = useState("map");
+      const [isSyncing, setIsSyncing] = useState(false);
+      const [cloudStatus, setCloudStatus] = useState("idle");
+      const [vaultData, setVaultData] = useState({ coins: [], historicalEntities: [] });
 
       const [selectedCountry, setSelectedCountry] = useState(null);
       const [editingCoin, setEditingCoin] = useState(null);
       const [isModalOpen, setIsModalOpen] = useState(false);
-      const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
-      const [lightboxImg, setLightboxImg] = useState(null);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      // In-App Camera Viewfinder State
-      const [cameraTargetField, setCameraTargetField] = useState(null);
-      const [activeCameraShape, setActiveCameraShape] = useState("round");
+      // Scrubber for Historical Timeline
+      const [scrubberYear, setScrubberYear] = useState(1800);
 
-      // Load data from JSONBin on launch
       useEffect(() => {
-        setSyncStatus("syncing");
-        setSyncMessage("Loading from cloud...");
+        setIsSyncing(true);
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
           headers: { "X-Master-Key": API_KEY }
         })
-          .then(res => {
-            if (!res.ok) throw new Error("Status " + res.status);
-            return res.json();
-          })
+          .then(res => res.json())
           .then(data => {
             if (data && data.record) {
-              const loadedCoins = Array.isArray(data.record) ? data.record : (data.record.coins || []);
-              setCoins(loadedCoins);
-              localStorage.setItem("misha_master_vault_coins_v7", JSON.stringify(loadedCoins));
-              setSyncStatus("success");
-              setSyncMessage("Cloud Synced");
-              setTimeout(() => setSyncStatus("idle"), 3000);
+              setVaultData({
+                coins: data.record.coins || [],
+                historicalEntities: data.record.historicalEntities || []
+              });
             }
           })
-          .catch(err => {
-            console.warn("JSONBin load failed, using local copy:", err);
-            setSyncStatus("error");
-            setSyncMessage("Offline / Local mode");
-            setTimeout(() => setSyncStatus("idle"), 4000);
-          });
+          .catch(err => console.error("Cloud fetch error:", err))
+          .finally(() => setIsSyncing(false));
       }, []);
 
-      // Auto-save to both JSONBin and localStorage
-      const pushToCloud = (updatedList) => {
-        setCoins(updatedList);
-        localStorage.setItem("misha_master_vault_coins_v7", JSON.stringify(updatedList));
+      const pushToCloud = async (updated) => {
+        setVaultData(updated);
+        setIsSyncing(true);
+        setCloudStatus("saving");
 
-        setSyncStatus("syncing");
-        setSyncMessage("Saving to cloud...");
-
-        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-          },
-          body: JSON.stringify({ coins: updatedList })
-        })
-          .then(res => {
-            if (!res.ok) throw new Error("Save error " + res.status);
-            return res.json();
-          })
-          .then(() => {
-            setSyncStatus("success");
-            setSyncMessage("✓ Saved to cloud");
-            setTimeout(() => setSyncStatus("idle"), 3000);
-          })
-          .catch(err => {
-            console.error("Cloud push failed:", err);
-            setSyncStatus("error");
-            setSyncMessage("Cloud save failed (saved locally)");
-            setTimeout(() => setSyncStatus("idle"), 5000);
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": API_KEY,
+              "X-Bin-Versioning": "false"
+            },
+            body: JSON.stringify(updated)
           });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          setCloudStatus("saved");
+          setTimeout(() => setCloudStatus("idle"), 3000);
+        } catch (err) {
+          console.error("Cloud sync error:", err);
+          setCloudStatus("error");
+        } finally {
+          setIsSyncing(false);
+        }
       };
 
       const sovereignCount = useMemo(() => {
         const set = new Set();
-        coins.forEach(c => {
+        (vaultData.coins || []).forEach(c => {
           if (!c.isTerritory && SOVEREIGN_LIST.some(s => s.a3 === c.countryCode)) set.add(c.countryCode);
         });
         return set.size;
-      }, [coins]);
+      }, [vaultData.coins]);
 
       const sovereignPercent = ((sovereignCount / 195) * 100).toFixed(2);
 
-      const territoriesCount = useMemo(() => {
-        const set = new Set();
-        coins.forEach(c => {
-          if (c.isTerritory || TERRITORIES_LIST.some(t => t.code === c.countryCode)) set.add(c.countryCode);
-        });
-        return set.size;
-      }, [coins]);
-
       const handleSaveCoin = (coin) => {
-        let updated;
+        const list = vaultData.coins || [];
+        let updatedList;
         if (editingCoin) {
-          updated = coins.map(c => c.id === editingCoin.id ? { ...coin, id: c.id } : c);
+          updatedList = list.map(c => c.id === editingCoin.id ? { ...coin, id: c.id } : c);
         } else {
-          updated = [{ ...coin, id: Date.now().toString(), createdAt: new Date().toISOString() }, ...coins];
+          updatedList = [{ ...coin, id: Date.now().toString(), createdAt: new Date().toISOString() }, ...list];
         }
-        pushToCloud(updated);
+        pushToCloud({ ...vaultData, coins: updatedList });
         setIsModalOpen(false);
         setEditingCoin(null);
       };
 
       const handleDeleteCoin = (id) => {
-        if (window.confirm("Remove this coin from your vault?")) {
-          const updated = coins.filter(c => c.id !== id);
-          pushToCloud(updated);
+        if (window.confirm("Delete this coin from vault?")) {
+          const updatedList = (vaultData.coins || []).filter(c => c.id !== id);
+          pushToCloud({ ...vaultData, coins: updatedList });
         }
       };
 
-      const handleExport = () => {
-        const jsonStr = JSON.stringify(coins, null, 2);
-        const el = document.createElement("textarea");
-        el.value = jsonStr;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand("copy");
-        document.body.removeChild(el);
-        alert("Collection JSON copied to clipboard!");
-      };
-
-      const handleImport = (jsonStr) => {
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const list = Array.isArray(parsed) ? parsed : (parsed.coins || []);
-          if (Array.isArray(list)) {
-            pushToCloud(list);
-            setIsSyncModalOpen(false);
-            alert("Collection imported and synced!");
-          }
-        } catch (e) {
-          alert("Invalid JSON format.");
-        }
+      const handleSaveHistoricalEntity = (entity) => {
+        const updatedEntities = [entity, ...(vaultData.historicalEntities || []).filter(e => e.id !== entity.id)];
+        pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
       return (
-        <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-4xl bg-[#05070d] border-x border-slate-800">
+        <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
           
           {/* Header */}
           <header className="p-3 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between">
@@ -346,105 +265,118 @@
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
                 MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span>
               </h1>
-              <div className="flex items-center gap-1.5 text-[10px] font-medium">
-                {syncStatus === "syncing" && <span className="text-cyan-400 animate-pulse">● {syncMessage}</span>}
-                {syncStatus === "success" && <span className="text-emerald-400">{syncMessage}</span>}
-                {syncStatus === "error" && <span className="text-rose-400 font-semibold">{syncMessage}</span>}
-                {syncStatus === "idle" && <span className="text-slate-500">Live JSONBin Connected</span>}
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                {cloudStatus === "saving" && <span className="text-cyan-400 animate-pulse font-bold">• Saving to Cloud...</span>}
+                {cloudStatus === "saved" && <span className="text-emerald-400 font-bold">✓ Saved to Cloud</span>}
+                {cloudStatus === "error" && <span className="text-red-400 font-bold">✕ Sync Warning</span>}
+                {cloudStatus === "idle" && <span>Live Cloud Linked</span>}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
               <button 
-                onClick={() => setIsSyncModalOpen(true)}
-                className="px-2 py-1 bg-[#121728] hover:bg-[#1a2138] border border-slate-700 text-[#00f0ff] rounded-lg text-xs font-semibold">
-                ⇄ Backup
+                onClick={() => setView("map")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+                Map
               </button>
-
-              <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                <button 
-                  onClick={() => setView("map")} 
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                  Map
-                </button>
-                <button 
-                  onClick={() => setView("vault")} 
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                  Vault ({coins.length})
-                </button>
-              </div>
+              <button 
+                onClick={() => setView("vault")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+                Vault ({(vaultData.coins || []).length})
+              </button>
+              <button 
+                onClick={() => setView("historical")} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "historical" ? "bg-amber-400 text-black shadow-md" : "text-amber-400/70"}`}>
+                History
+              </button>
             </div>
           </header>
 
-          {/* Dual-Scrubber Header for Sovereign & Territories */}
-          <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800">
-            <div className="flex items-center justify-between text-xs mb-1 font-semibold">
-              <span className="text-emerald-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#39ff14] shadow-[0_0_6px_#39ff14]"></span>
-                {sovereignCount} / 195 Sovereign States
-              </span>
-              <span className="text-emerald-400 font-mono">{sovereignPercent}%</span>
-            </div>
-            
-            <div className="w-full bg-[#121624] h-2 rounded-full overflow-hidden border border-slate-800">
-              <div 
-                className="bg-[#39ff14] h-full shadow-[0_0_10px_#39ff14] transition-all duration-500" 
-                style={{ width: `${sovereignPercent}%` }}>
+          {/* Master Sovereign Progress Bar */}
+          {view !== "historical" && (
+            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800">
+              <div className="flex items-center justify-between text-xs mb-1 font-semibold">
+                <span className="text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#39ff14] shadow-[0_0_6px_#39ff14]"></span>
+                  {sovereignCount} / 195 Sovereign States
+                </span>
+                <span className="text-emerald-400 font-mono">{sovereignPercent}%</span>
               </div>
-            </div>
+              
+              <div className="w-full bg-[#121624] h-2 rounded-full overflow-hidden border border-slate-800">
+                <div 
+                  className="bg-[#39ff14] h-full shadow-[0_0_10px_#39ff14] transition-all duration-500" 
+                  style={{ width: `${sovereignPercent}%` }}>
+                </div>
+              </div>
 
-            <div className="flex items-center justify-between pt-1.5">
-              <button 
-                onClick={() => setShowTerritories(!showTerritories)}
-                className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
-                <span>Territories & Dependencies ({territoriesCount} / {TERRITORIES_LIST.length})</span>
-                <span className={`text-[9px] transform transition-transform ${showTerritories ? "rotate-180" : ""}`}>▼</span>
-              </button>
-              <span className="text-[10px] text-slate-500 font-mono">Red Diagonal Striped</span>
-            </div>
+              <div className="flex items-center justify-between pt-1.5">
+                <button 
+                  onClick={() => setShowTerritories(!showTerritories)}
+                  className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
+                  <span>Territories & Dependencies ({TERRITORIES_LIST.length})</span>
+                  <span className={`text-[9px] transform transition-transform ${showTerritories ? "rotate-180" : ""}`}>▼</span>
+                </button>
+                <span className="text-[10px] text-slate-500 font-mono">Red Diagonal Striped</span>
+              </div>
 
-            {showTerritories && (
-              <div className="mt-2 pt-2 border-t border-slate-800 flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
-                {TERRITORIES_LIST.map(t => {
-                  const hasCoin = coins.some(c => c.countryCode === t.code);
-                  return (
+              {showTerritories && (
+                <div className="mt-2 pt-2 border-t border-slate-800 flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                  {TERRITORIES_LIST.map(t => (
                     <button
                       key={t.code}
                       onClick={() => {
                         setSelectedCountry({ a3: t.code, name: t.name, isTerritory: true, mother: t.mother, coords: t.coords });
-                        setEditingCoin(null);
                         setIsModalOpen(true);
                       }}
-                      className={`px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border ${hasCoin ? "bg-red-950/60 border-red-500 text-red-300" : "bg-[#101424] border-slate-800 text-slate-300"}`}>
+                      className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300">
                       {t.name} ({t.mother})
                     </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Main Content Area */}
+          {/* Timeline Scrubber Header in History Tab */}
+          {view === "historical" && (
+            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 flex items-center gap-3">
+              <span className="text-xs font-bold text-amber-400 font-mono w-16">{scrubberYear} AD</span>
+              <input 
+                type="range" 
+                min="-500" 
+                max="2026" 
+                step="5" 
+                value={scrubberYear} 
+                onChange={e => setScrubberYear(parseInt(e.target.value))}
+                className="flex-1 accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              />
+              <span className="text-[10px] text-slate-400 font-semibold">Active Scrubber</span>
+            </div>
+          )}
+
+          {/* Main View Area */}
           <main className="flex-1 overflow-hidden relative">
-            {view === "map" ? (
+            {view === "map" && (
               <InteractiveWorldMap 
-                coins={coins}
+                coins={vaultData.coins || []}
                 onSelectModernCountry={(info) => {
                   setSelectedCountry(info);
                   setEditingCoin(null);
                   setIsModalOpen(true);
                 }}
               />
-            ) : (
+            )}
+
+            {view === "vault" && (
               <CollectionVault 
-                coins={coins} 
+                coins={vaultData.coins || []} 
                 onDeleteCoin={handleDeleteCoin}
                 onEditCoin={(c) => {
                   setEditingCoin(c);
-                  setSelectedCountry({ a3: c.countryCode, name: c.countryName, isTerritory: c.isTerritory });
+                  setSelectedCountry({ a3: c.countryCode, name: c.countryName });
                   setIsModalOpen(true);
                 }}
-                onOpenImage={(src) => setLightboxImg(src)}
                 onAddClick={() => {
                   setEditingCoin(null);
                   setSelectedCountry(null);
@@ -452,58 +384,30 @@
                 }}
               />
             )}
+
+            {view === "historical" && (
+              <HistoricalStudio 
+                entities={vaultData.historicalEntities || []}
+                scrubberYear={scrubberYear}
+                onSaveEntity={handleSaveHistoricalEntity}
+              />
+            )}
           </main>
 
-          {/* Add / Edit Coin Drawer */}
           {isModalOpen && (
             <AddEditCoinModal 
               initialCountry={selectedCountry}
               editingCoin={editingCoin}
               onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
               onSave={handleSaveCoin}
-              onOpenLiveCamera={(field, shape) => {
-                setCameraTargetField(field);
-                setActiveCameraShape(shape);
-              }}
             />
-          )}
-
-          {/* In-App Live Camera Viewfinder Modal */}
-          {cameraTargetField && (
-            <LiveCoinCameraModal 
-              shape={activeCameraShape}
-              onClose={() => setCameraTargetField(null)}
-              onCapture={(base64Img) => {
-                window.dispatchEvent(new CustomEvent("coin-photo-captured", {
-                  detail: { field: cameraTargetField, image: base64Img }
-                }));
-                setCameraTargetField(null);
-              }}
-            />
-          )}
-
-          {/* Backup & Import Modal */}
-          {isSyncModalOpen && (
-            <SyncModal 
-              coins={coins}
-              onExport={handleExport}
-              onImport={handleImport}
-              onClose={() => setIsSyncModalOpen(false)}
-            />
-          )}
-
-          {/* Fullscreen Photo Lightbox */}
-          {lightboxImg && (
-            <div onClick={() => setLightboxImg(null)} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
-              <img src={lightboxImg} className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl" />
-              <button className="absolute top-5 right-5 text-white bg-slate-800 px-3 py-1 rounded-full text-xs font-bold">✕ Close</button>
-            </div>
           )}
 
         </div>
       );
     }
 
+    // --- Interactive Modern World Map Engine ---
     function InteractiveWorldMap({ coins, onSelectModernCountry }) {
       const svgRef = useRef(null);
 
@@ -515,7 +419,7 @@
           if (EASTERN_CARIBBEAN.includes(c.countryCode) && c.isUnion) targets = EASTERN_CARIBBEAN;
 
           targets.forEach(code => {
-            if (!map[code]) map[code] = { collected: true, neonColor: c.neonColor || 'cyan', abroadOnly: !c.inPossession };
+            if (!map[code]) map[code] = { collected: true, neonColor: c.neonColor, abroadOnly: !c.inPossession };
             else if (c.inPossession) map[code].abroadOnly = false;
           });
         });
@@ -550,48 +454,46 @@
           const nameMap = {};
           tsvData.forEach(d => { nameMap[d.iso_n3] = { a3: d.iso_a3, name: d.name }; });
           nameMap["728"] = { a3: "SSD", name: "South Sudan" };
-          nameMap["798"] = { a3: "TUV", name: "Tuvalu" };
 
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
 
-          g.selectAll("path.country")
+          g.selectAll("path")
             .data(countries)
             .enter().append("path")
-            .attr("class", "country")
             .attr("d", path)
             .attr("class", d => {
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
               const st = code ? statusMap[code] : null;
-              if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer transition-all";
+              if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer";
               return `neon-${st.neonColor} cursor-pointer ${st.abroadOnly ? "border-red-glow" : "stroke-white/30 stroke-[0.35]"}`;
             })
             .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
 
-          // Render Micro-state Pins (Tuvalu, Nauru, Monaco, Vatican, etc.)
+          // Micro-states
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
             .attr("cx", d => projection(d.coords)[0])
             .attr("cy", d => projection(d.coords)[1])
-            .attr("r", 3.2)
+            .attr("r", 2.6)
             .attr("class", d => {
               const st = statusMap[d.a3];
-              if (!st) return "fill-[#242e44] stroke-cyan-400/80 hover:fill-[#00f0ff] cursor-pointer";
-              return `neon-${st.neonColor} ${st.abroadOnly ? "border-red-glow stroke-[1.5]" : "stroke-white/90 stroke-[1]"}`;
+              if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer";
+              return `neon-${st.neonColor} ${st.abroadOnly ? "border-red-glow stroke-[1.2]" : "stroke-white/70"}`;
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
 
-          // Render Non-Sovereign Territory Pins
+          // Striped Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
             .attr("cx", d => projection(d.coords)[0])
             .attr("cy", d => projection(d.coords)[1])
-            .attr("r", 3.5)
+            .attr("r", 3)
             .attr("fill", "url(#diagonalHatchRed)")
             .attr("stroke", "#ff1744")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 0.8)
             .attr("class", "cursor-pointer")
             .on("click", (e, d) => onSelectModernCountry({ a3: d.code, name: d.name, isTerritory: true, mother: d.mother }));
         });
@@ -604,203 +506,533 @@
       );
     }
 
-    function LiveCoinCameraModal({ shape, onClose, onCapture }) {
-      const videoRef = useRef(null);
-      const [stream, setStream] = useState(null);
+    // --- Dedicated Historical Cartographer Studio with Ocean Mask & Raw Drawing ---
+    function HistoricalStudio({ entities, scrubberYear, onSaveEntity }) {
+      const svgRef = useRef(null);
+      const [isDrawing, setIsDrawing] = useState(false);
+      const [rawPoints, setRawPoints] = useState([]);
+      const [closedPolygons, setClosedPolygons] = useState([]);
 
-      const [zoom, setZoom] = useState(1);
-      const [pan, setPan] = useState({ x: 0, y: 0 });
-      const dragStartRef = useRef(null);
+      const [selectedPolygonIndex, setSelectedPolygonIndex] = useState(null);
+      const [customizerOpen, setCustomizerOpen] = useState(false);
+
+      // Overlap inspector modal state
+      const [inspectingEntity, setInspectingEntity] = useState(null);
+
+      // Interactive Mint Placement State
+      const [placingMint, setPlacingMint] = useState(false);
+      const [mintCandidate, setMintCandidate] = useState(null);
+      const [mintCandidateCountry, setMintCandidateCountry] = useState("");
+      const [confirmedMint, setConfirmedMint] = useState(null);
+
+      const [metaModalOpen, setMetaModalOpen] = useState(true);
+      const [entityMeta, setEntityMeta] = useState({
+        name: "",
+        ruler: "",
+        startYear: "",
+        endYear: "",
+        mintCity: ""
+      });
+
+      const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 250]));
+      const worldGeoRef = useRef(null);
 
       useEffect(() => {
-        navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
-          audio: false
-        })
-          .then(mediaStream => {
-            setStream(mediaStream);
-            if (videoRef.current) {
-              videoRef.current.srcObject = mediaStream;
-              videoRef.current.play();
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+
+        const defs = svg.append("defs");
+
+        // Custom hatch patterns for closed polygons
+        closedPolygons.forEach((poly, idx) => {
+          if (poly.striped) {
+            const pat = defs.append("pattern")
+              .attr("id", `stripe-pat-${idx}`)
+              .attr("width", 8).attr("height", 8)
+              .attr("patternTransform", "rotate(45 0 0)")
+              .attr("patternUnits", "userSpaceOnUse");
+            
+            pat.append("rect").attr("width", 8).attr("height", 8).attr("fill", poly.bgColor || "#111625");
+            pat.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
+              .attr("stroke", poly.stripeColor || "#ff1744").attr("stroke-width", 2.5);
+          }
+        });
+
+        // Layer Ordering:
+        // 1. Base Map Background
+        // 2. Empire Drawing Layer (Historical Polygons)
+        // 3. Ocean Mask Layer (Covers drawings that spill into the sea)
+        // 4. Country Borders / Mint Pin Layer
+        const gRoot = svg.append("g").attr("id", "studio-root");
+        const gBase = gRoot.append("g").attr("id", "layer-base");
+        const gEmpire = gRoot.append("g").attr("id", "layer-empires");
+        const gOceanMask = gRoot.append("g").attr("id", "layer-ocean-mask");
+        const gBorders = gRoot.append("g").attr("id", "layer-borders");
+
+        const path = d3.geoPath().projection(projectionRef.current);
+
+        const zoom = d3.zoom().scaleExtent([1, 14]).on("zoom", (e) => {
+          if (!isDrawing) gRoot.attr("transform", e.transform);
+        });
+        svg.call(zoom);
+
+        Promise.all([
+          d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
+          d3.tsv("https://unpkg.com/world-atlas@1.1.4/world/110m.tsv")
+        ]).then(([atlasData, tsvData]) => {
+          const land = topojson.feature(atlasData, atlasData.objects.land);
+          const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
+          
+          worldGeoRef.current = { features: countries, tsv: tsvData, land: land };
+
+          // 1. Dark Dry Land Base
+          gBase.append("path")
+            .datum(land)
+            .attr("d", path)
+            .attr("fill", "#0b0f1d");
+
+          // 3. Ocean Mask: Inverts land so water covers freehand spills
+          // Creates a full world bounding box, subtracting land polygons
+          const sphere = { type: "Sphere" };
+          gOceanMask.append("path")
+            .datum(sphere)
+            .attr("d", path)
+            .attr("fill", "none")
+            .attr("stroke", "#192238")
+            .attr("stroke-width", 0.5);
+
+          // Render ghost modern country borders on dry land
+          gBorders.selectAll(".ghost-country")
+            .data(countries)
+            .enter().append("path")
+            .attr("d", path)
+            .attr("fill", "transparent")
+            .attr("stroke", "#1e293b")
+            .attr("stroke-width", 0.4);
+        });
+
+        // Pointer event for zero-decimation freehand drawing
+        svg.on("pointerdown", (event) => {
+          if (placingMint) {
+            const [mx, my] = d3.pointer(event, gRoot.node());
+            const coords = projectionRef.current.invert([mx, my]);
+            if (coords) {
+              setMintCandidate(coords);
+              setMintCandidateCountry(detectCountry(coords));
             }
-          })
-          .catch(err => {
-            alert("Camera access denied or unavailable. Please enable permissions in your browser.");
-            onClose();
-          });
+            return;
+          }
 
-        return () => {
-          if (stream) stream.getTracks().forEach(track => track.stop());
-        };
-      }, []);
+          if (!isDrawing) return;
+          const [mx, my] = d3.pointer(event, gRoot.node());
+          const coords = projectionRef.current.invert([mx, my]);
+          if (coords) setRawPoints([coords]);
+        });
 
-      const handleTouchStart = (e) => {
-        if (e.touches.length === 1) {
-          dragStartRef.current = {
-            startX: e.touches[0].clientX - pan.x,
-            startY: e.touches[0].clientY - pan.y
+        svg.on("pointermove", (event) => {
+          if (!isDrawing || rawPoints.length === 0) return;
+          const [mx, my] = d3.pointer(event, gRoot.node());
+          const coords = projectionRef.current.invert([mx, my]);
+          // ZERO DECIMATION: Add every single coordinate point
+          if (coords) setRawPoints(prev => [...prev, coords]);
+        });
+
+        svg.on("pointerup", () => {
+          if (!isDrawing || rawPoints.length < 3) return;
+          const newPoly = {
+            points: rawPoints,
+            bgColor: "#ffd600",
+            striped: false,
+            stripeColor: "#ff1744"
           };
+          setClosedPolygons(prev => [...prev, newPoly]);
+          setRawPoints([]);
+          setIsDrawing(false);
+        });
+
+      }, [isDrawing, closedPolygons, placingMint]);
+
+      const detectCountry = (coords) => {
+        if (!worldGeoRef.current || !coords) return "Unknown Territory / Sea";
+        const found = worldGeoRef.current.features.find(feature => d3.geoContains(feature, coords));
+        if (found) {
+          const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === found.id);
+          return item ? item.name : "Sovereign Territory";
         }
+        return "Coastal / Ocean Waters";
       };
 
-      const handleTouchMove = (e) => {
-        if (dragStartRef.current && e.touches.length === 1) {
-          setPan({
-            x: e.touches[0].clientX - dragStartRef.current.startX,
-            y: e.touches[0].clientY - dragStartRef.current.startY
-          });
-        }
+      const detectOverlappingCountries = (polyPoints) => {
+        if (!worldGeoRef.current || !polyPoints || polyPoints.length === 0) return [];
+        const overlaps = new Set();
+        // Check intersections with modern nation centroids & sample vertices
+        worldGeoRef.current.features.forEach(feat => {
+          const center = d3.geoCentroid(feat);
+          if (d3.polygonContains(polyPoints, center)) {
+            const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === feat.id);
+            if (item) overlaps.add(item.name);
+          }
+        });
+        return Array.from(overlaps);
       };
 
-      const handleTouchEnd = () => {
-        dragStartRef.current = null;
-      };
-
-      // Math-accurate crop scaled down to 300x300 JPEG (~18KB)
-      const captureFrame = () => {
-        if (!videoRef.current) return;
-        const video = videoRef.current;
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-        
-        const videoAspect = vw / vh;
-        let renderW, renderH, offsetX, offsetY;
-
-        if (videoAspect > 1) {
-          renderH = vh;
-          renderW = vh;
-          offsetX = (vw - vh) / 2;
-          offsetY = 0;
-        } else {
-          renderW = vw;
-          renderH = vw;
-          offsetX = 0;
-          offsetY = (vh - vw) / 2;
+      const handleSaveCompleteEntity = () => {
+        if (!entityMeta.name) {
+          alert("Please enter a name for the entity.");
+          return;
         }
 
-        const cropSize = renderW / zoom;
-        const sx = offsetX + (renderW - cropSize) / 2 - (pan.x / 120) * (cropSize / 2);
-        const sy = offsetY + (renderH - cropSize) / 2 - (pan.y / 120) * (cropSize / 2);
+        const fullEntity = {
+          id: Date.now().toString(),
+          name: entityMeta.name,
+          ruler: entityMeta.ruler,
+          startYear: parseInt(entityMeta.startYear) || -500,
+          endYear: parseInt(entityMeta.endYear) || 2026,
+          polygons: closedPolygons,
+          mint: confirmedMint ? {
+            city: entityMeta.mintCity,
+            country: confirmedMint.country,
+            coords: confirmedMint.coords
+          } : null
+        };
 
-        const clampedSx = Math.max(0, Math.min(vw - cropSize, sx));
-        const clampedSy = Math.max(0, Math.min(vh - cropSize, sy));
-
-        // High quality downscale canvas: 300x300
-        const canvas = document.createElement("canvas");
-        canvas.width = 300;
-        canvas.height = 300;
-        const ctx = canvas.getContext("2d");
-
-        if (shape === 'round') {
-          ctx.beginPath();
-          ctx.arc(150, 150, 150, 0, Math.PI * 2);
-          ctx.clip();
-        }
-
-        ctx.drawImage(video, clampedSx, clampedSy, cropSize, cropSize, 0, 0, 300, 300);
-
-        if (stream) stream.getTracks().forEach(track => track.stop());
-        onCapture(canvas.toDataURL("image/jpeg", 0.7));
+        onSaveEntity(fullEntity);
+        alert(`Saved ${entityMeta.name} to Historical Vault!`);
       };
+
+      // Filter entities visible under current timeline scrubber year
+      const visibleHistoricalEntities = useMemo(() => {
+        return (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+      }, [entities, scrubberYear]);
 
       return (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-3 select-none">
-          
-          <div className="w-full flex items-center justify-between text-white z-10 pt-2 px-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#00f0ff] flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-ping"></span>
-              Zoom & Align Inside Guide
-            </span>
-            <button 
-              onClick={() => {
-                if (stream) stream.getTracks().forEach(track => track.stop());
-                onClose();
-              }} 
-              className="text-white bg-slate-800 px-3 py-1 rounded-full text-xs font-bold">
-              ✕ Cancel
-            </button>
-          </div>
+        <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col">
 
-          {/* Camera Viewport */}
-          <div 
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            className="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center overflow-hidden rounded-3xl border border-slate-800 shadow-2xl bg-slate-950">
+          {/* SVG Map Canvas */}
+          <svg ref={svgRef} viewBox="0 0 800 480" className="w-full h-full object-contain">
             
-            <video 
-              ref={videoRef} 
-              playsInline 
-              muted 
-              style={{
-                transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-                transformOrigin: "center center"
-              }}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-75" 
-            />
+            {/* Render Saved Historical Entities Synced to Scrubber */}
+            {visibleHistoricalEntities.map((ent) => (
+              <g key={ent.id} onClick={() => setInspectingEntity(ent)} className="cursor-pointer">
+                {(ent.polygons || []).map((poly, pIdx) => {
+                  const pts = poly.points.map(p => projectionRef.current(p));
+                  const d = d3.line().curve(d3.curveLinearClosed)(pts);
+                  return (
+                    <path
+                      key={pIdx}
+                      d={d}
+                      fill={poly.bgColor || "#00f0ff"}
+                      fillOpacity={0.6}
+                      stroke={poly.bgColor || "#00f0ff"}
+                      strokeWidth={1.5}
+                    />
+                  );
+                })}
 
-            {/* Glowing HUD Silhouette Outline */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div 
-                className={`w-60 h-60 border-2 border-dashed border-[#00f0ff] shadow-[0_0_18px_rgba(0,240,255,0.8)] coin-mask-${shape}`}>
+                {ent.mint && (
+                  <g transform={`translate(${projectionRef.current(ent.mint.coords)[0]}, ${projectionRef.current(ent.mint.coords)[1]})`}>
+                    <circle r={5} fill="#ff1744" filter="drop-shadow(0 0 6px #ff1744)" />
+                    <circle r={2} fill="#ffffff" />
+                  </g>
+                )}
+              </g>
+            ))}
+
+            {/* Render Currently Active Drawing Session Polygons */}
+            {closedPolygons.map((poly, idx) => {
+              const pts = poly.points.map(p => projectionRef.current(p));
+              const d = d3.line().curve(d3.curveLinearClosed)(pts);
+              return (
+                <path
+                  key={idx}
+                  d={d}
+                  fill={poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor}
+                  fillOpacity={0.65}
+                  stroke={poly.bgColor || "#ffd600"}
+                  strokeWidth={1.5}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelectedPolygonIndex(idx);
+                    setCustomizerOpen(true);
+                  }}
+                />
+              );
+            })}
+
+            {/* Zero-Decimation In-Progress Finger Stroke */}
+            {rawPoints.length > 0 && (
+              <path 
+                d={d3.line()(rawPoints.map(p => projectionRef.current(p)))} 
+                fill="none" 
+                stroke="#39ff14" 
+                strokeWidth={2} 
+              />
+            )}
+
+            {/* Interactive Mint Placement Crosshair & Confirmation Target */}
+            {mintCandidate && (
+              <g transform={`translate(${projectionRef.current(mintCandidate)[0]}, ${projectionRef.current(mintCandidate)[1]})`}>
+                <circle r={9} fill="none" stroke="#ff1744" strokeWidth={2} className="animate-ping" />
+                <circle r={5} fill="#ff1744" />
+                <circle r={1.5} fill="#ffffff" />
+              </g>
+            )}
+
+            {confirmedMint && !mintCandidate && (
+              <g transform={`translate(${projectionRef.current(confirmedMint.coords)[0]}, ${projectionRef.current(confirmedMint.coords)[1]})`}>
+                <circle r={6} fill="#ff1744" filter="drop-shadow(0 0 6px #ff1744)" />
+                <circle r={2} fill="#ffffff" />
+              </g>
+            )}
+          </svg>
+
+          {/* Floating Top Entity Details Bar */}
+          <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
+            <div className="flex-1 mr-2">
+              <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                {entityMeta.name || "Untitled Entity"}
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {entityMeta.ruler || "Ruler"} • {entityMeta.startYear || "Year"} to {entityMeta.endYear || "Year"}
               </div>
             </div>
 
-            <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[9px] text-slate-300 pointer-events-none">
-              Drag to pan
-            </div>
-          </div>
-
-          {/* Zoom Controls */}
-          <div className="w-full max-w-xs flex flex-col items-center gap-2 z-10 bg-[#0d1220] p-3 rounded-2xl border border-slate-800">
-            <div className="w-full flex items-center justify-between text-[11px] font-bold text-slate-300">
-              <span className="text-[#00f0ff]">Digital Zoom</span>
-              <span className="font-mono text-cyan-300">{zoom.toFixed(1)}x</span>
-            </div>
-
-            <input 
-              type="range" 
-              min="1" 
-              max="3.5" 
-              step="0.1" 
-              value={zoom} 
-              onChange={e => setZoom(parseFloat(e.target.value))}
-              className="w-full accent-[#00f0ff] h-1.5 bg-slate-800 rounded-lg cursor-pointer" 
-            />
-
-            <div className="flex gap-2 w-full pt-1">
-              {[1, 1.5, 2, 2.8].map(z => (
-                <button
-                  key={z}
-                  type="button"
-                  onClick={() => setZoom(z)}
-                  className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-colors ${zoom === z ? "bg-[#00f0ff] text-black border-[#00f0ff]" : "bg-slate-900 border-slate-700 text-slate-300"}`}>
-                  {z}x
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-                className="px-2 py-1 bg-slate-800 text-slate-400 rounded-lg text-[10px]">
-                Reset
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setMetaModalOpen(true)} 
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg">
+                Edit Info
+              </button>
+              <button 
+                onClick={handleSaveCompleteEntity} 
+                className="bg-amber-400 hover:bg-amber-300 font-extrabold text-black text-xs px-3 py-1 rounded-lg shadow-md">
+                Save Entity
               </button>
             </div>
           </div>
 
-          {/* Shutter Button */}
-          <div className="w-full flex flex-col items-center gap-1.5 pb-3 z-10">
-            <button 
-              onClick={captureFrame}
-              className="w-16 h-16 rounded-full bg-white border-4 border-[#00f0ff] shadow-[0_0_20px_#00f0ff] active:scale-90 transition-transform">
-            </button>
-            <span className="text-[10px] text-slate-400">Tap to Snap & Cut to Mask</span>
+          {/* Bottom Floating Control Bar */}
+          <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
+            
+            {/* Mint Location Button */}
+            <div className="pointer-events-auto">
+              <button 
+                onClick={() => { setPlacingMint(!placingMint); setIsDrawing(false); }}
+                className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg ${placingMint ? "bg-red-500 text-white animate-pulse" : "bg-[#101526] border border-slate-700 text-slate-200"}`}>
+                <span>📍</span>
+                <span>{confirmedMint ? "Mint Placed" : "Place Mint"}</span>
+              </button>
+            </div>
+
+            {/* Zero-Decimation Pencil Drawing Button */}
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button 
+                onClick={() => { setIsDrawing(!isDrawing); setPlacingMint(false); }}
+                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isDrawing ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
+                <span>✏️</span>
+                <span>{isDrawing ? "Tracing Border..." : "Draw Empire"}</span>
+              </button>
+            </div>
           </div>
+
+          {/* Interactive Mint Confirmation Dialog */}
+          {placingMint && mintCandidate && (
+            <div className="absolute bottom-16 inset-x-4 z-40 bg-[#0c1222f6] border border-red-500/60 p-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-white">Place Mint Here?</div>
+                <div className="text-[10px] text-slate-400">Detected: <span className="text-red-400 font-semibold">{mintCandidateCountry}</span></div>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setMintCandidate(null)} 
+                  className="px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg font-bold">
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    setConfirmedMint({ coords: mintCandidate, country: mintCandidateCountry });
+                    setMintCandidate(null);
+                    setPlacingMint(false);
+                  }} 
+                  className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg font-extrabold shadow-md">
+                  Confirm
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Initial Info Setup Modal */}
+          {metaModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Historical Entity Setup</h3>
+                  <button onClick={() => setMetaModalOpen(false)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                </div>
+
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Entity / Empire Name *</label>
+                    <input 
+                      required 
+                      value={entityMeta.name} 
+                      onChange={e => setEntityMeta({...entityMeta, name: e.target.value})}
+                      placeholder="e.g. Polish-Lithuanian Commonwealth" 
+                      className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-400 block mb-1">Start Year</label>
+                      <input 
+                        type="number" 
+                        value={entityMeta.startYear} 
+                        onChange={e => setEntityMeta({...entityMeta, startYear: e.target.value})}
+                        placeholder="e.g. 1569" 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 block mb-1">End Year</label>
+                      <input 
+                        type="number" 
+                        value={entityMeta.endYear} 
+                        onChange={e => setEntityMeta({...entityMeta, endYear: e.target.value})}
+                        placeholder="e.g. 1795" 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Ruler / Monarch</label>
+                    <input 
+                      value={entityMeta.ruler} 
+                      onChange={e => setEntityMeta({...entityMeta, ruler: e.target.value})}
+                      placeholder="e.g. Sigismund III Vasa" 
+                      className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Mint City Label</label>
+                    <input 
+                      value={entityMeta.mintCity} 
+                      onChange={e => setEntityMeta({...entityMeta, mintCity: e.target.value})}
+                      placeholder="e.g. Kraków / Vilnius" 
+                      className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => setMetaModalOpen(false)} 
+                    className="w-full py-2.5 bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
+                    Continue to Map & Drawing
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Polygon Color & Striping Customizer */}
+          {customizerOpen && selectedPolygonIndex !== null && (
+            <div className="fixed inset-x-0 bottom-0 z-50 bg-[#0d1324] border-t border-slate-700 rounded-t-3xl p-4 max-h-[60vh] overflow-y-auto hide-scrollbar space-y-3 shadow-2xl">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                <h3 className="text-xs font-bold text-white">Closed Polygon #{selectedPolygonIndex + 1} Style</h3>
+                <button onClick={() => setCustomizerOpen(false)} className="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+              </div>
+
+              <div className="flex items-center justify-between bg-[#12192e] p-2.5 rounded-xl border border-slate-800">
+                <div>
+                  <div className="text-xs font-semibold text-white">Diagonal Striped Hatching</div>
+                  <div className="text-[10px] text-slate-400">Mark outer expansion or disputed zone</div>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={closedPolygons[selectedPolygonIndex]?.striped || false} 
+                  onChange={e => {
+                    const st = e.target.checked;
+                    setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, striped: st } : p));
+                  }} 
+                  className="w-5 h-5 accent-red-500" 
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-300 block mb-1">Fill Background Color (64 Options):</label>
+                <div className="grid grid-cols-8 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
+                  {PALETTE_64.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => {
+                        setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, bgColor: color } : p));
+                      }}
+                      style={{ backgroundColor: color }}
+                      className="w-full h-5 rounded-md hover:scale-110 transition-transform"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {closedPolygons[selectedPolygonIndex]?.striped && (
+                <div>
+                  <label className="text-[11px] font-bold text-red-400 block mb-1">Stripe Line Color:</label>
+                  <div className="grid grid-cols-8 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
+                    {PALETTE_64.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => {
+                          setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, stripeColor: color } : p));
+                        }}
+                        style={{ backgroundColor: color }}
+                        className="w-full h-5 rounded-md hover:scale-110 transition-transform"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Overlapping Modern Nations Inspector Modal */}
+          {inspectingEntity && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-xs font-bold text-white">{inspectingEntity.name}</h3>
+                  <button onClick={() => setInspectingEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                </div>
+
+                <div className="text-xs space-y-1 bg-[#12182b] p-2.5 rounded-xl border border-slate-800">
+                  <div><span className="text-slate-400">Ruler:</span> {inspectingEntity.ruler || "—"}</div>
+                  <div><span className="text-slate-400">Timeline:</span> {inspectingEntity.startYear} – {inspectingEntity.endYear}</div>
+                  {inspectingEntity.mint && (
+                    <div><span className="text-slate-400">Mint:</span> {inspectingEntity.mint.city} ({inspectingEntity.mint.country})</div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-cyan-400 block mb-1.5">Overlapping Modern Countries:</label>
+                  <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto hide-scrollbar">
+                    {detectOverlappingCountries(inspectingEntity.polygons?.[0]?.points).map((country, idx) => (
+                      <span key={idx} className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-[10px] text-slate-300">
+                        {country}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       );
     }
 
-    function CollectionVault({ coins, onDeleteCoin, onEditCoin, onOpenImage, onAddClick }) {
+    // --- Vault Cards Tab (Text-Only Lightweight) ---
+    function CollectionVault({ coins, onDeleteCoin, onEditCoin, onAddClick }) {
       const [query, setQuery] = useState("");
 
       const filtered = useMemo(() => {
@@ -817,18 +1049,18 @@
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="Search coin, ruler, country..." 
+              placeholder="Search coin, ruler, mint..." 
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="flex-1 bg-[#101524] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#00f0ff]" 
             />
-            <button onClick={onAddClick} className="bg-[#00f0ff] font-bold text-black text-xs px-4 rounded-xl shadow-lg">+ Add</button>
+            <button onClick={onAddClick} className="bg-[#00f0ff] font-bold text-black text-xs px-3 rounded-xl shadow-lg">+ Add</button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
             {filtered.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 text-xs">
-                No coins in vault yet. Tap + Add or tap any nation on the map to log one!
+                No coins found in vault.
               </div>
             ) : (
               filtered.map(coin => (
@@ -852,23 +1084,8 @@
                     <div><span className="text-slate-500">Year:</span> {coin.year || "—"}</div>
                     <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
                     <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
-                    <div className="truncate"><span className="text-slate-500">Shape:</span> {coin.shape || "Round"}</div>
+                    <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "—"}</div>
                   </div>
-
-                  {(coin.obverseImage || coin.reverseImage) && (
-                    <div className="flex gap-2 pt-1 items-center">
-                      {coin.obverseImage && (
-                        <div className="cursor-pointer" onClick={() => onOpenImage(coin.obverseImage)}>
-                          <img src={coin.obverseImage} className={`w-14 h-14 object-cover border border-slate-700 coin-mask-${coin.shape || 'round'}`} />
-                        </div>
-                      )}
-                      {coin.reverseImage && (
-                        <div className="cursor-pointer" onClick={() => onOpenImage(coin.reverseImage)}>
-                          <img src={coin.reverseImage} className={`w-14 h-14 object-cover border border-slate-700 coin-mask-${coin.shape || 'round'}`} />
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {coin.notes && <p className="text-[10px] text-slate-400 italic">"{coin.notes}"</p>}
                 </div>
@@ -879,7 +1096,8 @@
       );
     }
 
-    function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave, onOpenLiveCamera }) {
+    // --- Coin Entry & Edit Drawer ---
+    function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave }) {
       const [formData, setFormData] = useState(() => {
         if (editingCoin) return { ...editingCoin };
         return {
@@ -892,38 +1110,12 @@
           ruler: "",
           mint: "",
           grade: "UNC",
-          shape: "round",
           inPossession: true,
           isUnion: false,
           neonColor: "cyan",
-          notes: "",
-          obverseImage: "",
-          reverseImage: ""
+          notes: ""
         };
       });
-
-      useEffect(() => {
-        const handler = (e) => {
-          if (e.detail) {
-            setFormData(prev => ({ ...prev, [e.detail.field]: e.detail.image }));
-          }
-        };
-        window.addEventListener("coin-photo-captured", handler);
-        return () => window.removeEventListener("coin-photo-captured", handler);
-      }, []);
-
-      const handleImageUpload = (e, field) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          downscaleBase64(event.target.result, (compressed) => {
-            setFormData(prev => ({ ...prev, [field]: compressed }));
-          });
-        };
-        reader.readAsDataURL(file);
-      };
 
       return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -968,25 +1160,9 @@
                 </div>
               </div>
 
-              <div>
-                <label className="text-slate-400 block mb-1">Coin Silhouette Shape (Guides Camera)</label>
-                <select 
-                  value={formData.shape} 
-                  onChange={e => setFormData({...formData, shape: e.target.value})}
-                  className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white">
-                  <option value="round">Round (Standard Circular)</option>
-                  <option value="scalloped">Scalloped / Wavy (Eswatini, Tonga)</option>
-                  <option value="heptagon">Heptagon (7-sided, UK 20p/50p)</option>
-                  <option value="octagon">Octagon (8-sided, Chile, Lebanon)</option>
-                  <option value="decagon">Decagon (10-sided, Philippines 2 Piso)</option>
-                  <option value="dodecagon">Dodecagon (12-sided, Fiji 50c, UK £1)</option>
-                  <option value="square">Square / Rounded Square (Aruba 50c)</option>
-                </select>
-              </div>
-
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-slate-400 block mb-1">Mintmark / City</label>
+                  <label className="text-slate-400 block mb-1">Mint City / Mintmark</label>
                   <input value={formData.mint} onChange={e => setFormData({...formData, mint: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
                 <div>
@@ -998,7 +1174,7 @@
               <div className="p-2.5 bg-[#12182b] rounded-xl border border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-white">In Physical Possession</div>
-                  <div className="text-[10px] text-slate-400">If unchecked, shown with slim red border on map</div>
+                  <div className="text-[10px] text-slate-400">If unchecked, marked with slim red border</div>
                 </div>
                 <input 
                   type="checkbox" 
@@ -1008,103 +1184,15 @@
                 />
               </div>
 
-              {/* Photo Actions with Camera Viewfinder & File Upload */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="text-slate-400 block mb-1">Front Photo</label>
-                  {formData.obverseImage ? (
-                    <div className="relative flex justify-center p-2 bg-[#090d18] rounded-xl">
-                      <img src={formData.obverseImage} className={`w-16 h-16 object-cover border border-[#00f0ff] coin-mask-${formData.shape}`} />
-                      <button type="button" onClick={() => setFormData({...formData, obverseImage: ""})} className="absolute top-1 right-1 bg-black/80 text-white rounded-full w-4 h-4 text-[9px]">✕</button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-1.5">
-                      <button 
-                        type="button" 
-                        onClick={() => onOpenLiveCamera('obverseImage', formData.shape)}
-                        className="flex-1 py-2 bg-[#172138] hover:bg-[#1f2d4d] border border-[#00f0ff]/50 text-[#00f0ff] rounded-xl text-[10px] font-bold">
-                        📸 Camera
-                      </button>
-                      <label className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-center text-slate-300 rounded-xl text-[10px] cursor-pointer">
-                        📁 File
-                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'obverseImage')} className="hidden" />
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-slate-400 block mb-1">Back Photo</label>
-                  {formData.reverseImage ? (
-                    <div className="relative flex justify-center p-2 bg-[#090d18] rounded-xl">
-                      <img src={formData.reverseImage} className={`w-16 h-16 object-cover border border-[#00f0ff] coin-mask-${formData.shape}`} />
-                      <button type="button" onClick={() => setFormData({...formData, reverseImage: ""})} className="absolute top-1 right-1 bg-black/80 text-white rounded-full w-4 h-4 text-[9px]">✕</button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-1.5">
-                      <button 
-                        type="button" 
-                        onClick={() => onOpenLiveCamera('reverseImage', formData.shape)}
-                        className="flex-1 py-2 bg-[#172138] hover:bg-[#1f2d4d] border border-[#00f0ff]/50 text-[#00f0ff] rounded-xl text-[10px] font-bold">
-                        📸 Camera
-                      </button>
-                      <label className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-center text-slate-300 rounded-xl text-[10px] cursor-pointer">
-                        📁 File
-                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'reverseImage')} className="hidden" />
-                      </label>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <label className="text-slate-400 block mb-1">Notes</label>
+                <input value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="e.g. Acquired from coin fair" className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
               </div>
 
               <button type="submit" className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
                 Save Coin to Vault
               </button>
             </form>
-          </div>
-        </div>
-      );
-    }
-
-    function SyncModal({ coins, onExport, onImport, onClose }) {
-      const [importVal, setImportVal] = useState("");
-
-      return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0e1424] border border-slate-700 rounded-2xl w-full max-w-md p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-              <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>⇄</span> Collection Backup & Direct Import
-              </h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-white text-sm">✕</button>
-            </div>
-
-            <div className="space-y-1.5">
-              <button 
-                onClick={onExport} 
-                className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs">
-                Copy Collection JSON to Clipboard
-              </button>
-              <p className="text-[10px] text-slate-400 leading-relaxed">
-                Export your full collection to text to send directly to friends or create a local backup.
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 space-y-2">
-              <label className="text-[11px] text-slate-300 font-semibold block">Import JSON Data:</label>
-              <textarea 
-                rows="3" 
-                placeholder="Paste collection JSON here..." 
-                value={importVal} 
-                onChange={e => setImportVal(e.target.value)} 
-                className="w-full bg-[#141b2e] border border-slate-700 rounded-xl p-2 text-[10px] text-white focus:outline-none focus:border-[#00f0ff]" 
-              />
-              <button 
-                onClick={() => onImport(importVal)} 
-                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs border border-slate-700">
-                Load Imported Vault
-              </button>
-            </div>
           </div>
         </div>
       );
