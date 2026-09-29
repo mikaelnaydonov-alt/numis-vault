@@ -100,202 +100,204 @@
       { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.491, -4.679] }
     ];
 
+    // Sovereign states with multi-anchor test coordinates for precise partial overlap
     const SOVEREIGN_LIST = [
-      { a3: "AFG", name: "Afghanistan", a2: "AF", coords: [67.7099, 33.9391] },
-      { a3: "ALB", name: "Albania", a2: "AL", coords: [20.1683, 41.1533] },
-      { a3: "DZA", name: "Algeria", a2: "DZ", coords: [1.6596, 28.0339] },
-      { a3: "AND", name: "Andorra", a2: "AD", coords: [1.5218, 42.5063] },
-      { a3: "AGO", name: "Angola", a2: "AO", coords: [17.8739, -11.2027] },
-      { a3: "ATG", name: "Antigua and Barbuda", a2: "AG", coords: [-61.7964, 17.0608] },
-      { a3: "ARG", name: "Argentina", a2: "AR", coords: [-63.6167, -38.4161] },
-      { a3: "ARM", name: "Armenia", a2: "AM", coords: [45.0382, 40.0691] },
-      { a3: "AUS", name: "Australia", a2: "AU", coords: [133.7751, -25.2744] },
-      { a3: "AUT", name: "Austria", a2: "AT", coords: [14.5501, 47.5162] },
-      { a3: "AZE", name: "Azerbaijan", a2: "AZ", coords: [47.5769, 40.1431] },
-      { a3: "BHS", name: "Bahamas", a2: "BS", coords: [-77.3963, 25.0343] },
-      { a3: "BHR", name: "Bahrain", a2: "BH", coords: [50.5577, 26.0667] },
-      { a3: "BGD", name: "Bangladesh", a2: "BD", coords: [90.3563, 23.6850] },
-      { a3: "BRB", name: "Barbados", a2: "BB", coords: [-59.5432, 13.1939] },
-      { a3: "BLR", name: "Belarus", a2: "BY", coords: [27.9534, 53.7098] },
-      { a3: "BEL", name: "Belgium", a2: "BE", coords: [4.4699, 50.5039] },
-      { a3: "BLZ", name: "Belize", a2: "BZ", coords: [-88.4976, 17.1899] },
-      { a3: "BEN", name: "Benin", a2: "BJ", coords: [2.3158, 9.3077] },
-      { a3: "BTN", name: "Bhutan", a2: "BT", coords: [90.4336, 27.5142] },
-      { a3: "BOL", name: "Bolivia", a2: "BO", coords: [-63.5887, -16.2902] },
-      { a3: "BIH", name: "Bosnia and Herz.", a2: "BA", coords: [17.6791, 43.9159] },
-      { a3: "BWA", name: "Botswana", a2: "BW", coords: [24.6849, -22.3285] },
-      { a3: "BRA", name: "Brazil", a2: "BR", coords: [-51.9253, -14.2350] },
-      { a3: "BRN", name: "Brunei", a2: "BN", coords: [114.7277, 4.5353] },
-      { a3: "BGR", name: "Bulgaria", a2: "BG", coords: [25.4858, 42.7339] },
-      { a3: "BFA", name: "Burkina Faso", a2: "BF", coords: [-1.5616, 12.2383] },
-      { a3: "BDI", name: "Burundi", a2: "BI", coords: [29.9189, -3.3731] },
-      { a3: "CPV", name: "Cabo Verde", a2: "CV", coords: [-24.0132, 16.0021] },
-      { a3: "KHM", name: "Cambodia", a2: "KH", coords: [104.9910, 12.5657] },
-      { a3: "CMR", name: "Cameroon", a2: "CM", coords: [12.3547, 7.3697] },
-      { a3: "CAN", name: "Canada", a2: "CA", coords: [-106.3468, 56.1304] },
-      { a3: "CAF", name: "Central African Rep.", a2: "CF", coords: [20.9394, 6.6111] },
-      { a3: "TCD", name: "Chad", a2: "TD", coords: [18.7322, 15.4542] },
-      { a3: "CHL", name: "Chile", a2: "CL", coords: [-71.5430, -35.6751] },
-      { a3: "CHN", name: "China", a2: "CN", coords: [104.1954, 35.8617] },
-      { a3: "COL", name: "Colombia", a2: "CO", coords: [-74.2973, 4.5709] },
-      { a3: "COM", name: "Comoros", a2: "KM", coords: [43.8726, -11.8753] },
-      { a3: "COG", name: "Congo", a2: "CG", coords: [15.8277, -0.2280] },
-      { a3: "COD", name: "Congo (DRC)", a2: "CD", coords: [21.7587, -4.0383] },
-      { a3: "CRI", name: "Costa Rica", a2: "CR", coords: [-83.7534, 9.7489] },
-      { a3: "CIV", name: "Côte d'Ivoire", a2: "CI", coords: [-5.5471, 7.5400] },
-      { a3: "HRV", name: "Croatia", a2: "HR", coords: [15.2000, 45.1000] },
-      { a3: "CUB", name: "Cuba", a2: "CU", coords: [-77.7812, 21.5218] },
-      { a3: "CYP", name: "Cyprus", a2: "CY", coords: [33.4299, 35.1264] },
-      { a3: "CZE", name: "Czech Republic", a2: "CZ", coords: [15.4730, 49.8175] },
-      { a3: "DNK", name: "Denmark", a2: "DK", coords: [9.5018, 56.2639] },
-      { a3: "DJI", name: "Djibouti", a2: "DJ", coords: [42.5903, 11.8251] },
-      { a3: "DMA", name: "Dominica", a2: "DM", coords: [-61.3710, 15.4150] },
-      { a3: "DOM", name: "Dominican Republic", a2: "DO", coords: [-70.1627, 18.7357] },
-      { a3: "ECU", name: "Ecuador", a2: "EC", coords: [-78.1834, -1.8312] },
-      { a3: "EGY", name: "Egypt", a2: "EG", coords: [30.8025, 26.8206] },
-      { a3: "SLV", name: "El Salvador", a2: "SV", coords: [-88.8965, 13.7942] },
-      { a3: "GNQ", name: "Equatorial Guinea", a2: "GQ", coords: [10.2679, 1.6508] },
-      { a3: "ERI", name: "Eritrea", a2: "ER", coords: [39.7823, 15.1794] },
-      { a3: "EST", name: "Estonia", a2: "EE", coords: [25.0136, 58.5953] },
-      { a3: "SWZ", name: "Eswatini", a2: "SZ", coords: [31.4659, -26.5225] },
-      { a3: "ETH", name: "Ethiopia", a2: "ET", coords: [40.4897, 9.1450] },
-      { a3: "FJI", name: "Fiji", a2: "FJ", coords: [178.0650, -17.7134] },
-      { a3: "FIN", name: "Finland", a2: "FI", coords: [25.7482, 61.9241] },
-      { a3: "FRA", name: "France", a2: "FR", coords: [2.2137, 46.2276] },
-      { a3: "GAB", name: "Gabon", a2: "GA", coords: [11.6094, -0.8037] },
-      { a3: "GMB", name: "Gambia", a2: "GM", coords: [-15.3101, 13.4432] },
-      { a3: "GEO", name: "Georgia", a2: "GE", coords: [43.3569, 42.3154] },
-      { a3: "DEU", name: "Germany", a2: "DE", coords: [10.4515, 51.1657] },
-      { a3: "GHA", name: "Ghana", a2: "GH", coords: [-1.0232, 7.9465] },
-      { a3: "GRC", name: "Greece", a2: "GR", coords: [21.8243, 39.0742] },
-      { a3: "GRD", name: "Grenada", a2: "GD", coords: [-61.6042, 12.1165] },
-      { a3: "GTM", name: "Guatemala", a2: "GT", coords: [-90.2308, 15.7835] },
-      { a3: "GIN", name: "Guinea", a2: "GN", coords: [-9.6966, 9.9456] },
-      { a3: "GNB", name: "Guinea-Bissau", a2: "GW", coords: [-15.1804, 11.8037] },
-      { a3: "GUY", name: "Guyana", a2: "GY", coords: [-58.9302, 4.8604] },
-      { a3: "HTI", name: "Haiti", a2: "HT", coords: [-72.2852, 18.9712] },
-      { a3: "HND", name: "Honduras", a2: "HN", coords: [-86.2419, 15.2000] },
-      { a3: "HUN", name: "Hungary", a2: "HU", coords: [19.5033, 47.1625] },
-      { a3: "ISL", name: "Iceland", a2: "IS", coords: [-19.0208, 64.9631] },
-      { a3: "IND", name: "India", a2: "IN", coords: [78.9629, 20.5937] },
-      { a3: "IDN", name: "Indonesia", a2: "ID", coords: [113.9213, -0.7893] },
-      { a3: "IRN", name: "Iran", a2: "IR", coords: [53.6880, 32.4279] },
-      { a3: "IRQ", name: "Iraq", a2: "IQ", coords: [43.6793, 33.2232] },
-      { a3: "IRL", name: "Ireland", a2: "IE", coords: [-8.2439, 53.4129] },
-      { a3: "ISR", name: "Israel", a2: "IL", coords: [34.8516, 31.0461] },
-      { a3: "ITA", name: "Italy", a2: "IT", coords: [12.5674, 41.8719] },
-      { a3: "JAM", name: "Jamaica", a2: "JM", coords: [-77.2975, 18.1096] },
-      { a3: "JPN", name: "Japan", a2: "JP", coords: [138.2529, 36.2048] },
-      { a3: "JOR", name: "Jordan", a2: "JO", coords: [36.2384, 30.5852] },
-      { a3: "KAZ", name: "Kazakhstan", a2: "KZ", coords: [66.9237, 48.0196] },
-      { a3: "KEN", name: "Kenya", a2: "KE", coords: [37.9062, -0.0236] },
-      { a3: "KIR", name: "Kiribati", a2: "KI", coords: [-157.363, 1.870] },
-      { a3: "PRK", name: "North Korea", a2: "KP", coords: [127.5101, 40.3399] },
-      { a3: "KOR", name: "South Korea", a2: "KR", coords: [127.7669, 35.9078] },
-      { a3: "KWT", name: "Kuwait", a2: "KW", coords: [47.4818, 29.3117] },
-      { a3: "KGZ", name: "Kyrgyzstan", a2: "KG", coords: [74.7661, 41.2044] },
-      { a3: "LAO", name: "Laos", a2: "LA", coords: [102.4955, 19.8563] },
-      { a3: "LVA", name: "Latvia", a2: "LV", coords: [24.6032, 56.8796] },
-      { a3: "LBN", name: "Lebanon", a2: "LB", coords: [35.8623, 33.8547] },
-      { a3: "LSO", name: "Lesotho", a2: "LS", coords: [28.2336, -29.6099] },
-      { a3: "LBR", name: "Liberia", a2: "LR", coords: [-9.4295, 6.4281] },
-      { a3: "LBY", name: "Libya", a2: "LY", coords: [17.2283, 26.3351] },
-      { a3: "LIE", name: "Liechtenstein", a2: "LI", coords: [9.521, 47.166] },
-      { a3: "LTU", name: "Lithuania", a2: "LT", coords: [23.8813, 55.1694] },
-      { a3: "LUX", name: "Luxembourg", a2: "LU", coords: [6.1296, 49.8153] },
-      { a3: "MDG", name: "Madagascar", a2: "MG", coords: [46.8691, -18.7669] },
-      { a3: "MWI", name: "Malawi", a2: "MW", coords: [34.3015, -13.2543] },
-      { a3: "MYS", name: "Malaysia", a2: "MY", coords: [101.9758, 4.2105] },
-      { a3: "MDV", name: "Maldives", a2: "MV", coords: [73.2207, 3.2028] },
-      { a3: "MLI", name: "Mali", a2: "ML", coords: [-3.9962, 17.5707] },
-      { a3: "MLT", name: "Malta", a2: "MT", coords: [14.3754, 35.9375] },
-      { a3: "MHL", name: "Marshall Islands", a2: "MH", coords: [171.184, 7.131] },
-      { a3: "MRT", name: "Mauritania", a2: "MR", coords: [-10.9408, 21.0079] },
-      { a3: "MUS", name: "Mauritius", a2: "MU", coords: [57.5522, -20.3484] },
-      { a3: "MEX", name: "Mexico", a2: "MX", coords: [-102.5528, 23.6345] },
-      { a3: "FSM", name: "Micronesia", a2: "FM", coords: [150.5508, 7.4256] },
-      { a3: "MDA", name: "Moldova", a2: "MD", coords: [28.3699, 47.4116] },
-      { a3: "MCO", name: "Monaco", a2: "MC", coords: [7.4246, 43.7384] },
-      { a3: "MNG", name: "Mongolia", a2: "MN", coords: [103.8467, 46.8625] },
-      { a3: "MNE", name: "Montenegro", a2: "ME", coords: [19.3744, 42.7087] },
-      { a3: "MAR", name: "Morocco", a2: "MA", coords: [-7.0926, 31.7917] },
-      { a3: "MOZ", name: "Mozambique", a2: "MZ", coords: [35.5296, -18.6657] },
-      { a3: "MMR", name: "Myanmar", a2: "MM", coords: [95.9560, 21.9162] },
-      { a3: "NAM", name: "Namibia", a2: "NA", coords: [18.4904, -22.9576] },
-      { a3: "NRU", name: "Nauru", a2: "NR", coords: [166.931, -0.522] },
-      { a3: "NPL", name: "Nepal", a2: "NP", coords: [84.1240, 28.3949] },
-      { a3: "NLD", name: "Netherlands", a2: "NL", coords: [5.2913, 52.1326] },
-      { a3: "NZL", name: "New Zealand", a2: "NZ", coords: [174.8860, -40.9006] },
-      { a3: "NIC", name: "Nicaragua", a2: "NI", coords: [-85.2072, 12.8654] },
-      { a3: "NER", name: "Niger", a2: "NE", coords: [8.0817, 17.6078] },
-      { a3: "NGA", name: "Nigeria", a2: "NG", coords: [8.6753, 9.0820] },
-      { a3: "MKD", name: "North Macedonia", a2: "MK", coords: [21.7453, 41.6086] },
-      { a3: "NOR", name: "Norway", a2: "NO", coords: [8.4689, 60.4720] },
-      { a3: "OMN", name: "Oman", a2: "OM", coords: [55.9233, 21.4735] },
-      { a3: "PAK", name: "Pakistan", a2: "PK", coords: [69.3451, 30.3753] },
-      { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150] },
-      { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380] },
-      { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150] },
-      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425] },
-      { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899] },
-      { a3: "PHL", name: "Philippines", a2: "PH", coords: [121.7740, 12.8797] },
-      { a3: "POL", name: "Poland", a2: "PL", coords: [19.1451, 51.9194] },
-      { a3: "PRT", name: "Portugal", a2: "PT", coords: [-8.2245, 39.3999] },
-      { a3: "QAT", name: "Qatar", a2: "QA", coords: [51.1839, 25.3548] },
-      { a3: "ROU", name: "Romania", a2: "RO", coords: [24.9668, 45.9432] },
-      { a3: "RUS", name: "Russia", a2: "RU", coords: [105.3188, 61.5240] },
-      { a3: "RWA", name: "Rwanda", a2: "RW", coords: [29.8739, -1.9403] },
-      { a3: "KNA", name: "Saint Kitts & Nevis", a2: "KN", coords: [-62.7830, 17.3578] },
-      { a3: "LCA", name: "Saint Lucia", a2: "LC", coords: [-60.9789, 13.9094] },
-      { a3: "VCT", name: "St. Vincent & Gren.", a2: "VC", coords: [-61.2872, 12.9843] },
-      { a3: "WSM", name: "Samoa", a2: "WS", coords: [-172.1046, -13.7590] },
-      { a3: "SMR", name: "San Marino", a2: "SM", coords: [12.4578, 43.9424] },
-      { a3: "STP", name: "Sao Tome & Principe", a2: "ST", coords: [6.6131, 0.1864] },
-      { a3: "SAU", name: "Saudi Arabia", a2: "SA", coords: [45.0792, 23.8859] },
-      { a3: "SEN", name: "Senegal", a2: "SN", coords: [-14.4524, 14.4974] },
-      { a3: "SRB", name: "Serbia", a2: "RS", coords: [21.0059, 44.0165] },
-      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.4920, -4.6796] },
-      { a3: "SLE", name: "Sierra Leone", a2: "SL", coords: [-11.7799, 8.4606] },
-      { a3: "SGP", name: "Singapore", a2: "SG", coords: [103.8198, 1.3521] },
-      { a3: "SVK", name: "Slovakia", a2: "SK", coords: [19.6990, 48.6690] },
-      { a3: "SVN", name: "Slovenia", a2: "SI", coords: [14.9955, 46.1512] },
-      { a3: "SLB", name: "Solomon Islands", a2: "SB", coords: [160.1562, -9.6457] },
-      { a3: "SOM", name: "Somalia", a2: "SO", coords: [46.1996, 5.1521] },
-      { a3: "ZAF", name: "South Africa", a2: "ZA", coords: [22.9375, -30.5595] },
-      { a3: "SSD", name: "South Sudan", a2: "SS", coords: [31.3070, 6.8770] },
-      { a3: "ESP", name: "Spain", a2: "ES", coords: [-3.7492, 40.4637] },
-      { a3: "LKA", name: "Sri Lanka", a2: "LK", coords: [80.7718, 7.8731] },
-      { a3: "SDN", name: "Sudan", a2: "SD", coords: [30.2176, 12.8628] },
-      { a3: "SUR", name: "Suriname", a2: "SR", coords: [-56.0278, 3.9193] },
-      { a3: "SWE", name: "Sweden", a2: "SE", coords: [18.6435, 60.1282] },
-      { a3: "CHE", name: "Switzerland", a2: "CH", coords: [8.2275, 46.8182] },
-      { a3: "SYR", name: "Syria", a2: "SY", coords: [38.9968, 34.8021] },
-      { a3: "TWN", name: "Taiwan", a2: "TW", coords: [120.9605, 23.6978] },
-      { a3: "TJK", name: "Tajikistan", a2: "TJ", coords: [71.2761, 38.8610] },
-      { a3: "TZA", name: "Tanzania", a2: "TZ", coords: [34.8888, -6.3690] },
-      { a3: "THA", name: "Thailand", a2: "TH", coords: [100.9925, 15.8700] },
-      { a3: "TLS", name: "Timor-Leste", a2: "TL", coords: [125.7275, -8.8742] },
-      { a3: "TGO", name: "Togo", a2: "TG", coords: [0.8248, 8.6195] },
-      { a3: "TON", name: "Tonga", a2: "TO", coords: [-175.1982, -21.1789] },
-      { a3: "TTO", name: "Trinidad & Tobago", a2: "TT", coords: [-61.2225, 10.6918] },
-      { a3: "TUN", name: "Tunisia", a2: "TN", coords: [9.5375, 33.8869] },
-      { a3: "TUR", name: "Turkey", a2: "TR", coords: [35.2433, 38.9637] },
-      { a3: "TKM", name: "Turkmenistan", a2: "TM", coords: [59.5563, 38.9697] },
-      { a3: "TUV", name: "Tuvalu", a2: "TV", coords: [179.194, -8.506] },
-      { a3: "UGA", name: "Uganda", a2: "UG", coords: [32.2903, 1.3733] },
-      { a3: "UKR", name: "Ukraine", a2: "UA", coords: [31.1656, 48.3794] },
-      { a3: "ARE", name: "United Arab Emirates", a2: "AE", coords: [53.8478, 23.4241] },
-      { a3: "GBR", name: "United Kingdom", a2: "GB", coords: [-3.4360, 55.3781] },
-      { a3: "USA", name: "United States", a2: "US", coords: [-95.7129, 37.0902] },
-      { a3: "URY", name: "Uruguay", a2: "UY", coords: [-55.7658, -32.5228] },
-      { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775] },
-      { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767] },
-      { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029] },
-      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238] },
-      { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583] },
-      { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527] },
-      { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339] },
-      { a3: "ZWE", name: "Zimbabwe", a2: "ZW", coords: [29.1549, -19.0154] }
+      { a3: "AFG", name: "Afghanistan", a2: "AF", coords: [67.7099, 33.9391], anchors: [[67.7, 33.9], [62.2, 34.3], [69.1, 34.5]] },
+      { a3: "ALB", name: "Albania", a2: "AL", coords: [20.1683, 41.1533], anchors: [[20.1, 41.1], [19.8, 40.7]] },
+      { a3: "DZA", name: "Algeria", a2: "DZ", coords: [1.6596, 28.0339], anchors: [[1.6, 28.0], [3.0, 36.7], [-0.5, 35.7], [6.5, 36.3]] },
+      { a3: "AND", name: "Andorra", a2: "AD", coords: [1.5218, 42.5063], anchors: [[1.52, 42.5]] },
+      { a3: "AGO", name: "Angola", a2: "AO", coords: [17.8739, -11.2027], anchors: [[17.8, -11.2], [13.2, -8.8]] },
+      { a3: "ATG", name: "Antigua and Barbuda", a2: "AG", coords: [-61.7964, 17.0608], anchors: [[-61.7, 17.0]] },
+      { a3: "ARG", name: "Argentina", a2: "AR", coords: [-63.6167, -38.4161], anchors: [[-63.6, -38.4], [-58.4, -34.6]] },
+      { a3: "ARM", name: "Armenia", a2: "AM", coords: [45.0382, 40.0691], anchors: [[45.0, 40.0], [44.5, 40.1]] },
+      { a3: "AUS", name: "Australia", a2: "AU", coords: [133.7751, -25.2744], anchors: [[133.7, -25.2], [151.2, -33.8]] },
+      { a3: "AUT", name: "Austria", a2: "AT", coords: [14.5501, 47.5162], anchors: [[14.5, 47.5], [16.3, 48.2], [11.4, 47.2], [13.0, 47.8]] },
+      { a3: "AZE", name: "Azerbaijan", a2: "AZ", coords: [47.5769, 40.1431], anchors: [[47.5, 40.1], [49.8, 40.4]] },
+      { a3: "BHS", name: "Bahamas", a2: "BS", coords: [-77.3963, 25.0343], anchors: [[-77.3, 25.0]] },
+      { a3: "BHR", name: "Bahrain", a2: "BH", coords: [50.5577, 26.0667], anchors: [[50.5, 26.0]] },
+      { a3: "BGD", name: "Bangladesh", a2: "BD", coords: [90.3563, 23.6850], anchors: [[90.3, 23.6]] },
+      { a3: "BRB", name: "Barbados", a2: "BB", coords: [-59.5432, 13.1939], anchors: [[-59.5, 13.1]] },
+      { a3: "BLR", name: "Belarus", a2: "BY", coords: [27.9534, 53.7098], anchors: [[27.9, 53.7], [23.7, 52.1], [30.9, 52.4], [23.8, 53.6], [30.3, 53.9]] },
+      { a3: "BEL", name: "Belgium", a2: "BE", coords: [4.4699, 50.5039], anchors: [[4.4, 50.5], [4.3, 50.8], [3.2, 51.2], [5.5, 50.6]] },
+      { a3: "BLZ", name: "Belize", a2: "BZ", coords: [-88.4976, 17.1899], anchors: [[-88.4, 17.1]] },
+      { a3: "BEN", name: "Benin", a2: "BJ", coords: [2.3158, 9.3077], anchors: [[2.3, 9.3]] },
+      { a3: "BTN", name: "Bhutan", a2: "BT", coords: [90.4336, 27.5142], anchors: [[90.4, 27.5]] },
+      { a3: "BOL", name: "Bolivia", a2: "BO", coords: [-63.5887, -16.2902], anchors: [[-63.5, -16.2]] },
+      { a3: "BIH", name: "Bosnia and Herz.", a2: "BA", coords: [17.6791, 43.9159], anchors: [[17.6, 43.9], [18.4, 43.8], [17.1, 44.7]] },
+      { a3: "BWA", name: "Botswana", a2: "BW", coords: [24.6849, -22.3285], anchors: [[24.6, -22.3]] },
+      { a3: "BRA", name: "Brazil", a2: "BR", coords: [-51.9253, -14.2350], anchors: [[-51.9, -14.2]] },
+      { a3: "BRN", name: "Brunei", a2: "BN", coords: [114.7277, 4.5353], anchors: [[114.7, 4.5]] },
+      { a3: "BGR", name: "Bulgaria", a2: "BG", coords: [25.4858, 42.7339], anchors: [[25.4, 42.7], [23.3, 42.7], [27.4, 42.5], [24.7, 42.1]] },
+      { a3: "BFA", name: "Burkina Faso", a2: "BF", coords: [-1.5616, 12.2383], anchors: [[-1.5, 12.2]] },
+      { a3: "BDI", name: "Burundi", a2: "BI", coords: [29.9189, -3.3731], anchors: [[29.9, -3.3]] },
+      { a3: "CPV", name: "Cabo Verde", a2: "CV", coords: [-24.0132, 16.0021], anchors: [[-24.0, 16.0]] },
+      { a3: "KHM", name: "Cambodia", a2: "KH", coords: [104.9910, 12.5657], anchors: [[104.9, 12.5]] },
+      { a3: "CMR", name: "Cameroon", a2: "CM", coords: [12.3547, 7.3697], anchors: [[12.3, 7.3]] },
+      { a3: "CAN", name: "Canada", a2: "CA", coords: [-106.3468, 56.1304], anchors: [[-106.3, 56.1]] },
+      { a3: "CAF", name: "Central African Rep.", a2: "CF", coords: [20.9394, 6.6111], anchors: [[20.9, 6.6]] },
+      { a3: "TCD", name: "Chad", a2: "TD", coords: [18.7322, 15.4542], anchors: [[18.7, 15.4]] },
+      { a3: "CHL", name: "Chile", a2: "CL", coords: [-71.5430, -35.6751], anchors: [[-71.5, -35.6]] },
+      { a3: "CHN", name: "China", a2: "CN", coords: [104.1954, 35.8617], anchors: [[104.1, 35.8], [116.4, 39.9], [121.4, 31.2]] },
+      { a3: "COL", name: "Colombia", a2: "CO", coords: [-74.2973, 4.5709], anchors: [[-74.2, 4.5]] },
+      { a3: "COM", name: "Comoros", a2: "KM", coords: [43.8726, -11.8753], anchors: [[43.8, -11.8]] },
+      { a3: "COG", name: "Congo", a2: "CG", coords: [15.8277, -0.2280], anchors: [[15.8, -0.2]] },
+      { a3: "COD", name: "Congo (DRC)", a2: "CD", coords: [21.7587, -4.0383], anchors: [[21.7, -4.0]] },
+      { a3: "CRI", name: "Costa Rica", a2: "CR", coords: [-83.7534, 9.7489], anchors: [[-83.7, 9.7]] },
+      { a3: "CIV", name: "Côte d'Ivoire", a2: "CI", coords: [-5.5471, 7.5400], anchors: [[-5.5, 7.5]] },
+      { a3: "HRV", name: "Croatia", a2: "HR", coords: [15.2000, 45.1000], anchors: [[15.2, 45.1], [15.9, 45.8], [16.4, 43.5], [13.8, 44.8], [18.6, 45.5]] },
+      { a3: "CUB", name: "Cuba", a2: "CU", coords: [-77.7812, 21.5218], anchors: [[-77.7, 21.5]] },
+      { a3: "CYP", name: "Cyprus", a2: "CY", coords: [33.4299, 35.1264], anchors: [[33.4, 35.1], [33.0, 34.7], [33.9, 35.1]] },
+      { a3: "CZE", name: "Czech Republic", a2: "CZ", coords: [15.4730, 49.8175], anchors: [[15.4, 49.8], [14.4, 50.0], [16.6, 49.2], [18.2, 49.8]] },
+      { a3: "DNK", name: "Denmark", a2: "DK", coords: [9.5018, 56.2639], anchors: [[9.5, 56.2], [12.5, 55.6], [9.9, 57.0]] },
+      { a3: "DJI", name: "Djibouti", a2: "DJ", coords: [42.5903, 11.8251], anchors: [[42.5, 11.8]] },
+      { a3: "DMA", name: "Dominica", a2: "DM", coords: [-61.3710, 15.4150], anchors: [[-61.3, 15.4]] },
+      { a3: "DOM", name: "Dominican Republic", a2: "DO", coords: [-70.1627, 18.7357], anchors: [[-70.1, 18.7]] },
+      { a3: "ECU", name: "Ecuador", a2: "EC", coords: [-78.1834, -1.8312], anchors: [[-78.1, -1.8]] },
+      { a3: "EGY", name: "Egypt", a2: "EG", coords: [30.8025, 26.8206], anchors: [[30.8, 26.8], [31.2, 30.0], [29.9, 31.2], [32.5, 29.9], [32.8, 24.0]] },
+      { a3: "SLV", name: "El Salvador", a2: "SV", coords: [-88.8965, 13.7942], anchors: [[-88.8, 13.7]] },
+      { a3: "GNQ", name: "Equatorial Guinea", a2: "GQ", coords: [10.2679, 1.6508], anchors: [[10.2, 1.6]] },
+      { a3: "ERI", name: "Eritrea", a2: "ER", coords: [39.7823, 15.1794], anchors: [[39.7, 15.1]] },
+      { a3: "EST", name: "Estonia", a2: "EE", coords: [25.0136, 58.5953], anchors: [[25.0, 58.5], [24.7, 59.4], [26.7, 58.3]] },
+      { a3: "SWZ", name: "Eswatini", a2: "SZ", coords: [31.4659, -26.5225], anchors: [[31.4, -26.5]] },
+      { a3: "ETH", name: "Ethiopia", a2: "ET", coords: [40.4897, 9.1450], anchors: [[40.4, 9.1]] },
+      { a3: "FJI", name: "Fiji", a2: "FJ", coords: [178.0650, -17.7134], anchors: [[178.0, -17.7]] },
+      { a3: "FIN", name: "Finland", a2: "FI", coords: [25.7482, 61.9241], anchors: [[25.7, 61.9], [24.9, 60.1]] },
+      { a3: "FRA", name: "France", a2: "FR", coords: [2.2137, 46.2276], anchors: [[2.2, 46.2], [2.3, 48.8], [5.3, 43.2], [-0.5, 44.8], [4.8, 45.7], [-1.5, 47.2]] },
+      { a3: "GAB", name: "Gabon", a2: "GA", coords: [11.6094, -0.8037], anchors: [[11.6, -0.8]] },
+      { a3: "GMB", name: "Gambia", a2: "GM", coords: [-15.3101, 13.4432], anchors: [[-15.3, 13.4]] },
+      { a3: "GEO", name: "Georgia", a2: "GE", coords: [43.3569, 42.3154], anchors: [[43.3, 42.3], [44.8, 41.7], [41.6, 41.6]] },
+      // Germany: Anchors in South (Bavaria), West (Rhineland/Trier), North (Hamburg), East (Berlin)
+      { a3: "DEU", name: "Germany", a2: "DE", coords: [10.4515, 51.1657], anchors: [[10.4, 51.1], [11.5, 48.1], [8.6, 49.4], [6.6, 49.7], [6.9, 50.9], [13.4, 52.5], [9.9, 53.5]] },
+      { a3: "GHA", name: "Ghana", a2: "GH", coords: [-1.0232, 7.9465], anchors: [[-1.0, 7.9]] },
+      { a3: "GRC", name: "Greece", a2: "GR", coords: [21.8243, 39.0742], anchors: [[21.8, 39.0], [23.7, 37.9], [22.9, 40.6], [25.1, 35.3]] },
+      { a3: "GRD", name: "Grenada", a2: "GD", coords: [-61.6042, 12.1165], anchors: [[-61.6, 12.1]] },
+      { a3: "GTM", name: "Guatemala", a2: "GT", coords: [-90.2308, 15.7835], anchors: [[-90.2, 15.7]] },
+      { a3: "GIN", name: "Guinea", a2: "GN", coords: [-9.6966, 9.9456], anchors: [[-9.6, 9.9]] },
+      { a3: "GNB", name: "Guinea-Bissau", a2: "GW", coords: [-15.1804, 11.8037], anchors: [[-15.1, 11.8]] },
+      { a3: "GUY", name: "Guyana", a2: "GY", coords: [-58.9302, 4.8604], anchors: [[-58.9, 4.8]] },
+      { a3: "HTI", name: "Haiti", a2: "HT", coords: [-72.2852, 18.9712], anchors: [[-72.2, 18.9]] },
+      { a3: "HND", name: "Honduras", a2: "HN", coords: [-86.2419, 15.2000], anchors: [[-86.2, 15.2]] },
+      { a3: "HUN", name: "Hungary", a2: "HU", coords: [19.5033, 47.1625], anchors: [[19.5, 47.1], [19.0, 47.5], [16.8, 46.8], [21.6, 47.5]] },
+      { a3: "ISL", name: "Iceland", a2: "IS", coords: [-19.0208, 64.9631], anchors: [[-19.0, 64.9]] },
+      { a3: "IND", name: "India", a2: "IN", coords: [78.9629, 20.5937], anchors: [[78.9, 20.5], [77.2, 28.6], [72.8, 18.9]] },
+      { a3: "IDN", name: "Indonesia", a2: "ID", coords: [113.9213, -0.7893], anchors: [[113.9, -0.7], [106.8, -6.2]] },
+      { a3: "IRN", name: "Iran", a2: "IR", coords: [53.6880, 32.4279], anchors: [[53.6, 32.4], [51.3, 35.6], [48.5, 31.3]] },
+      { a3: "IRQ", name: "Iraq", a2: "IQ", coords: [43.6793, 33.2232], anchors: [[43.6, 33.2], [44.3, 33.3], [47.8, 30.5], [43.1, 36.3]] },
+      { a3: "IRL", name: "Ireland", a2: "IE", coords: [-8.2439, 53.4129], anchors: [[-8.2, 53.4], [-6.2, 53.3]] },
+      { a3: "ISR", name: "Israel", a2: "IL", coords: [34.8516, 31.0461], anchors: [[34.8, 31.0], [35.2, 31.7], [34.7, 32.0]] },
+      { a3: "ITA", name: "Italy", a2: "IT", coords: [12.5674, 41.8719], anchors: [[12.5, 41.8], [9.1, 45.4], [14.2, 40.8], [13.3, 38.1], [12.3, 45.4]] },
+      { a3: "JAM", name: "Jamaica", a2: "JM", coords: [-77.2975, 18.1096], anchors: [[-77.2, 18.1]] },
+      { a3: "JPN", name: "Japan", a2: "JP", coords: [138.2529, 36.2048], anchors: [[138.2, 36.2], [139.6, 35.6]] },
+      { a3: "JOR", name: "Jordan", a2: "JO", coords: [36.2384, 30.5852], anchors: [[36.2, 30.5], [35.9, 31.9]] },
+      { a3: "KAZ", name: "Kazakhstan", a2: "KZ", coords: [66.9237, 48.0196], anchors: [[66.9, 48.0], [71.4, 51.1], [76.9, 43.2]] },
+      { a3: "KEN", name: "Kenya", a2: "KE", coords: [37.9062, -0.0236], anchors: [[37.9, -0.0]] },
+      { a3: "KIR", name: "Kiribati", a2: "KI", coords: [-157.363, 1.870], anchors: [[-157.3, 1.8]] },
+      { a3: "PRK", name: "North Korea", a2: "KP", coords: [127.5101, 40.3399], anchors: [[127.5, 40.3]] },
+      { a3: "KOR", name: "South Korea", a2: "KR", coords: [127.7669, 35.9078], anchors: [[127.7, 35.9]] },
+      { a3: "KWT", name: "Kuwait", a2: "KW", coords: [47.4818, 29.3117], anchors: [[47.4, 29.3]] },
+      { a3: "KGZ", name: "Kyrgyzstan", a2: "KG", coords: [74.7661, 41.2044], anchors: [[74.7, 41.2]] },
+      { a3: "LAO", name: "Laos", a2: "LA", coords: [102.4955, 19.8563], anchors: [[102.4, 19.8]] },
+      { a3: "LVA", name: "Latvia", a2: "LV", coords: [24.6032, 56.8796], anchors: [[24.6, 56.8], [24.1, 56.9], [21.0, 56.5], [26.5, 55.8]] },
+      { a3: "LBN", name: "Lebanon", a2: "LB", coords: [35.8623, 33.8547], anchors: [[35.8, 33.8], [35.5, 33.8], [35.8, 34.4]] },
+      { a3: "LSO", name: "Lesotho", a2: "LS", coords: [28.2336, -29.6099], anchors: [[28.2, -29.6]] },
+      { a3: "LBR", name: "Liberia", a2: "LR", coords: [-9.4295, 6.4281], anchors: [[-9.4, 6.4]] },
+      { a3: "LBY", name: "Libya", a2: "LY", coords: [17.2283, 26.3351], anchors: [[17.2, 26.3], [13.1, 32.8], [20.0, 32.1]] },
+      { a3: "LIE", name: "Liechtenstein", a2: "LI", coords: [9.521, 47.166], anchors: [[9.5, 47.1]] },
+      { a3: "LTU", name: "Lithuania", a2: "LT", coords: [23.8813, 55.1694], anchors: [[23.8, 55.1], [25.2, 54.6], [23.9, 54.9], [21.1, 55.7]] },
+      { a3: "LUX", name: "Luxembourg", a2: "LU", coords: [6.1296, 49.8153], anchors: [[6.1, 49.8]] },
+      { a3: "MDG", name: "Madagascar", a2: "MG", coords: [46.8691, -18.7669], anchors: [[46.8, -18.7]] },
+      { a3: "MWI", name: "Malawi", a2: "MW", coords: [34.3015, -13.2543], anchors: [[34.3, -13.2]] },
+      { a3: "MYS", name: "Malaysia", a2: "MY", coords: [101.9758, 4.2105], anchors: [[101.9, 4.2]] },
+      { a3: "MDV", name: "Maldives", a2: "MV", coords: [73.2207, 3.2028], anchors: [[73.2, 3.2]] },
+      { a3: "MLI", name: "Mali", a2: "ML", coords: [-3.9962, 17.5707], anchors: [[-3.9, 17.5]] },
+      { a3: "MLT", name: "Malta", a2: "MT", coords: [14.3754, 35.9375], anchors: [[14.3, 35.9]] },
+      { a3: "MHL", name: "Marshall Islands", a2: "MH", coords: [171.184, 7.131], anchors: [[171.1, 7.1]] },
+      { a3: "MRT", name: "Mauritania", a2: "MR", coords: [-10.9408, 21.0079], anchors: [[-10.9, 21.0]] },
+      { a3: "MUS", name: "Mauritius", a2: "MU", coords: [57.5522, -20.3484], anchors: [[57.5, -20.3]] },
+      { a3: "MEX", name: "Mexico", a2: "MX", coords: [-102.5528, 23.6345], anchors: [[-102.5, 23.6], [-99.1, 19.4]] },
+      { a3: "FSM", name: "Micronesia", a2: "FM", coords: [150.5508, 7.4256], anchors: [[150.5, 7.4]] },
+      { a3: "MDA", name: "Moldova", a2: "MD", coords: [28.3699, 47.4116], anchors: [[28.3, 47.4], [28.8, 47.0]] },
+      { a3: "MCO", name: "Monaco", a2: "MC", coords: [7.4246, 43.7384], anchors: [[7.4, 43.7]] },
+      { a3: "MNG", name: "Mongolia", a2: "MN", coords: [103.8467, 46.8625], anchors: [[103.8, 46.8]] },
+      { a3: "MNE", name: "Montenegro", a2: "ME", coords: [19.3744, 42.7087], anchors: [[19.3, 42.7], [19.2, 42.4]] },
+      { a3: "MAR", name: "Morocco", a2: "MA", coords: [-7.0926, 31.7917], anchors: [[-7.0, 31.7], [-6.8, 34.0], [-5.8, 35.7], [-7.6, 33.5]] },
+      { a3: "MOZ", name: "Mozambique", a2: "MZ", coords: [35.5296, -18.6657], anchors: [[35.5, -18.6]] },
+      { a3: "MMR", name: "Myanmar", a2: "MM", coords: [95.9560, 21.9162], anchors: [[95.9, 21.9]] },
+      { a3: "NAM", name: "Namibia", a2: "NA", coords: [18.4904, -22.9576], anchors: [[18.4, -22.9]] },
+      { a3: "NRU", name: "Nauru", a2: "NR", coords: [166.931, -0.522], anchors: [[166.9, -0.5]] },
+      { a3: "NPL", name: "Nepal", a2: "NP", coords: [84.1240, 28.3949], anchors: [[84.1, 28.3]] },
+      { a3: "NLD", name: "Netherlands", a2: "NL", coords: [5.2913, 52.1326], anchors: [[5.2, 52.1], [4.9, 52.3], [4.4, 51.9]] },
+      { a3: "NZL", name: "New Zealand", a2: "NZ", coords: [174.8860, -40.9006], anchors: [[174.8, -40.9]] },
+      { a3: "NIC", name: "Nicaragua", a2: "NI", coords: [-85.2072, 12.8654], anchors: [[-85.2, 12.8]] },
+      { a3: "NER", name: "Niger", a2: "NE", coords: [8.0817, 17.6078], anchors: [[8.0, 17.6]] },
+      { a3: "NGA", name: "Nigeria", a2: "NG", coords: [8.6753, 9.0820], anchors: [[8.6, 9.0]] },
+      { a3: "MKD", name: "North Macedonia", a2: "MK", coords: [21.7453, 41.6086], anchors: [[21.7, 41.6], [21.4, 42.0]] },
+      { a3: "NOR", name: "Norway", a2: "NO", coords: [8.4689, 60.4720], anchors: [[8.4, 60.4], [10.7, 59.9]] },
+      { a3: "OMN", name: "Oman", a2: "OM", coords: [55.9233, 21.4735], anchors: [[55.9, 21.4]] },
+      { a3: "PAK", name: "Pakistan", a2: "PK", coords: [69.3451, 30.3753], anchors: [[69.3, 30.3]] },
+      { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150], anchors: [[134.5, 7.5]] },
+      { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380], anchors: [[-80.7, 8.5]] },
+      { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150], anchors: [[143.9, -6.3]] },
+      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [[-58.4, -23.4]] },
+      { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899], anchors: [[-75.0, -9.1]] },
+      { a3: "PHL", name: "Philippines", a2: "PH", coords: [121.7740, 12.8797], anchors: [[121.7, 12.8]] },
+      { a3: "POL", name: "Poland", a2: "PL", coords: [19.1451, 51.9194], anchors: [[19.1, 51.9], [21.0, 52.2], [19.9, 50.0], [18.6, 54.3], [16.9, 52.4], [22.5, 51.2], [17.0, 51.1]] },
+      { a3: "PRT", name: "Portugal", a2: "PT", coords: [-8.2245, 39.3999], anchors: [[-8.2, 39.3], [-9.1, 38.7], [-8.6, 41.1]] },
+      { a3: "QAT", name: "Qatar", a2: "QA", coords: [51.1839, 25.3548], anchors: [[51.1, 25.3]] },
+      { a3: "ROU", name: "Romania", a2: "RO", coords: [24.9668, 45.9432], anchors: [[24.9, 45.9], [26.1, 44.4], [23.5, 46.7], [28.6, 44.1], [21.2, 45.7]] },
+      { a3: "RUS", name: "Russia", a2: "RU", coords: [105.3188, 61.5240], anchors: [[37.6, 55.7], [30.3, 59.9], [20.5, 54.7], [39.7, 47.2]] },
+      { a3: "RWA", name: "Rwanda", a2: "RW", coords: [29.8739, -1.9403], anchors: [[29.8, -1.9]] },
+      { a3: "KNA", name: "Saint Kitts & Nevis", a2: "KN", coords: [-62.7830, 17.3578], anchors: [[-62.7, 17.3]] },
+      { a3: "LCA", name: "Saint Lucia", a2: "LC", coords: [-60.9789, 13.9094], anchors: [[-60.9, 13.9]] },
+      { a3: "VCT", name: "St. Vincent & Gren.", a2: "VC", coords: [-61.2872, 12.9843], anchors: [[-61.2, 12.9]] },
+      { a3: "WSM", name: "Samoa", a2: "WS", coords: [-172.1046, -13.7590], anchors: [[-172.1, -13.7]] },
+      { a3: "SMR", name: "San Marino", a2: "SM", coords: [12.4578, 43.9424], anchors: [[12.4, 43.9]] },
+      { a3: "STP", name: "Sao Tome & Principe", a2: "ST", coords: [6.6131, 0.1864], anchors: [[6.6, 0.1]] },
+      { a3: "SAU", name: "Saudi Arabia", a2: "SA", coords: [45.0792, 23.8859], anchors: [[45.0, 23.8], [39.1, 21.5], [38.5, 24.5]] },
+      { a3: "SEN", name: "Senegal", a2: "SN", coords: [-14.4524, 14.4974], anchors: [[-14.4, 14.4]] },
+      { a3: "SRB", name: "Serbia", a2: "RS", coords: [21.0059, 44.0165], anchors: [[21.0, 44.0], [20.4, 44.8], [21.9, 43.3], [19.8, 45.2]] },
+      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.4920, -4.6796], anchors: [[55.4, -4.6]] },
+      { a3: "SLE", name: "Sierra Leone", a2: "SL", coords: [-11.7799, 8.4606], anchors: [[-11.7, 8.4]] },
+      { a3: "SGP", name: "Singapore", a2: "SG", coords: [103.8198, 1.3521], anchors: [[103.8, 1.3]] },
+      { a3: "SVK", name: "Slovakia", a2: "SK", coords: [19.6990, 48.6690], anchors: [[19.6, 48.6], [17.1, 48.1], [21.2, 48.7]] },
+      { a3: "SVN", name: "Slovenia", a2: "SI", coords: [14.9955, 46.1512], anchors: [[14.9, 46.1], [14.5, 46.0], [13.6, 45.5]] },
+      { a3: "SLB", name: "Solomon Islands", a2: "SB", coords: [160.1562, -9.6457], anchors: [[160.1, -9.6]] },
+      { a3: "SOM", name: "Somalia", a2: "SO", coords: [46.1996, 5.1521], anchors: [[46.1, 5.1]] },
+      { a3: "ZAF", name: "South Africa", a2: "ZA", coords: [22.9375, -30.5595], anchors: [[22.9, -30.5]] },
+      { a3: "SSD", name: "South Sudan", a2: "SS", coords: [31.3070, 6.8770], anchors: [[31.3, 6.8]] },
+      { a3: "ESP", name: "Spain", a2: "ES", coords: [-3.7492, 40.4637], anchors: [[-3.7, 40.4], [-0.3, 39.4], [2.1, 41.3], [-5.9, 37.3], [-0.8, 41.6]] },
+      { a3: "LKA", name: "Sri Lanka", a2: "LK", coords: [80.7718, 7.8731], anchors: [[80.7, 7.8]] },
+      { a3: "SDN", name: "Sudan", a2: "SD", coords: [30.2176, 12.8628], anchors: [[30.2, 12.8]] },
+      { a3: "SUR", name: "Suriname", a2: "SR", coords: [-56.0278, 3.9193], anchors: [[-56.0, 3.9]] },
+      { a3: "SWE", name: "Sweden", a2: "SE", coords: [18.6435, 60.1282], anchors: [[18.6, 60.1], [18.0, 59.3], [11.9, 57.7]] },
+      { a3: "CHE", name: "Switzerland", a2: "CH", coords: [8.2275, 46.8182], anchors: [[8.2, 46.8], [6.1, 46.2], [8.5, 47.3]] },
+      { a3: "SYR", name: "Syria", a2: "SY", coords: [38.9968, 34.8021], anchors: [[38.9, 34.8], [36.2, 33.5], [37.1, 36.2], [35.7, 35.5]] },
+      { a3: "TWN", name: "Taiwan", a2: "TW", coords: [120.9605, 23.6978], anchors: [[120.9, 23.6]] },
+      { a3: "TJK", name: "Tajikistan", a2: "TJ", coords: [71.2761, 38.8610], anchors: [[71.2, 38.8]] },
+      { a3: "TZA", name: "Tanzania", a2: "TZ", coords: [34.8888, -6.3690], anchors: [[34.8, -6.3]] },
+      { a3: "THA", name: "Thailand", a2: "TH", coords: [100.9925, 15.8700], anchors: [[100.9, 15.8]] },
+      { a3: "TLS", name: "Timor-Leste", a2: "TL", coords: [125.7275, -8.8742], anchors: [[125.7, -8.8]] },
+      { a3: "TGO", name: "Togo", a2: "TG", coords: [0.8248, 8.6195], anchors: [[0.8, 8.6]] },
+      { a3: "TON", name: "Tonga", a2: "TO", coords: [-175.1982, -21.1789], anchors: [[-175.1, -21.1]] },
+      { a3: "TTO", name: "Trinidad & Tobago", a2: "TT", coords: [-61.2225, 10.6918], anchors: [[-61.2, 10.6]] },
+      { a3: "TUN", name: "Tunisia", a2: "TN", coords: [9.5375, 33.8869], anchors: [[9.5, 33.8], [10.1, 36.8], [10.6, 35.8]] },
+      { a3: "TUR", name: "Turkey", a2: "TR", coords: [35.2433, 38.9637], anchors: [[35.2, 38.9], [28.9, 41.0], [27.1, 38.4], [32.8, 39.9], [34.6, 36.8]] },
+      { a3: "TKM", name: "Turkmenistan", a2: "TM", coords: [59.5563, 38.9697], anchors: [[59.5, 38.9]] },
+      { a3: "TUV", name: "Tuvalu", a2: "TV", coords: [179.194, -8.506], anchors: [[179.1, -8.5]] },
+      { a3: "UGA", name: "Uganda", a2: "UG", coords: [32.2903, 1.3733], anchors: [[32.2, 1.3]] },
+      { a3: "UKR", name: "Ukraine", a2: "UA", coords: [31.1656, 48.3794], anchors: [[31.1, 48.3], [30.5, 50.4], [24.0, 49.8], [30.7, 46.4], [35.0, 48.4], [34.0, 44.9]] },
+      { a3: "ARE", name: "United Arab Emirates", a2: "AE", coords: [53.8478, 23.4241], anchors: [[53.8, 23.4]] },
+      { a3: "GBR", name: "United Kingdom", a2: "GB", coords: [-3.4360, 55.3781], anchors: [[-3.4, 55.3], [-0.1, 51.5], [-2.2, 53.4], [-3.1, 55.9]] },
+      { a3: "USA", name: "United States", a2: "US", coords: [-95.7129, 37.0902], anchors: [[-95.7, 37.0]] },
+      { a3: "URY", name: "Uruguay", a2: "UY", coords: [-55.7658, -32.5228], anchors: [[-55.7, -32.5]] },
+      { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775], anchors: [[64.5, 41.3]] },
+      { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767], anchors: [[166.9, -15.3]] },
+      { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029], anchors: [[12.4, 41.9]] },
+      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [[-66.5, 6.4]] },
+      { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583], anchors: [[108.2, 14.0]] },
+      { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527], anchors: [[48.5, 15.5]] },
+      { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339], anchors: [[27.8, -13.1]] },
+      { a3: "ZWE", name: "Zimbabwe", a2: "ZW", coords: [29.1549, -19.0154], anchors: [[29.1, -19.0]] }
     ];
 
     const getFlagEmoji = (a2) => {
@@ -310,6 +312,19 @@
       const num = parseInt(s);
       if (isNaN(num)) return s;
       return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
+    };
+
+    // Robust ray-casting algorithm on geographic [lon, lat]
+    const pointInGeoPolygon = (pt, ring) => {
+      const x = pt[0], y = pt[1];
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const xi = ring[i][0], yi = ring[i][1];
+        const xj = ring[j][0], yj = ring[j][1];
+        const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
     };
 
     function App() {
@@ -544,7 +559,6 @@
           <main className="flex-1 overflow-hidden relative flex flex-col">
             {view === "map" && (
               <div className="flex flex-col h-full">
-                {/* Upper Map Area */}
                 <div className="h-[48vh] sm:h-[55vh] relative border-b border-slate-800/80 bg-[#05070d]">
                   <InteractiveWorldMap 
                     coins={vaultData.coins || []}
@@ -557,7 +571,6 @@
                   />
                 </div>
 
-                {/* Bottom Interactive Vault Dashboard */}
                 <div className="flex-1 p-3.5 overflow-y-auto hide-scrollbar bg-[#080b14] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -574,7 +587,6 @@
                     </button>
                   </div>
 
-                  {/* Horizontal Feed of Coins */}
                   <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-1">
                     {(vaultData.coins || []).slice(0, 10).map(coin => {
                       const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
@@ -603,7 +615,6 @@
                     })}
                   </div>
 
-                  {/* Mini Stats Bar */}
                   <div className="grid grid-cols-3 gap-2 pt-1">
                     <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
                       <div className="text-[10px] text-slate-400">Total Coins</div>
@@ -1057,24 +1068,18 @@
         return "Coastal Waters";
       };
 
+      // Accurate Multi-Anchor Point-in-Polygon Engine
       const getCountriesInsideEmpire = (entity) => {
         if (!entity?.polygons || entity.polygons.length === 0) return [];
-        const polyGeoPoints = entity.polygons[0].points;
-        const projectedPoly = polyGeoPoints.map(p => projectionRef.current(p));
+        const ring = entity.polygons[0].points;
+        if (!ring || ring.length < 3) return [];
+
         const matched = [];
 
         SOVEREIGN_LIST.forEach(nation => {
-          const projCenter = projectionRef.current(nation.coords);
-          if (d3.polygonContains(projectedPoly, projCenter)) {
-            matched.push(nation);
-            return;
-          }
-          const hasNearbyVertex = polyGeoPoints.some(gp => {
-            const dx = gp[0] - nation.coords[0];
-            const dy = gp[1] - nation.coords[1];
-            return (dx * dx + dy * dy) < 18;
-          });
-          if (hasNearbyVertex) {
+          const testPoints = nation.anchors || [nation.coords];
+          const hasOverlap = testPoints.some(pt => pointInGeoPolygon(pt, ring));
+          if (hasOverlap) {
             matched.push(nation);
           }
         });
