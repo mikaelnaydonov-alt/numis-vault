@@ -168,6 +168,12 @@
       { a3: "YEM", name: "Yemen" }, { a3: "ZMB", name: "Zambia" }, { a3: "ZWE", name: "Zimbabwe" }
     ];
 
+    const formatYear = (yr) => {
+      const num = parseInt(yr);
+      if (isNaN(num)) return "0 AD";
+      return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
+    };
+
     function App() {
       const [view, setView] = useState("map");
       const [isSyncing, setIsSyncing] = useState(false);
@@ -179,6 +185,7 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
+      // Scrubber Timeline (3000 BC to 2026 AD)
       const [scrubberYear, setScrubberYear] = useState(1600);
 
       useEffect(() => {
@@ -228,7 +235,7 @@
       const sovereignCount = useMemo(() => {
         const set = new Set();
         (vaultData.coins || []).forEach(c => {
-          if (!c.isTerritory && SOVEREIGN_LIST.some(s => s.a3 === c.countryCode)) set.add(c.countryCode);
+          if (!c.isTerritory && !c.isHistorical && SOVEREIGN_LIST.some(s => s.a3 === c.countryCode)) set.add(c.countryCode);
         });
         return set.size;
       }, [vaultData.coins]);
@@ -256,8 +263,23 @@
       };
 
       const handleSaveHistoricalEntity = (entity) => {
-        const updatedEntities = [entity, ...(vaultData.historicalEntities || []).filter(e => e.id !== entity.id)];
+        const list = vaultData.historicalEntities || [];
+        const exists = list.some(e => e.id === entity.id);
+        const updatedEntities = exists ? list.map(e => e.id === entity.id ? entity : e) : [entity, ...list];
         pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
+      };
+
+      const handleAddHistoricalCoin = (entityId, coinInfo) => {
+        const newCoin = {
+          ...coinInfo,
+          id: Date.now().toString(),
+          isHistorical: true,
+          entityId: entityId,
+          createdAt: new Date().toISOString()
+        };
+        const updatedCoins = [newCoin, ...(vaultData.coins || [])];
+        pushToCloud({ ...vaultData, coins: updatedCoins });
+        alert(`Saved ${coinInfo.denomination} to ${coinInfo.countryName}!`);
       };
 
       return (
@@ -343,20 +365,22 @@
             </div>
           )}
 
-          {/* Timeline Scrubber Header in History Tab */}
+          {/* Timeline Scrubber Header in History Tab (3000 BC to 2026 AD) */}
           {view === "historical" && (
             <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 flex items-center gap-3">
-              <span className="text-xs font-bold text-amber-400 font-mono w-16">{scrubberYear} AD</span>
+              <span className="text-xs font-bold text-amber-400 font-mono w-20 text-center bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                {formatYear(scrubberYear)}
+              </span>
               <input 
                 type="range" 
-                min="-500" 
+                min="-3000" 
                 max="2026" 
                 step="5" 
                 value={scrubberYear} 
                 onChange={e => setScrubberYear(parseInt(e.target.value))}
                 className="flex-1 accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
               />
-              <span className="text-[10px] text-slate-400 font-semibold">Active Scrubber</span>
+              <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">Timeline Era</span>
             </div>
           )}
 
@@ -376,6 +400,7 @@
             {view === "vault" && (
               <CollectionVault 
                 coins={vaultData.coins || []} 
+                historicalEntities={vaultData.historicalEntities || []}
                 onDeleteCoin={handleDeleteCoin}
                 onEditCoin={(c) => {
                   setEditingCoin(c);
@@ -393,8 +418,10 @@
             {view === "historical" && (
               <HistoricalStudio 
                 entities={vaultData.historicalEntities || []}
+                coins={vaultData.coins || []}
                 scrubberYear={scrubberYear}
                 onSaveEntity={handleSaveHistoricalEntity}
+                onAddHistoricalCoin={handleAddHistoricalCoin}
               />
             )}
           </main>
@@ -419,6 +446,7 @@
       const statusMap = useMemo(() => {
         const map = {};
         coins.forEach(c => {
+          if (c.isHistorical) return;
           let targets = [c.countryCode];
           if (WEST_AFRICAN_CFA.includes(c.countryCode) && c.isUnion) targets = WEST_AFRICAN_CFA;
           if (EASTERN_CARIBBEAN.includes(c.countryCode) && c.isUnion) targets = EASTERN_CARIBBEAN;
@@ -511,8 +539,8 @@
       );
     }
 
-    // --- Dedicated Historical Cartographer Studio with Coast Clipping & Scaled Dots ---
-    function HistoricalStudio({ entities, scrubberYear, onSaveEntity }) {
+    // --- Dedicated Historical Cartographer Studio with Clean Surface & Tap Inspection ---
+    function HistoricalStudio({ entities, coins, scrubberYear, onSaveEntity, onAddHistoricalCoin }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
       const isVertexModeRef = useRef(false);
@@ -521,10 +549,18 @@
       const currentVerticesRef = useRef([]);
 
       const [closedPolygons, setClosedPolygons] = useState([]);
-      const [selectedPolygonIndex, setSelectedPolygonIndex] = useState(null);
-      const [customizerOpen, setCustomizerOpen] = useState(false);
-
       const [inspectingEntity, setInspectingEntity] = useState(null);
+
+      // Historical coin modal state
+      const [isAddingCoinForEntity, setIsAddingCoinForEntity] = useState(null);
+      const [historicalCoinForm, setHistoricalCoinForm] = useState({
+        denomination: "",
+        year: "",
+        ruler: "",
+        mint: "",
+        grade: "VF",
+        notes: ""
+      });
 
       const [placingMint, setPlacingMint] = useState(false);
       const placingMintRef = useRef(false);
@@ -534,11 +570,14 @@
 
       const [metaModalOpen, setMetaModalOpen] = useState(false);
       const [entityMeta, setEntityMeta] = useState({
-        name: "Polish - Lithuanian Commonwealth",
-        ruler: "Sigismund III Vasa",
-        startYear: "1588",
-        endYear: "1621",
-        mintCity: "Vilnius / Kraków"
+        id: "",
+        name: "Roman Empire",
+        ruler: "Trajan",
+        startYear: "-27",
+        endYear: "476",
+        mintCity: "Rome",
+        bgColor: "#ffaa00",
+        striped: false
       });
 
       const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 250]));
@@ -559,11 +598,9 @@
       }, [placingMint]);
 
       const pickDistinctColor = (startYr, endYr) => {
-        const s = parseInt(startYr) || -500;
+        const s = parseInt(startYr) || -3000;
         const e = parseInt(endYr) || 2026;
-        const activeContemporaryEntities = (entities || []).filter(item => {
-          return (item.startYear <= e && item.endYear >= s);
-        });
+        const activeContemporaryEntities = (entities || []).filter(item => (item.startYear <= e && item.endYear >= s));
 
         const usedColors = new Set();
         activeContemporaryEntities.forEach(item => {
@@ -572,8 +609,7 @@
         closedPolygons.forEach(p => { if (p.bgColor) usedColors.add(p.bgColor.toLowerCase()); });
 
         const available = PALETTE_64.filter(col => !usedColors.has(col.toLowerCase()));
-        const pool = available.length > 0 ? available : PALETTE_64;
-        return pool[Math.floor(Math.random() * pool.length)];
+        return (available.length > 0 ? available : PALETTE_64)[Math.floor(Math.random() * (available.length || PALETTE_64.length))];
       };
 
       useEffect(() => {
@@ -583,23 +619,24 @@
 
         const defs = svg.append("defs");
 
-        closedPolygons.forEach((poly, idx) => {
-          if (poly.striped) {
-            const pat = defs.append("pattern")
-              .attr("id", `stripe-pat-${idx}`)
-              .attr("width", 8).attr("height", 8)
-              .attr("patternTransform", "rotate(45 0 0)")
-              .attr("patternUnits", "userSpaceOnUse");
-            
-            pat.append("rect").attr("width", 8).attr("height", 8).attr("fill", poly.bgColor || "#111625");
-            pat.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
-              .attr("stroke", poly.stripeColor || "#ff1744").attr("stroke-width", 2.5);
-          }
+        // Patterns for striping
+        entities.forEach(ent => {
+          (ent.polygons || []).forEach((poly, idx) => {
+            if (poly.striped) {
+              const pat = defs.append("pattern")
+                .attr("id", `stripe-pat-${ent.id}-${idx}`)
+                .attr("width", 8).attr("height", 8)
+                .attr("patternTransform", "rotate(45 0 0)")
+                .attr("patternUnits", "userSpaceOnUse");
+              pat.append("rect").attr("width", 8).attr("height", 8).attr("fill", poly.bgColor || "#111625");
+              pat.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
+                .attr("stroke", poly.stripeColor || "#ff1744").attr("stroke-width", 2.5);
+            }
+          });
         });
 
         const gRoot = svg.append("g").attr("id", "studio-root");
         const gBase = gRoot.append("g").attr("id", "layer-base");
-        
         const gClippedEmpires = gRoot.append("g")
           .attr("id", "layer-clipped-empires")
           .attr("clip-path", "url(#world-land-clip)");
@@ -674,7 +711,7 @@
         svgEl.addEventListener("click", handlePointerClick);
         return () => svgEl.removeEventListener("click", handlePointerClick);
 
-      }, [closedPolygons]);
+      }, [closedPolygons, entities]);
 
       const updateDynamicOverlay = () => {
         const k = currentTransformRef.current ? currentTransformRef.current.k : 1;
@@ -689,36 +726,38 @@
         if (!gClipped.empty()) {
           gClipped.selectAll("*").remove();
 
+          // Saved historical entities (tappable to inspect/recolor)
           visibleEntities.forEach(ent => {
-            const gEnt = gClipped.append("g").attr("class", "cursor-pointer").on("click", () => setInspectingEntity(ent));
-            (ent.polygons || []).forEach(poly => {
+            const gEnt = gClipped.append("g")
+              .attr("class", "cursor-pointer")
+              .on("click", (evt) => {
+                evt.stopPropagation();
+                setInspectingEntity(ent);
+              });
+
+            (ent.polygons || []).forEach((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
               gEnt.append("path")
                 .attr("d", d)
-                .attr("fill", poly.bgColor || "#00f0ff")
+                .attr("fill", poly.striped ? `url(#stripe-pat-${ent.id}-${idx})` : (poly.bgColor || "#00f0ff"))
                 .attr("fill-opacity", 0.65)
                 .attr("stroke", poly.bgColor || "#00f0ff")
                 .attr("stroke-width", Math.max(0.4, 1.4 / k));
             });
           });
 
-          // Only show closed polygons if the currently edited entity fits the current scrubber year
+          // Polygons in current drafting session
           if (isCurrentActiveInScrubber) {
             closedPolygons.forEach((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
               gClipped.append("path")
                 .attr("d", d)
-                .attr("fill", poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor)
+                .attr("fill", poly.bgColor || "#ffd600")
                 .attr("fill-opacity", 0.7)
                 .attr("stroke", poly.bgColor || "#ffd600")
-                .attr("stroke-width", Math.max(0.5, 1.5 / k))
-                .attr("class", "cursor-pointer")
-                .on("click", () => {
-                  setSelectedPolygonIndex(idx);
-                  setCustomizerOpen(true);
-                });
+                .attr("stroke-width", Math.max(0.5, 1.5 / k));
             });
           }
         }
@@ -730,13 +769,19 @@
           visibleEntities.forEach(ent => {
             if (ent.mint && ent.mint.coords) {
               const [mx, my] = projectionRef.current(ent.mint.coords);
-              const gMint = gActive.append("g").attr("transform", `translate(${mx}, ${my})`);
+              const gMint = gActive.append("g")
+                .attr("transform", `translate(${mx}, ${my})`)
+                .attr("class", "cursor-pointer")
+                .on("click", (evt) => {
+                  evt.stopPropagation();
+                  setInspectingEntity(ent);
+                });
               gMint.append("circle").attr("r", 4.5 / k).attr("fill", "#ff1744");
               gMint.append("circle").attr("r", 1.8 / k).attr("fill", "#ffffff");
             }
           });
 
-          // Render active drawing dots & lines
+          // Live vertex dots & lines
           if (currentVertices.length > 0) {
             const pts = currentVertices.map(p => projectionRef.current(p));
             gActive.append("path")
@@ -796,7 +841,6 @@
         }
 
         const assignedColor = pickDistinctColor(entityMeta.startYear, entityMeta.endYear);
-
         const newPoly = {
           points: currentVertices,
           bgColor: assignedColor,
@@ -816,7 +860,7 @@
         }
 
         const fullEntity = {
-          id: Date.now().toString(),
+          id: entityMeta.id || Date.now().toString(),
           name: entityMeta.name,
           ruler: entityMeta.ruler,
           startYear: parseInt(entityMeta.startYear) || -500,
@@ -830,6 +874,8 @@
         };
 
         onSaveEntity(fullEntity);
+        setClosedPolygons([]);
+        setConfirmedMint(null);
         alert(`Saved ${entityMeta.name} to Historical Vault!`);
       };
 
@@ -841,25 +887,33 @@
         );
       };
 
-      // Determine active contemporary entity to display in bottom label
+      const handleUpdateEntityColor = (entityToUpdate, newColor) => {
+        const updated = {
+          ...entityToUpdate,
+          polygons: (entityToUpdate.polygons || []).map(p => ({ ...p, bgColor: newColor }))
+        };
+        onSaveEntity(updated);
+        setInspectingEntity(updated);
+      };
+
+      const handleToggleEntityStripe = (entityToUpdate, isStriped) => {
+        const updated = {
+          ...entityToUpdate,
+          polygons: (entityToUpdate.polygons || []).map(p => ({ ...p, striped: isStriped }))
+        };
+        onSaveEntity(updated);
+        setInspectingEntity(updated);
+      };
+
       const activeTimelineEntities = useMemo(() => {
-        const savedMatch = (entities || []).find(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
-        if (savedMatch) return savedMatch;
+        return (entities || []).find(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+      }, [entities, scrubberYear]);
 
-        const isCurrentActive = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
-        if (isCurrentActive && entityMeta.name) {
-          return {
-            name: entityMeta.name,
-            ruler: entityMeta.ruler,
-            startYear: entityMeta.startYear,
-            endYear: entityMeta.endYear,
-            mint: confirmedMint ? { city: entityMeta.mintCity, country: confirmedMint.country } : null
-          };
-        }
-        return null;
-      }, [entities, scrubberYear, entityMeta, confirmedMint]);
-
-      const isCurrentEntityActiveInYear = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
+      // Coins belonging to currently inspected empire
+      const coinsForInspectedEntity = useMemo(() => {
+        if (!inspectingEntity) return [];
+        return (coins || []).filter(c => c.entityId === inspectingEntity.id);
+      }, [coins, inspectingEntity]);
 
       return (
         <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col select-none">
@@ -871,36 +925,25 @@
             className="w-full h-full object-contain map-canvas-touch">
           </svg>
 
-          {/* Floating Top Entity Details - Shows only when current entity is active in timeline */}
-          {isCurrentEntityActiveInYear && (
-            <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
-              <div className="flex-1 mr-2">
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  {entityMeta.name}
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  {entityMeta.ruler} • {entityMeta.startYear} to {entityMeta.endYear}
-                </div>
-              </div>
+          {/* Clean Floating Setup Button (Opens modal instead of floating header bar) */}
+          <div className="absolute top-3 left-3 z-20 flex gap-2">
+            <button 
+              onClick={() => setMetaModalOpen(true)}
+              className="bg-[#0b101eee] border border-amber-400/60 text-amber-400 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5">
+              <span>🏛</span>
+              <span>{closedPolygons.length > 0 ? "Configuring Empire" : "New Empire Setup"}</span>
+            </button>
+            {closedPolygons.length > 0 && (
+              <button 
+                onClick={handleSaveCompleteEntity}
+                className="bg-amber-400 text-black px-3.5 py-1.5 rounded-xl text-xs font-black shadow-lg hover:bg-amber-300">
+                Save Empire
+              </button>
+            )}
+          </div>
 
-              <div className="flex items-center gap-1.5">
-                <button 
-                  onClick={() => setMetaModalOpen(true)} 
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg">
-                  Edit Info
-                </button>
-                <button 
-                  onClick={handleSaveCompleteEntity} 
-                  className="bg-amber-400 hover:bg-amber-300 font-extrabold text-black text-xs px-3 py-1 rounded-lg shadow-md">
-                  Save Entity
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Zoom Buttons */}
-          <div className="absolute right-3 top-16 z-30 flex flex-col gap-1.5">
+          {/* Zoom In/Out Buttons */}
+          <div className="absolute right-3 top-3 z-30 flex flex-col gap-1.5">
             <button 
               onClick={() => handleZoomStep("in")} 
               className="w-8 h-8 rounded-lg bg-[#0e1424]/90 border border-slate-700 text-white font-black text-base shadow-lg flex items-center justify-center active:scale-95">
@@ -913,15 +956,23 @@
             </button>
           </div>
 
-          {/* Floating Bottom Empire Pill - Pops up only when timeline reaches the period */}
+          {/* Bottom Floating Empire Pill (Tap opens full details & color editor) */}
           {activeTimelineEntities && (
             <div className="absolute bottom-24 inset-x-4 z-20 flex justify-center pointer-events-none">
-              <div className="bg-[#0b101eee] border border-amber-400/50 backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></div>
+              <div 
+                onClick={() => setInspectingEntity(activeTimelineEntities)}
+                className="pointer-events-auto cursor-pointer bg-[#0b101eee] border border-amber-400/50 hover:border-amber-400 backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-3 transition-transform active:scale-95">
+                <div 
+                  className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                  style={{ backgroundColor: activeTimelineEntities.polygons?.[0]?.bgColor || "#ffaa00" }}>
+                </div>
                 <div>
-                  <div className="text-xs font-black text-white">{activeTimelineEntities.name}</div>
-                  <div className="text-[10px] text-amber-300 font-medium">
-                    {activeTimelineEntities.ruler} ({activeTimelineEntities.startYear} – {activeTimelineEntities.endYear})
+                  <div className="text-xs font-black text-white flex items-center gap-2">
+                    <span>{activeTimelineEntities.name}</span>
+                    <span className="text-[10px] text-amber-400 font-normal">Tap to inspect ⓘ</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-medium">
+                    {activeTimelineEntities.ruler} ({formatYear(activeTimelineEntities.startYear)} – {formatYear(activeTimelineEntities.endYear)})
                     {activeTimelineEntities.mint?.city && ` • Mint: ${activeTimelineEntities.mint.city}`}
                   </div>
                 </div>
@@ -929,9 +980,8 @@
             </div>
           )}
 
-          {/* Elevated Bottom Control Bar (Shifted up to prevent Safari gesture bar clash) */}
+          {/* Elevated Bottom Control Bar */}
           <div className="absolute bottom-9 sm:bottom-8 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
-            
             <div className="pointer-events-auto">
               <button 
                 onClick={() => { setPlacingMint(!placingMint); setIsVertexMode(false); }}
@@ -962,7 +1012,7 @@
                 onClick={() => { setIsVertexMode(!isVertexMode); setPlacingMint(false); }}
                 className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isVertexMode ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
                 <span>📍</span>
-                <span>{isVertexMode ? "Tap to Add Dots" : "Start Boundary"}</span>
+                <span>{isVertexMode ? "Tap Map to Add Dots" : "Start Boundary"}</span>
               </button>
             </div>
           </div>
@@ -993,7 +1043,7 @@
             </div>
           )}
 
-          {/* Edit Info Modal */}
+          {/* Empire Setup Modal */}
           {metaModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
@@ -1009,18 +1059,19 @@
                       required 
                       value={entityMeta.name} 
                       onChange={e => setEntityMeta({...entityMeta, name: e.target.value})}
-                      placeholder="e.g. Polish-Lithuanian Commonwealth" 
+                      placeholder="e.g. Roman Empire" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Start Year</label>
+                      <label className="text-slate-400 block mb-1">Start Year (negative = BC)</label>
                       <input 
                         type="number" 
                         value={entityMeta.startYear} 
                         onChange={e => setEntityMeta({...entityMeta, startYear: e.target.value})}
+                        placeholder="-27"
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1030,16 +1081,18 @@
                         type="number" 
                         value={entityMeta.endYear} 
                         onChange={e => setEntityMeta({...entityMeta, endYear: e.target.value})}
+                        placeholder="476"
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1">Ruler / Monarch</label>
+                    <label className="text-slate-400 block mb-1">Ruler / Monarch / Emperor</label>
                     <input 
                       value={entityMeta.ruler} 
                       onChange={e => setEntityMeta({...entityMeta, ruler: e.target.value})}
+                      placeholder="e.g. Augustus / Trajan" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1049,6 +1102,7 @@
                     <input 
                       value={entityMeta.mintCity} 
                       onChange={e => setEntityMeta({...entityMeta, mintCity: e.target.value})}
+                      placeholder="e.g. Rome / Lugdunum" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1056,110 +1110,191 @@
                   <button 
                     onClick={() => setMetaModalOpen(false)} 
                     className="w-full py-2.5 bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
-                    Done
+                    Confirm & Start Map Drawing
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Polygon Customizer Drawer */}
-          {customizerOpen && selectedPolygonIndex !== null && (
-            <div className="fixed inset-x-0 bottom-0 z-50 bg-[#0d1324] border-t border-slate-700 rounded-t-3xl p-4 max-h-[60vh] overflow-y-auto hide-scrollbar space-y-3 shadow-2xl">
-              <div className="flex items-center justify-between pb-1 border-b border-slate-800">
-                <h3 className="text-xs font-bold text-white">Closed Polygon #{selectedPolygonIndex + 1} Style</h3>
-                <button onClick={() => setCustomizerOpen(false)} className="text-slate-400 hover:text-white font-bold text-sm">✕</button>
-              </div>
-
-              <div className="flex items-center justify-between bg-[#12192e] p-2.5 rounded-xl border border-slate-800">
-                <div>
-                  <div className="text-xs font-semibold text-white">Diagonal Striped Hatching</div>
-                  <div className="text-[10px] text-slate-400">Mark outer expansion or disputed zone</div>
+          {/* Comprehensive Empire Inspector, Color Changer & Coin Drawer */}
+          {inspectingEntity && (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
+                
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className="w-3.5 h-3.5 rounded-full" 
+                      style={{ backgroundColor: inspectingEntity.polygons?.[0]?.bgColor || "#ffaa00" }}>
+                    </span>
+                    <h3 className="text-sm font-black text-white">{inspectingEntity.name}</h3>
+                  </div>
+                  <button onClick={() => setInspectingEntity(null)} className="text-slate-400 hover:text-white text-base font-bold">✕</button>
                 </div>
-                <input 
-                  type="checkbox" 
-                  checked={closedPolygons[selectedPolygonIndex]?.striped || false} 
-                  onChange={e => {
-                    const st = e.target.checked;
-                    setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, striped: st } : p));
-                  }} 
-                  className="w-5 h-5 accent-red-500" 
-                />
-              </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">Fill Background Color (64 Options):</label>
-                <div className="grid grid-cols-8 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
-                  {PALETTE_64.map(color => (
-                    <button
-                      key={color}
-                      onClick={() => {
-                        setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, bgColor: color } : p));
-                      }}
-                      style={{ backgroundColor: color }}
-                      className="w-full h-5 rounded-md hover:scale-110 transition-transform"
-                    />
-                  ))}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-[#13192c] p-2.5 rounded-xl border border-slate-800">
+                  <div><span className="text-slate-400">Ruler:</span> <span className="text-white font-semibold">{inspectingEntity.ruler || "—"}</span></div>
+                  <div><span className="text-slate-400">Era:</span> <span className="text-amber-400 font-semibold">{formatYear(inspectingEntity.startYear)} – {formatYear(inspectingEntity.endYear)}</span></div>
+                  <div className="col-span-2"><span className="text-slate-400">Mint:</span> <span className="text-white">{inspectingEntity.mint?.city || "—"} ({inspectingEntity.mint?.country || "—"})</span></div>
                 </div>
-              </div>
 
-              {closedPolygons[selectedPolygonIndex]?.striped && (
+                {/* Inline 64-Color Palette Switcher */}
                 <div>
-                  <label className="text-[11px] font-bold text-red-400 block mb-1">Stripe Line Color:</label>
-                  <div className="grid grid-cols-8 gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-slate-300">Change Empire Color (64 Options):</label>
+                    <label className="text-[10px] text-slate-400 flex items-center gap-1 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={inspectingEntity.polygons?.[0]?.striped || false}
+                        onChange={e => handleToggleEntityStripe(inspectingEntity, e.target.checked)}
+                        className="accent-red-500 rounded" 
+                      />
+                      <span>Striped</span>
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-8 gap-1.5 max-h-24 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
                     {PALETTE_64.map(color => (
                       <button
                         key={color}
-                        onClick={() => {
-                          setClosedPolygons(prev => prev.map((p, i) => i === selectedPolygonIndex ? { ...p, stripeColor: color } : p));
-                        }}
+                        onClick={() => handleUpdateEntityColor(inspectingEntity, color)}
                         style={{ backgroundColor: color }}
                         className="w-full h-5 rounded-md hover:scale-110 transition-transform"
                       />
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Overlapping Modern Nations Modal */}
-          {inspectingEntity && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h3 className="text-xs font-bold text-white">{inspectingEntity.name}</h3>
-                  <button onClick={() => setInspectingEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
-                </div>
-
-                <div className="text-xs space-y-1 bg-[#12182b] p-2.5 rounded-xl border border-slate-800">
-                  <div><span className="text-slate-400">Ruler:</span> {inspectingEntity.ruler || "—"}</div>
-                  <div><span className="text-slate-400">Timeline:</span> {inspectingEntity.startYear} – {inspectingEntity.endYear}</div>
-                  {inspectingEntity.mint && (
-                    <div><span className="text-slate-400">Mint:</span> {inspectingEntity.mint.city} ({inspectingEntity.mint.country})</div>
-                  )}
-                </div>
-
+                {/* Attached Historical Coins */}
                 <div>
-                  <label className="text-[11px] font-bold text-cyan-400 block mb-1.5">Overlapping Modern Countries:</label>
-                  <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto hide-scrollbar">
-                    {inspectingEntity.polygons && inspectingEntity.polygons[0] ? (
-                      worldGeoRef.current.features.filter(feat => {
-                        const center = d3.geoCentroid(feat);
-                        return d3.polygonContains(inspectingEntity.polygons[0].points, center);
-                      }).map((feat, idx) => {
-                        const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === feat.id);
-                        return (
-                          <span key={idx} className="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-[10px] text-slate-300">
-                            {item ? item.name : "Territory"}
-                          </span>
-                        );
-                      })
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-cyan-400">Coins in Vault ({coinsForInspectedEntity.length})</span>
+                    <button 
+                      onClick={() => setIsAddingCoinForEntity(inspectingEntity)}
+                      className="bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-[11px] px-2.5 py-1 rounded-lg shadow">
+                      + Add Coin to {inspectingEntity.name}
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto hide-scrollbar">
+                    {coinsForInspectedEntity.length === 0 ? (
+                      <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
+                        No coins attached to this empire yet.
+                      </div>
                     ) : (
-                      <span className="text-xs text-slate-500">None detected</span>
+                      coinsForInspectedEntity.map(coin => (
+                        <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center">
+                          <div>
+                            <div className="text-white font-bold">{coin.denomination}</div>
+                            <div className="text-[10px] text-slate-400">{coin.ruler} • {formatYear(coin.year)} • {coin.mint || "Mint unknown"}</div>
+                          </div>
+                          <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
+                            {coin.grade || "UNC"}
+                          </span>
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Add Historical Coin Modal */}
+          {isAddingCoinForEntity && (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Add Coin: <span className="text-amber-400">{isAddingCoinForEntity.name}</span>
+                  </h3>
+                  <button onClick={() => setIsAddingCoinForEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                </div>
+
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  onAddHistoricalCoin(isAddingCoinForEntity.id, {
+                    ...historicalCoinForm,
+                    countryCode: "HIST",
+                    countryName: isAddingCoinForEntity.name,
+                    inPossession: true,
+                    neonColor: "amber"
+                  });
+                  setIsAddingCoinForEntity(null);
+                  setHistoricalCoinForm({ denomination: "", year: "", ruler: "", mint: "", grade: "VF", notes: "" });
+                }} className="space-y-2.5 text-xs">
+                  
+                  <div>
+                    <label className="text-slate-400 block mb-1">Denomination * (e.g. Denarius, Sestertius)</label>
+                    <input 
+                      required 
+                      value={historicalCoinForm.denomination} 
+                      onChange={e => setHistoricalCoinForm({...historicalCoinForm, denomination: e.target.value})}
+                      placeholder="e.g. Denarius" 
+                      className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-400 block mb-1">Year (neg = BC)</label>
+                      <input 
+                        type="number"
+                        value={historicalCoinForm.year} 
+                        onChange={e => setHistoricalCoinForm({...historicalCoinForm, year: e.target.value})}
+                        placeholder="e.g. 112 or -44" 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 block mb-1">Grade</label>
+                      <input 
+                        value={historicalCoinForm.grade} 
+                        onChange={e => setHistoricalCoinForm({...historicalCoinForm, grade: e.target.value})}
+                        placeholder="VF / XF" 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-400 block mb-1">Emperor / Ruler</label>
+                      <input 
+                        value={historicalCoinForm.ruler} 
+                        onChange={e => setHistoricalCoinForm({...historicalCoinForm, ruler: e.target.value})}
+                        placeholder={isAddingCoinForEntity.ruler || "e.g. Trajan"} 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 block mb-1">Mint City</label>
+                      <input 
+                        value={historicalCoinForm.mint} 
+                        onChange={e => setHistoricalCoinForm({...historicalCoinForm, mint: e.target.value})}
+                        placeholder={isAddingCoinForEntity.mint?.city || "e.g. Rome"} 
+                        className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1">Notes / Description</label>
+                    <input 
+                      value={historicalCoinForm.notes} 
+                      onChange={e => setHistoricalCoinForm({...historicalCoinForm, notes: e.target.value})}
+                      placeholder="e.g. Pax reverse, acquired in Munich" 
+                      className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full py-2.5 bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
+                    Save Historical Coin to Vault
+                  </button>
+                </form>
               </div>
             </div>
           )}
@@ -1168,25 +1303,28 @@
       );
     }
 
-    // --- Vault Cards Tab ---
-    function CollectionVault({ coins, onDeleteCoin, onEditCoin, onAddClick }) {
+    // --- Vault Cards Tab with Historical / Sovereign Filter ---
+    function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onAddClick }) {
       const [query, setQuery] = useState("");
+      const [vaultMode, setVaultMode] = useState("all"); // "all", "sovereign", "historical"
 
       const filtered = useMemo(() => {
-        return coins.filter(c => 
-          c.countryName.toLowerCase().includes(query.toLowerCase()) ||
-          c.denomination.toLowerCase().includes(query.toLowerCase()) ||
-          (c.mint && c.mint.toLowerCase().includes(query.toLowerCase())) ||
-          (c.ruler && c.ruler.toLowerCase().includes(query.toLowerCase()))
-        );
-      }, [coins, query]);
+        return coins.filter(c => {
+          if (vaultMode === "sovereign" && c.isHistorical) return false;
+          if (vaultMode === "historical" && !c.isHistorical) return false;
+
+          const searchTarget = `${c.countryName} ${c.denomination} ${c.mint || ""} ${c.ruler || ""}`.toLowerCase();
+          return searchTarget.includes(query.toLowerCase());
+        });
+      }, [coins, query, vaultMode]);
 
       return (
         <div className="flex flex-col h-full p-3.5 overflow-y-auto hide-scrollbar space-y-3">
+          
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="Search coin, ruler, mint..." 
+              placeholder="Search coin, empire, ruler, mint..." 
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="flex-1 bg-[#101524] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#00f0ff]" 
@@ -1194,21 +1332,43 @@
             <button onClick={onAddClick} className="bg-[#00f0ff] font-bold text-black text-xs px-3 rounded-xl shadow-lg">+ Add</button>
           </div>
 
+          {/* Sub-Tabs for Vault */}
+          <div className="flex gap-1.5 bg-[#090d18] p-1 rounded-xl border border-slate-800 text-xs">
+            <button 
+              onClick={() => setVaultMode("all")}
+              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "all" ? "bg-slate-800 text-white" : "text-slate-400"}`}>
+              All ({coins.length})
+            </button>
+            <button 
+              onClick={() => setVaultMode("sovereign")}
+              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "sovereign" ? "bg-cyan-500 text-black" : "text-slate-400"}`}>
+              Modern ({coins.filter(c => !c.isHistorical).length})
+            </button>
+            <button 
+              onClick={() => setVaultMode("historical")}
+              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "historical" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+              Ancient & Medieval ({coins.filter(c => c.isHistorical).length})
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
             {filtered.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 text-xs">
-                No coins found in vault.
+                No coins found in this category.
               </div>
             ) : (
               filtered.map(coin => (
                 <div 
                   key={coin.id} 
-                  className={`bg-[#0f1424] border rounded-2xl p-3 space-y-2 relative ${!coin.inPossession ? "border-[#ff1744] shadow-[0_0_6px_rgba(255,23,68,0.2)]" : "border-slate-800"}`}>
+                  className={`bg-[#0f1424] border rounded-2xl p-3 space-y-2 relative ${coin.isHistorical ? "border-amber-400/40" : (!coin.inPossession ? "border-[#ff1744]" : "border-slate-800")}`}>
                   
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
-                      <p className="text-[11px] text-[#00f0ff] font-semibold">{coin.denomination}</p>
+                      <div className="flex items-center gap-1.5">
+                        {coin.isHistorical && <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 px-1 rounded font-semibold">Ancient</span>}
+                        <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
+                      </div>
+                      <p className={`text-[11px] font-semibold ${coin.isHistorical ? "text-amber-400" : "text-[#00f0ff]"}`}>{coin.denomination}</p>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -1218,7 +1378,7 @@
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 bg-[#080b14] p-1.5 rounded-lg text-[10px] text-slate-300">
-                    <div><span className="text-slate-500">Year:</span> {coin.year || "—"}</div>
+                    <div><span className="text-slate-500">Year:</span> {formatYear(coin.year)}</div>
                     <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
                     <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
                     <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "—"}</div>
@@ -1249,6 +1409,7 @@
           grade: "UNC",
           inPossession: true,
           isUnion: false,
+          isHistorical: false,
           neonColor: "cyan",
           notes: ""
         };
@@ -1292,7 +1453,7 @@
                   <input required value={formData.denomination} onChange={e => setFormData({...formData, denomination: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Year</label>
+                  <label className="text-slate-400 block mb-1">Year (neg = BC)</label>
                   <input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
               </div>
