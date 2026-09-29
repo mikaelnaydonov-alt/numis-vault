@@ -168,9 +168,16 @@
       { a3: "YEM", name: "Yemen" }, { a3: "ZMB", name: "Zambia" }, { a3: "ZWE", name: "Zimbabwe" }
     ];
 
-    const formatYear = (yr) => {
-      const num = parseInt(yr);
-      if (isNaN(num)) return "0 AD";
+    // Helper: Formats single years or ranges gracefully (e.g. "1588-1621", "-44" -> "44 BC")
+    const formatYearDisplay = (yr) => {
+      if (!yr && yr !== 0) return "—";
+      const s = String(yr).trim();
+      if (s.includes("-") && !s.startsWith("-")) {
+        // e.g. 1588-1621
+        return `${s} AD`;
+      }
+      const num = parseInt(s);
+      if (isNaN(num)) return s;
       return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
     };
 
@@ -279,7 +286,7 @@
         };
         const updatedCoins = [newCoin, ...(vaultData.coins || [])];
         pushToCloud({ ...vaultData, coins: updatedCoins });
-        alert(`Saved ${coinInfo.denomination} to ${coinInfo.countryName}!`);
+        alert(`Saved ${coinInfo.denomination} (${coinInfo.year}) to ${coinInfo.countryName}!`);
       };
 
       return (
@@ -365,11 +372,11 @@
             </div>
           )}
 
-          {/* Timeline Scrubber Header in History Tab (3000 BC to 2026 AD) */}
+          {/* Timeline Scrubber Header in History Tab */}
           {view === "historical" && (
             <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 flex items-center gap-3">
               <span className="text-xs font-bold text-amber-400 font-mono w-20 text-center bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                {formatYear(scrubberYear)}
+                {formatYearDisplay(scrubberYear)}
               </span>
               <input 
                 type="range" 
@@ -539,7 +546,7 @@
       );
     }
 
-    // --- Dedicated Historical Cartographer Studio with Clean Surface & Tap Inspection ---
+    // --- Dedicated Historical Cartographer Studio with Clean Color Switcher & Dash Range Dates ---
     function HistoricalStudio({ entities, coins, scrubberYear, onSaveEntity, onAddHistoricalCoin }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
@@ -550,8 +557,9 @@
 
       const [closedPolygons, setClosedPolygons] = useState([]);
       const [inspectingEntity, setInspectingEntity] = useState(null);
+      const [colorPaletteModalEntity, setColorPaletteModalEntity] = useState(null);
 
-      // Historical coin modal state
+      // Historical coin modal state (supports range strings like "1588-1621")
       const [isAddingCoinForEntity, setIsAddingCoinForEntity] = useState(null);
       const [historicalCoinForm, setHistoricalCoinForm] = useState({
         denomination: "",
@@ -571,12 +579,12 @@
       const [metaModalOpen, setMetaModalOpen] = useState(false);
       const [entityMeta, setEntityMeta] = useState({
         id: "",
-        name: "Roman Empire",
-        ruler: "Trajan",
-        startYear: "-27",
-        endYear: "476",
-        mintCity: "Rome",
-        bgColor: "#ffaa00",
+        name: "Polish - Lithuanian Commonwealth",
+        ruler: "Sigismund III Vasa",
+        startYear: "1588",
+        endYear: "1621",
+        mintCity: "Vilnius / Kraków",
+        bgColor: "#ffd600",
         striped: false
       });
 
@@ -597,21 +605,7 @@
         placingMintRef.current = placingMint;
       }, [placingMint]);
 
-      const pickDistinctColor = (startYr, endYr) => {
-        const s = parseInt(startYr) || -3000;
-        const e = parseInt(endYr) || 2026;
-        const activeContemporaryEntities = (entities || []).filter(item => (item.startYear <= e && item.endYear >= s));
-
-        const usedColors = new Set();
-        activeContemporaryEntities.forEach(item => {
-          (item.polygons || []).forEach(p => { if (p.bgColor) usedColors.add(p.bgColor.toLowerCase()); });
-        });
-        closedPolygons.forEach(p => { if (p.bgColor) usedColors.add(p.bgColor.toLowerCase()); });
-
-        const available = PALETTE_64.filter(col => !usedColors.has(col.toLowerCase()));
-        return (available.length > 0 ? available : PALETTE_64)[Math.floor(Math.random() * (available.length || PALETTE_64.length))];
-      };
-
+      // Re-build patterns & base canvas
       useEffect(() => {
         const svgEl = svgRef.current;
         const svg = d3.select(svgEl);
@@ -619,7 +613,7 @@
 
         const defs = svg.append("defs");
 
-        // Patterns for striping
+        // Dynamic Hatch Patterns
         entities.forEach(ent => {
           (ent.polygons || []).forEach((poly, idx) => {
             if (poly.striped) {
@@ -726,7 +720,6 @@
         if (!gClipped.empty()) {
           gClipped.selectAll("*").remove();
 
-          // Saved historical entities (tappable to inspect/recolor)
           visibleEntities.forEach(ent => {
             const gEnt = gClipped.append("g")
               .attr("class", "cursor-pointer")
@@ -747,16 +740,16 @@
             });
           });
 
-          // Polygons in current drafting session
+          // In-progress shape
           if (isCurrentActiveInScrubber) {
             closedPolygons.forEach((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
               gClipped.append("path")
                 .attr("d", d)
-                .attr("fill", poly.bgColor || "#ffd600")
+                .attr("fill", poly.bgColor || entityMeta.bgColor || "#ffd600")
                 .attr("fill-opacity", 0.7)
-                .attr("stroke", poly.bgColor || "#ffd600")
+                .attr("stroke", poly.bgColor || entityMeta.bgColor || "#ffd600")
                 .attr("stroke-width", Math.max(0.5, 1.5 / k));
             });
           }
@@ -781,7 +774,7 @@
             }
           });
 
-          // Live vertex dots & lines
+          // In-progress dots
           if (currentVertices.length > 0) {
             const pts = currentVertices.map(p => projectionRef.current(p));
             gActive.append("path")
@@ -840,11 +833,10 @@
           return;
         }
 
-        const assignedColor = pickDistinctColor(entityMeta.startYear, entityMeta.endYear);
         const newPoly = {
           points: currentVertices,
-          bgColor: assignedColor,
-          striped: false,
+          bgColor: entityMeta.bgColor || "#ffd600",
+          striped: entityMeta.striped || false,
           stripeColor: "#ff1744"
         };
 
@@ -865,7 +857,7 @@
           ruler: entityMeta.ruler,
           startYear: parseInt(entityMeta.startYear) || -500,
           endYear: parseInt(entityMeta.endYear) || 2026,
-          polygons: closedPolygons,
+          polygons: closedPolygons.map(p => ({ ...p, bgColor: entityMeta.bgColor, striped: entityMeta.striped })),
           mint: confirmedMint ? {
             city: entityMeta.mintCity,
             country: confirmedMint.country,
@@ -887,29 +879,31 @@
         );
       };
 
-      const handleUpdateEntityColor = (entityToUpdate, newColor) => {
+      // Direct color modifier for any entity
+      const applyColorToEntity = (targetEntity, newColor) => {
         const updated = {
-          ...entityToUpdate,
-          polygons: (entityToUpdate.polygons || []).map(p => ({ ...p, bgColor: newColor }))
+          ...targetEntity,
+          polygons: (targetEntity.polygons || []).map(p => ({ ...p, bgColor: newColor }))
         };
         onSaveEntity(updated);
-        setInspectingEntity(updated);
+        if (inspectingEntity?.id === targetEntity.id) setInspectingEntity(updated);
+        if (colorPaletteModalEntity?.id === targetEntity.id) setColorPaletteModalEntity(updated);
       };
 
-      const handleToggleEntityStripe = (entityToUpdate, isStriped) => {
+      const applyStripeToEntity = (targetEntity, isStriped) => {
         const updated = {
-          ...entityToUpdate,
-          polygons: (entityToUpdate.polygons || []).map(p => ({ ...p, striped: isStriped }))
+          ...targetEntity,
+          polygons: (targetEntity.polygons || []).map(p => ({ ...p, striped: isStriped }))
         };
         onSaveEntity(updated);
-        setInspectingEntity(updated);
+        if (inspectingEntity?.id === targetEntity.id) setInspectingEntity(updated);
+        if (colorPaletteModalEntity?.id === targetEntity.id) setColorPaletteModalEntity(updated);
       };
 
       const activeTimelineEntities = useMemo(() => {
         return (entities || []).find(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
       }, [entities, scrubberYear]);
 
-      // Coins belonging to currently inspected empire
       const coinsForInspectedEntity = useMemo(() => {
         if (!inspectingEntity) return [];
         return (coins || []).filter(c => c.entityId === inspectingEntity.id);
@@ -925,13 +919,13 @@
             className="w-full h-full object-contain map-canvas-touch">
           </svg>
 
-          {/* Clean Floating Setup Button (Opens modal instead of floating header bar) */}
+          {/* Clean Setup Button in History View */}
           <div className="absolute top-3 left-3 z-20 flex gap-2">
             <button 
               onClick={() => setMetaModalOpen(true)}
               className="bg-[#0b101eee] border border-amber-400/60 text-amber-400 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-lg backdrop-blur-md flex items-center gap-1.5">
               <span>🏛</span>
-              <span>{closedPolygons.length > 0 ? "Configuring Empire" : "New Empire Setup"}</span>
+              <span>{closedPolygons.length > 0 ? "Edit Empire Specs" : "New Empire Setup"}</span>
             </button>
             {closedPolygons.length > 0 && (
               <button 
@@ -942,7 +936,7 @@
             )}
           </div>
 
-          {/* Zoom In/Out Buttons */}
+          {/* Zoom Buttons */}
           <div className="absolute right-3 top-3 z-30 flex flex-col gap-1.5">
             <button 
               onClick={() => handleZoomStep("in")} 
@@ -956,25 +950,38 @@
             </button>
           </div>
 
-          {/* Bottom Floating Empire Pill (Tap opens full details & color editor) */}
+          {/* Bottom Floating Empire Pill with Instant Color Picker Trigger */}
           {activeTimelineEntities && (
             <div className="absolute bottom-24 inset-x-4 z-20 flex justify-center pointer-events-none">
-              <div 
-                onClick={() => setInspectingEntity(activeTimelineEntities)}
-                className="pointer-events-auto cursor-pointer bg-[#0b101eee] border border-amber-400/50 hover:border-amber-400 backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-3 transition-transform active:scale-95">
+              <div className="pointer-events-auto bg-[#0b101eee] border border-amber-400/50 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-2xl flex items-center gap-3">
                 <div 
-                  className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]"
-                  style={{ backgroundColor: activeTimelineEntities.polygons?.[0]?.bgColor || "#ffaa00" }}>
+                  onClick={() => setColorPaletteModalEntity(activeTimelineEntities)}
+                  className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform border border-white/60 shadow-[0_0_8px_rgba(251,191,36,0.8)]"
+                  style={{ backgroundColor: activeTimelineEntities.polygons?.[0]?.bgColor || "#ffaa00" }}
+                  title="Click to change color">
                 </div>
-                <div>
-                  <div className="text-xs font-black text-white flex items-center gap-2">
+                
+                <div onClick={() => setInspectingEntity(activeTimelineEntities)} className="cursor-pointer">
+                  <div className="text-xs font-black text-white flex items-center gap-1.5">
                     <span>{activeTimelineEntities.name}</span>
-                    <span className="text-[10px] text-amber-400 font-normal">Tap to inspect ⓘ</span>
+                    <span className="text-[10px] text-amber-400">ⓘ</span>
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">
-                    {activeTimelineEntities.ruler} ({formatYear(activeTimelineEntities.startYear)} – {formatYear(activeTimelineEntities.endYear)})
-                    {activeTimelineEntities.mint?.city && ` • Mint: ${activeTimelineEntities.mint.city}`}
+                  <div className="text-[10px] text-slate-400">
+                    {activeTimelineEntities.ruler} ({formatYearDisplay(activeTimelineEntities.startYear)} – {formatYearDisplay(activeTimelineEntities.endYear)})
                   </div>
+                </div>
+
+                <div className="flex items-center gap-1 border-l border-slate-800 pl-2">
+                  <button 
+                    onClick={() => setColorPaletteModalEntity(activeTimelineEntities)}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold px-2 py-1 rounded-lg">
+                    🎨 Color
+                  </button>
+                  <button 
+                    onClick={() => setIsAddingCoinForEntity(activeTimelineEntities)}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-black text-[10px] font-black px-2 py-1 rounded-lg">
+                    + Coin
+                  </button>
                 </div>
               </div>
             </div>
@@ -1043,10 +1050,10 @@
             </div>
           )}
 
-          {/* Empire Setup Modal */}
+          {/* Empire Setup Modal with Upfront 64-Color Palette */}
           {metaModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider">Historical Entity Setup</h3>
                   <button onClick={() => setMetaModalOpen(false)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
@@ -1059,19 +1066,19 @@
                       required 
                       value={entityMeta.name} 
                       onChange={e => setEntityMeta({...entityMeta, name: e.target.value})}
-                      placeholder="e.g. Roman Empire" 
+                      placeholder="e.g. Polish - Lithuanian Commonwealth" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Start Year (negative = BC)</label>
+                      <label className="text-slate-400 block mb-1">Start Year</label>
                       <input 
                         type="number" 
                         value={entityMeta.startYear} 
                         onChange={e => setEntityMeta({...entityMeta, startYear: e.target.value})}
-                        placeholder="-27"
+                        placeholder="1588"
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1081,7 +1088,7 @@
                         type="number" 
                         value={entityMeta.endYear} 
                         onChange={e => setEntityMeta({...entityMeta, endYear: e.target.value})}
-                        placeholder="476"
+                        placeholder="1621"
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1092,7 +1099,7 @@
                     <input 
                       value={entityMeta.ruler} 
                       onChange={e => setEntityMeta({...entityMeta, ruler: e.target.value})}
-                      placeholder="e.g. Augustus / Trajan" 
+                      placeholder="e.g. Sigismund III Vasa" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1102,9 +1109,28 @@
                     <input 
                       value={entityMeta.mintCity} 
                       onChange={e => setEntityMeta({...entityMeta, mintCity: e.target.value})}
-                      placeholder="e.g. Rome / Lugdunum" 
+                      placeholder="e.g. Vilnius / Kraków" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
+                  </div>
+
+                  {/* Pick Color Upfront */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-slate-400 font-bold">Empire Color:</label>
+                      <div className="w-4 h-4 rounded-full border border-white" style={{ backgroundColor: entityMeta.bgColor }}></div>
+                    </div>
+                    <div className="grid grid-cols-8 gap-1.5 max-h-24 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
+                      {PALETTE_64.map(color => (
+                        <button
+                          type="button"
+                          key={color}
+                          onClick={() => setEntityMeta({ ...entityMeta, bgColor: color })}
+                          style={{ backgroundColor: color }}
+                          className={`w-full h-5 rounded-md transition-transform ${entityMeta.bgColor === color ? "scale-115 ring-2 ring-white" : "hover:scale-105"}`}
+                        />
+                      ))}
+                    </div>
                   </div>
 
                   <button 
@@ -1117,7 +1143,52 @@
             </div>
           )}
 
-          {/* Comprehensive Empire Inspector, Color Changer & Coin Drawer */}
+          {/* Quick Color Palette Switcher Modal */}
+          {colorPaletteModalEntity && (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Change Color: <span className="text-amber-400">{colorPaletteModalEntity.name}</span>
+                  </h3>
+                  <button onClick={() => setColorPaletteModalEntity(null)} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                </div>
+
+                <div className="flex items-center justify-between bg-[#12192e] p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-xs text-white">Diagonal Stripe Pattern</span>
+                  <input 
+                    type="checkbox" 
+                    checked={colorPaletteModalEntity.polygons?.[0]?.striped || false} 
+                    onChange={e => applyStripeToEntity(colorPaletteModalEntity, e.target.checked)}
+                    className="w-5 h-5 accent-red-500 rounded" 
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">Select from 64 Colors:</label>
+                  <div className="grid grid-cols-8 gap-1.5 max-h-48 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
+                    {PALETTE_64.map(color => (
+                      <button
+                        type="button"
+                        key={color}
+                        onClick={() => applyColorToEntity(colorPaletteModalEntity, color)}
+                        style={{ backgroundColor: color }}
+                        className={`w-full h-5 rounded-md transition-transform ${colorPaletteModalEntity.polygons?.[0]?.bgColor === color ? "scale-115 ring-2 ring-white" : "hover:scale-105"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setColorPaletteModalEntity(null)} 
+                  className="w-full py-2 bg-slate-800 text-white font-bold rounded-xl text-xs">
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Empire Inspector & Coin Drawer */}
           {inspectingEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
@@ -1135,19 +1206,19 @@
 
                 <div className="grid grid-cols-2 gap-2 text-xs bg-[#13192c] p-2.5 rounded-xl border border-slate-800">
                   <div><span className="text-slate-400">Ruler:</span> <span className="text-white font-semibold">{inspectingEntity.ruler || "—"}</span></div>
-                  <div><span className="text-slate-400">Era:</span> <span className="text-amber-400 font-semibold">{formatYear(inspectingEntity.startYear)} – {formatYear(inspectingEntity.endYear)}</span></div>
+                  <div><span className="text-slate-400">Era:</span> <span className="text-amber-400 font-semibold">{formatYearDisplay(inspectingEntity.startYear)} – {formatYearDisplay(inspectingEntity.endYear)}</span></div>
                   <div className="col-span-2"><span className="text-slate-400">Mint:</span> <span className="text-white">{inspectingEntity.mint?.city || "—"} ({inspectingEntity.mint?.country || "—"})</span></div>
                 </div>
 
                 {/* Inline 64-Color Palette Switcher */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[11px] font-bold text-slate-300">Change Empire Color (64 Options):</label>
+                    <label className="text-[11px] font-bold text-slate-300">Change Empire Color:</label>
                     <label className="text-[10px] text-slate-400 flex items-center gap-1 cursor-pointer">
                       <input 
                         type="checkbox" 
                         checked={inspectingEntity.polygons?.[0]?.striped || false}
-                        onChange={e => handleToggleEntityStripe(inspectingEntity, e.target.checked)}
+                        onChange={e => applyStripeToEntity(inspectingEntity, e.target.checked)}
                         className="accent-red-500 rounded" 
                       />
                       <span>Striped</span>
@@ -1156,10 +1227,11 @@
                   <div className="grid grid-cols-8 gap-1.5 max-h-24 overflow-y-auto hide-scrollbar p-1.5 bg-[#070b14] rounded-xl border border-slate-800">
                     {PALETTE_64.map(color => (
                       <button
+                        type="button"
                         key={color}
-                        onClick={() => handleUpdateEntityColor(inspectingEntity, color)}
+                        onClick={() => applyColorToEntity(inspectingEntity, color)}
                         style={{ backgroundColor: color }}
-                        className="w-full h-5 rounded-md hover:scale-110 transition-transform"
+                        className={`w-full h-5 rounded-md transition-transform ${inspectingEntity.polygons?.[0]?.bgColor === color ? "scale-115 ring-2 ring-white" : "hover:scale-105"}`}
                       />
                     ))}
                   </div>
@@ -1186,7 +1258,7 @@
                         <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center">
                           <div>
                             <div className="text-white font-bold">{coin.denomination}</div>
-                            <div className="text-[10px] text-slate-400">{coin.ruler} • {formatYear(coin.year)} • {coin.mint || "Mint unknown"}</div>
+                            <div className="text-[10px] text-slate-400">{coin.ruler} • {formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}</div>
                           </div>
                           <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
                             {coin.grade || "UNC"}
@@ -1201,7 +1273,7 @@
             </div>
           )}
 
-          {/* Add Historical Coin Modal */}
+          {/* Add Historical Coin Modal with Dash Range Support */}
           {isAddingCoinForEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
@@ -1226,24 +1298,25 @@
                 }} className="space-y-2.5 text-xs">
                   
                   <div>
-                    <label className="text-slate-400 block mb-1">Denomination * (e.g. Denarius, Sestertius)</label>
+                    <label className="text-slate-400 block mb-1">Denomination * (e.g. 6 Groschen, Denarius)</label>
                     <input 
                       required 
                       value={historicalCoinForm.denomination} 
                       onChange={e => setHistoricalCoinForm({...historicalCoinForm, denomination: e.target.value})}
-                      placeholder="e.g. Denarius" 
+                      placeholder="e.g. 6 Groschen" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Year (neg = BC)</label>
+                      {/* Accepts Dashed Ranges like 1588-1621 */}
+                      <label className="text-slate-400 block mb-1">Year / Range</label>
                       <input 
-                        type="number"
+                        type="text"
                         value={historicalCoinForm.year} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, year: e.target.value})}
-                        placeholder="e.g. 112 or -44" 
+                        placeholder="e.g. 1588-1621" 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1260,11 +1333,11 @@
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-slate-400 block mb-1">Emperor / Ruler</label>
+                      <label className="text-slate-400 block mb-1">Emperor / Monarch</label>
                       <input 
                         value={historicalCoinForm.ruler} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, ruler: e.target.value})}
-                        placeholder={isAddingCoinForEntity.ruler || "e.g. Trajan"} 
+                        placeholder={isAddingCoinForEntity.ruler || "Sigismund III"} 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1273,7 +1346,7 @@
                       <input 
                         value={historicalCoinForm.mint} 
                         onChange={e => setHistoricalCoinForm({...historicalCoinForm, mint: e.target.value})}
-                        placeholder={isAddingCoinForEntity.mint?.city || "e.g. Rome"} 
+                        placeholder={isAddingCoinForEntity.mint?.city || "Kraków"} 
                         className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                       />
                     </div>
@@ -1284,7 +1357,7 @@
                     <input 
                       value={historicalCoinForm.notes} 
                       onChange={e => setHistoricalCoinForm({...historicalCoinForm, notes: e.target.value})}
-                      placeholder="e.g. Pax reverse, acquired in Munich" 
+                      placeholder="e.g. Crowned bust, acquired from auction" 
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -1306,14 +1379,14 @@
     // --- Vault Cards Tab with Historical / Sovereign Filter ---
     function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onAddClick }) {
       const [query, setQuery] = useState("");
-      const [vaultMode, setVaultMode] = useState("all"); // "all", "sovereign", "historical"
+      const [vaultMode, setVaultMode] = useState("all");
 
       const filtered = useMemo(() => {
         return coins.filter(c => {
           if (vaultMode === "sovereign" && c.isHistorical) return false;
           if (vaultMode === "historical" && !c.isHistorical) return false;
 
-          const searchTarget = `${c.countryName} ${c.denomination} ${c.mint || ""} ${c.ruler || ""}`.toLowerCase();
+          const searchTarget = `${c.countryName} ${c.denomination} ${c.mint || ""} ${c.ruler || ""} ${c.year || ""}`.toLowerCase();
           return searchTarget.includes(query.toLowerCase());
         });
       }, [coins, query, vaultMode]);
@@ -1332,7 +1405,6 @@
             <button onClick={onAddClick} className="bg-[#00f0ff] font-bold text-black text-xs px-3 rounded-xl shadow-lg">+ Add</button>
           </div>
 
-          {/* Sub-Tabs for Vault */}
           <div className="flex gap-1.5 bg-[#090d18] p-1 rounded-xl border border-slate-800 text-xs">
             <button 
               onClick={() => setVaultMode("all")}
@@ -1365,7 +1437,7 @@
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        {coin.isHistorical && <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 px-1 rounded font-semibold">Ancient</span>}
+                        {coin.isHistorical && <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 px-1 rounded font-semibold">Historical</span>}
                         <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
                       </div>
                       <p className={`text-[11px] font-semibold ${coin.isHistorical ? "text-amber-400" : "text-[#00f0ff]"}`}>{coin.denomination}</p>
@@ -1378,7 +1450,7 @@
                   </div>
 
                   <div className="grid grid-cols-2 gap-1 bg-[#080b14] p-1.5 rounded-lg text-[10px] text-slate-300">
-                    <div><span className="text-slate-500">Year:</span> {formatYear(coin.year)}</div>
+                    <div><span className="text-slate-500">Year:</span> {formatYearDisplay(coin.year)}</div>
                     <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
                     <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
                     <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "—"}</div>
@@ -1453,8 +1525,9 @@
                   <input required value={formData.denomination} onChange={e => setFormData({...formData, denomination: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Year (neg = BC)</label>
-                  <input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
+                  {/* Supports Dash Ranges (e.g. 1588-1621) */}
+                  <label className="text-slate-400 block mb-1">Year / Range (e.g. 1588-1621)</label>
+                  <input type="text" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" />
                 </div>
               </div>
 
