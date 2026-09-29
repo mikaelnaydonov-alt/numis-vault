@@ -475,6 +475,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
 
+          // Micro-states
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
@@ -488,6 +489,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
 
+          // Striped Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
@@ -556,7 +558,6 @@
         placingMintRef.current = placingMint;
       }, [placingMint]);
 
-      // Pick a random color from PALETTE_64 that is not currently taken by any contemporary entity
       const pickDistinctColor = (startYr, endYr) => {
         const s = parseInt(startYr) || -500;
         const e = parseInt(endYr) || 2026;
@@ -582,7 +583,6 @@
 
         const defs = svg.append("defs");
 
-        // Custom hatch patterns for closed polygons
         closedPolygons.forEach((poly, idx) => {
           if (poly.striped) {
             const pat = defs.append("pattern")
@@ -597,11 +597,9 @@
           }
         });
 
-        // studio-root holds everything so zoom transforms all elements synchronously
         const gRoot = svg.append("g").attr("id", "studio-root");
         const gBase = gRoot.append("g").attr("id", "layer-base");
         
-        // This empire layer is strictly clipped by the world land geometry
         const gClippedEmpires = gRoot.append("g")
           .attr("id", "layer-clipped-empires")
           .attr("clip-path", "url(#world-land-clip)");
@@ -621,7 +619,6 @@
           .on("zoom", (e) => {
             currentTransformRef.current = e.transform;
             gRoot.attr("transform", e.transform);
-            // Re-render dots and pins immediately to keep their screen size constant
             updateDynamicOverlay();
           });
 
@@ -636,17 +633,14 @@
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
           worldGeoRef.current = { features: countries, tsv: tsvData, land: land };
 
-          // Build SVG ClipPath using the natural Earth land vector
           const clipPath = defs.append("clipPath").attr("id", "world-land-clip");
           clipPath.append("path").datum(land).attr("d", path);
 
-          // Dark Dry Land Base
           gBase.append("path")
             .datum(land)
             .attr("d", path)
             .attr("fill", "#0c1120");
 
-          // Subtle Modern Country Borders on Dry Land
           gBorders.selectAll(".ghost-country")
             .data(countries)
             .enter().append("path")
@@ -682,19 +676,19 @@
 
       }, [closedPolygons]);
 
-      // Renders empires (clipped to land) and scaled UI dots/pins
       const updateDynamicOverlay = () => {
         const k = currentTransformRef.current ? currentTransformRef.current.k : 1;
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        // 1. Render clipped historical empires onto dry land only
+        // Filter entities strictly active within scrubber year
+        const visibleEntities = (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+        const isCurrentActiveInScrubber = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
+
         const gClipped = d3.select("#layer-clipped-empires");
         if (!gClipped.empty()) {
           gClipped.selectAll("*").remove();
 
-          // Saved entities matching timeline scrubber
-          const visibleEntities = (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
           visibleEntities.forEach(ent => {
             const gEnt = gClipped.append("g").attr("class", "cursor-pointer").on("click", () => setInspectingEntity(ent));
             (ent.polygons || []).forEach(poly => {
@@ -709,31 +703,30 @@
             });
           });
 
-          // Closed polygons in current active setup
-          closedPolygons.forEach((poly, idx) => {
-            const pts = poly.points.map(p => projectionRef.current(p));
-            const d = d3.line().curve(d3.curveLinearClosed)(pts);
-            gClipped.append("path")
-              .attr("d", d)
-              .attr("fill", poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor)
-              .attr("fill-opacity", 0.7)
-              .attr("stroke", poly.bgColor || "#ffd600")
-              .attr("stroke-width", Math.max(0.5, 1.5 / k))
-              .attr("class", "cursor-pointer")
-              .on("click", () => {
-                setSelectedPolygonIndex(idx);
-                setCustomizerOpen(true);
-              });
-          });
+          // Only show closed polygons if the currently edited entity fits the current scrubber year
+          if (isCurrentActiveInScrubber) {
+            closedPolygons.forEach((poly, idx) => {
+              const pts = poly.points.map(p => projectionRef.current(p));
+              const d = d3.line().curve(d3.curveLinearClosed)(pts);
+              gClipped.append("path")
+                .attr("d", d)
+                .attr("fill", poly.striped ? `url(#stripe-pat-${idx})` : poly.bgColor)
+                .attr("fill-opacity", 0.7)
+                .attr("stroke", poly.bgColor || "#ffd600")
+                .attr("stroke-width", Math.max(0.5, 1.5 / k))
+                .attr("class", "cursor-pointer")
+                .on("click", () => {
+                  setSelectedPolygonIndex(idx);
+                  setCustomizerOpen(true);
+                });
+            });
+          }
         }
 
-        // 2. Render razor-sharp, un-clipped active control dots & mint pins
         const gActive = d3.select("#layer-active-draw");
         if (!gActive.empty()) {
           gActive.selectAll("*").remove();
 
-          // Render confirmed mints for saved entities
-          const visibleEntities = (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
           visibleEntities.forEach(ent => {
             if (ent.mint && ent.mint.coords) {
               const [mx, my] = projectionRef.current(ent.mint.coords);
@@ -743,7 +736,7 @@
             }
           });
 
-          // In-progress boundary dots and perimeter line
+          // Render active drawing dots & lines
           if (currentVertices.length > 0) {
             const pts = currentVertices.map(p => projectionRef.current(p));
             gActive.append("path")
@@ -765,7 +758,6 @@
             });
           }
 
-          // Mint Candidate Crosshair
           if (mintCandidate) {
             const [cx, cy] = projectionRef.current(mintCandidate);
             const gCandidate = gActive.append("g").attr("transform", `translate(${cx}, ${cy})`);
@@ -774,8 +766,7 @@
             gCandidate.append("circle").attr("r", 1.2 / k).attr("fill", "#ffffff");
           }
 
-          // Confirmed Mint Pin for current setup
-          if (confirmedMint && !mintCandidate) {
+          if (confirmedMint && !mintCandidate && isCurrentActiveInScrubber) {
             const [cx, cy] = projectionRef.current(confirmedMint.coords);
             const gPin = gActive.append("g").attr("transform", `translate(${cx}, ${cy})`);
             gPin.append("circle").attr("r", 5 / k).attr("fill", "#ff1744");
@@ -786,7 +777,7 @@
 
       useEffect(() => {
         updateDynamicOverlay();
-      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint]);
+      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint, entityMeta]);
 
       const detectCountry = (coords) => {
         if (!worldGeoRef.current || !coords) return "Coastal / Ocean Waters";
@@ -804,7 +795,6 @@
           return;
         }
 
-        // Automatically assign a distinctive non-conflicting color for this era
         const assignedColor = pickDistinctColor(entityMeta.startYear, entityMeta.endYear);
 
         const newPoly = {
@@ -851,6 +841,26 @@
         );
       };
 
+      // Determine active contemporary entity to display in bottom label
+      const activeTimelineEntities = useMemo(() => {
+        const savedMatch = (entities || []).find(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
+        if (savedMatch) return savedMatch;
+
+        const isCurrentActive = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
+        if (isCurrentActive && entityMeta.name) {
+          return {
+            name: entityMeta.name,
+            ruler: entityMeta.ruler,
+            startYear: entityMeta.startYear,
+            endYear: entityMeta.endYear,
+            mint: confirmedMint ? { city: entityMeta.mintCity, country: confirmedMint.country } : null
+          };
+        }
+        return null;
+      }, [entities, scrubberYear, entityMeta, confirmedMint]);
+
+      const isCurrentEntityActiveInYear = (parseInt(entityMeta.startYear) <= scrubberYear && parseInt(entityMeta.endYear) >= scrubberYear);
+
       return (
         <div className="relative w-full h-full bg-[#05070d] overflow-hidden flex flex-col select-none">
 
@@ -861,33 +871,35 @@
             className="w-full h-full object-contain map-canvas-touch">
           </svg>
 
-          {/* Floating Top Entity Details */}
-          <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
-            <div className="flex-1 mr-2">
-              <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                {entityMeta.name}
+          {/* Floating Top Entity Details - Shows only when current entity is active in timeline */}
+          {isCurrentEntityActiveInYear && (
+            <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between bg-[#0b101ef0] p-2 rounded-xl border border-slate-800 backdrop-blur-md">
+              <div className="flex-1 mr-2">
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  {entityMeta.name}
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  {entityMeta.ruler} • {entityMeta.startYear} to {entityMeta.endYear}
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400">
-                {entityMeta.ruler} • {entityMeta.startYear} to {entityMeta.endYear}
+
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={() => setMetaModalOpen(true)} 
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg">
+                  Edit Info
+                </button>
+                <button 
+                  onClick={handleSaveCompleteEntity} 
+                  className="bg-amber-400 hover:bg-amber-300 font-extrabold text-black text-xs px-3 py-1 rounded-lg shadow-md">
+                  Save Entity
+                </button>
               </div>
             </div>
+          )}
 
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={() => setMetaModalOpen(true)} 
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1 rounded-lg">
-                Edit Info
-              </button>
-              <button 
-                onClick={handleSaveCompleteEntity} 
-                className="bg-amber-400 hover:bg-amber-300 font-extrabold text-black text-xs px-3 py-1 rounded-lg shadow-md">
-                Save Entity
-              </button>
-            </div>
-          </div>
-
-          {/* Zoom In/Out Buttons */}
+          {/* Zoom Buttons */}
           <div className="absolute right-3 top-16 z-30 flex flex-col gap-1.5">
             <button 
               onClick={() => handleZoomStep("in")} 
@@ -901,13 +913,29 @@
             </button>
           </div>
 
-          {/* Bottom Floating Control Bar */}
-          <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
+          {/* Floating Bottom Empire Pill - Pops up only when timeline reaches the period */}
+          {activeTimelineEntities && (
+            <div className="absolute bottom-24 inset-x-4 z-20 flex justify-center pointer-events-none">
+              <div className="bg-[#0b101eee] border border-amber-400/50 backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></div>
+                <div>
+                  <div className="text-xs font-black text-white">{activeTimelineEntities.name}</div>
+                  <div className="text-[10px] text-amber-300 font-medium">
+                    {activeTimelineEntities.ruler} ({activeTimelineEntities.startYear} – {activeTimelineEntities.endYear})
+                    {activeTimelineEntities.mint?.city && ` • Mint: ${activeTimelineEntities.mint.city}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Elevated Bottom Control Bar (Shifted up to prevent Safari gesture bar clash) */}
+          <div className="absolute bottom-9 sm:bottom-8 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
             
             <div className="pointer-events-auto">
               <button 
                 onClick={() => { setPlacingMint(!placingMint); setIsVertexMode(false); }}
-                className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg ${placingMint ? "bg-red-500 text-white animate-pulse" : "bg-[#101526] border border-slate-700 text-slate-200"}`}>
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xl ${placingMint ? "bg-red-500 text-white animate-pulse" : "bg-[#101526] border border-slate-700 text-slate-200"}`}>
                 <span>📍</span>
                 <span>{confirmedMint ? "Mint Placed" : "Place Mint"}</span>
               </button>
@@ -917,7 +945,7 @@
               {isVertexMode && currentVertices.length >= 3 && (
                 <button 
                   onClick={handleCompletePolygon}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-black px-3 py-2 rounded-xl text-xs shadow-lg">
+                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-black px-3.5 py-2.5 rounded-xl text-xs shadow-lg">
                   ✓ Close Shape ({currentVertices.length} pts)
                 </button>
               )}
@@ -925,14 +953,14 @@
               {isVertexMode && currentVertices.length > 0 && (
                 <button 
                   onClick={() => setCurrentVertices(prev => prev.slice(0, -1))}
-                  className="bg-slate-800 text-slate-300 font-bold px-2.5 py-2 rounded-xl text-xs border border-slate-700">
+                  className="bg-slate-800 text-slate-300 font-bold px-2.5 py-2.5 rounded-xl text-xs border border-slate-700">
                   Undo Pt
                 </button>
               )}
 
               <button 
                 onClick={() => { setIsVertexMode(!isVertexMode); setPlacingMint(false); }}
-                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isVertexMode ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
+                className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isVertexMode ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
                 <span>📍</span>
                 <span>{isVertexMode ? "Tap to Add Dots" : "Start Boundary"}</span>
               </button>
@@ -941,7 +969,7 @@
 
           {/* Mint Confirmation Dialog */}
           {placingMint && mintCandidate && (
-            <div className="absolute bottom-16 inset-x-4 z-40 bg-[#0c1222f6] border border-red-500/60 p-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between">
+            <div className="absolute bottom-24 inset-x-4 z-40 bg-[#0c1222f6] border border-red-500/60 p-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-white">Place Mint Here?</div>
                 <div className="text-[10px] text-slate-400">Detected: <span className="text-red-400 font-semibold">{mintCandidateCountry}</span></div>
