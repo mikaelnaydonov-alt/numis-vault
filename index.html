@@ -390,7 +390,7 @@
             />
           )}
 
-          {/* In-App Live Camera Viewfinder Modal with Dashed Silhouette HUD & Zoom/Pan */}
+          {/* In-App Live Camera Viewfinder Modal with Dashed Silhouette HUD & Exact Zoom/Pan Crop */}
           {cameraTargetField && (
             <LiveCoinCameraModal 
               shape={activeCameraShape}
@@ -477,6 +477,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
 
+          // Micro-states
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
@@ -490,6 +491,7 @@
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
 
+          // Striped Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
@@ -843,7 +845,6 @@
       const videoRef = useRef(null);
       const [stream, setStream] = useState(null);
 
-      // Zoom & Pan state
       const [zoom, setZoom] = useState(1);
       const [pan, setPan] = useState({ x: 0, y: 0 });
       const dragStartRef = useRef(null);
@@ -872,7 +873,6 @@
         };
       }, []);
 
-      // Touch drag to pan coin inside viewfinder
       const handleTouchStart = (e) => {
         if (e.touches.length === 1) {
           dragStartRef.current = {
@@ -895,30 +895,50 @@
         dragStartRef.current = null;
       };
 
+      // Math-accurate crop matching on-screen CSS scale & object-cover
       const captureFrame = () => {
         if (!videoRef.current) return;
         const video = videoRef.current;
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const baseSize = Math.min(vw, vh);
+        
+        const videoAspect = vw / vh;
+        let renderW, renderH, offsetX, offsetY;
 
-        // Calculate scaled crop based on digital zoom & pan
-        const cropSize = baseSize / zoom;
-        const centerX = (vw / 2) - (pan.x / 140) * (cropSize / 2);
-        const centerY = (vh / 2) - (pan.y / 140) * (cropSize / 2);
+        if (videoAspect > 1) {
+          renderH = vh;
+          renderW = vh;
+          offsetX = (vw - vh) / 2;
+          offsetY = 0;
+        } else {
+          renderW = vw;
+          renderH = vw;
+          offsetX = 0;
+          offsetY = (vh - vw) / 2;
+        }
 
-        const sx = Math.max(0, Math.min(vw - cropSize, centerX - cropSize / 2));
-        const sy = Math.max(0, Math.min(vh - cropSize, centerY - cropSize / 2));
+        const cropSize = renderW / zoom;
+        const sx = offsetX + (renderW - cropSize) / 2 - (pan.x / 120) * (cropSize / 2);
+        const sy = offsetY + (renderH - cropSize) / 2 - (pan.y / 120) * (cropSize / 2);
+
+        const clampedSx = Math.max(0, Math.min(vw - cropSize, sx));
+        const clampedSy = Math.max(0, Math.min(vh - cropSize, sy));
 
         const canvas = document.createElement("canvas");
         canvas.width = 600;
         canvas.height = 600;
         const ctx = canvas.getContext("2d");
 
-        ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, 600, 600);
+        if (shape === 'round') {
+          ctx.beginPath();
+          ctx.arc(300, 300, 300, 0, Math.PI * 2);
+          ctx.clip();
+        }
+
+        ctx.drawImage(video, clampedSx, clampedSy, cropSize, cropSize, 0, 0, 600, 600);
 
         if (stream) stream.getTracks().forEach(track => track.stop());
-        onCapture(canvas.toDataURL("image/jpeg", 0.8));
+        onCapture(canvas.toDataURL("image/jpeg", 0.85));
       };
 
       return (
