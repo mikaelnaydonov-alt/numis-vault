@@ -65,107 +65,237 @@
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
 
     const TERRITORIES_LIST = [
-      { code: "ABW", name: "Aruba", mother: "NLD", coords: [-69.968, 12.521] },
-      { code: "CUW", name: "Curaçao", mother: "NLD", coords: [-68.990, 12.169] },
-      { code: "SXM", name: "Sint Maarten", mother: "NLD", coords: [-63.054, 18.042] },
-      { code: "BMU", name: "Bermuda", mother: "GBR", coords: [-64.757, 32.307] },
-      { code: "CYM", name: "Cayman Islands", mother: "GBR", coords: [-81.254, 19.313] },
-      { code: "FLK", name: "Falkland Islands", mother: "GBR", coords: [-59.523, -51.796] },
-      { code: "GIB", name: "Gibraltar", mother: "GBR", coords: [-5.353, 36.140] },
-      { code: "GGY", name: "Guernsey", mother: "GBR", coords: [-2.585, 49.448] },
-      { code: "JEY", name: "Jersey", mother: "GBR", coords: [-2.131, 49.214] },
-      { code: "IMN", name: "Isle of Man", mother: "GBR", coords: [-4.548, 54.236] },
-      { code: "GRL", name: "Greenland", mother: "DNK", coords: [-42.604, 71.706] },
-      { code: "PYF", name: "French Polynesia", mother: "FRA", coords: [-149.406, -17.679] },
-      { code: "NCL", name: "New Caledonia", mother: "FRA", coords: [165.618, -20.904] },
-      { code: "HKG", name: "Hong Kong", mother: "CHN", coords: [114.169, 22.319] }
+      { code: "ABW", name: "Aruba", mother: "NLD", a2: "AW", coords: [-69.968, 12.521] },
+      { code: "CUW", name: "Curaçao", mother: "NLD", a2: "CW", coords: [-68.990, 12.169] },
+      { code: "SXM", name: "Sint Maarten", mother: "NLD", a2: "SX", coords: [-63.054, 18.042] },
+      { code: "BMU", name: "Bermuda", mother: "GBR", a2: "BM", coords: [-64.757, 32.307] },
+      { code: "CYM", name: "Cayman Islands", mother: "GBR", a2: "KY", coords: [-81.254, 19.313] },
+      { code: "FLK", name: "Falkland Islands", mother: "GBR", a2: "FK", coords: [-59.523, -51.796] },
+      { code: "GIB", name: "Gibraltar", mother: "GBR", a2: "GI", coords: [-5.353, 36.140] },
+      { code: "GGY", name: "Guernsey", mother: "GBR", a2: "GG", coords: [-2.585, 49.448] },
+      { code: "JEY", name: "Jersey", mother: "GBR", a2: "JE", coords: [-2.131, 49.214] },
+      { code: "IMN", name: "Isle of Man", mother: "GBR", a2: "IM", coords: [-4.548, 54.236] },
+      { code: "GRL", name: "Greenland", mother: "DNK", a2: "GL", coords: [-42.604, 71.706] },
+      { code: "PYF", name: "French Polynesia", mother: "FRA", a2: "PF", coords: [-149.406, -17.679] },
+      { code: "NCL", name: "New Caledonia", mother: "FRA", a2: "NC", coords: [165.618, -20.904] },
+      { code: "HKG", name: "Hong Kong", mother: "CHN", a2: "HK", coords: [114.169, 22.319] }
     ];
 
     const MICRO_STATES = [
-      { a3: "TUV", name: "Tuvalu", coords: [179.196, -8.517] },
-      { a3: "NRU", name: "Nauru", coords: [166.931, -0.522] },
-      { a3: "PLW", name: "Palau", coords: [134.582, 7.514] },
-      { a3: "MHL", name: "Marshall Islands", coords: [171.184, 7.131] },
-      { a3: "KIR", name: "Kiribati", coords: [-157.363, 1.870] },
-      { a3: "TON", name: "Tonga", coords: [-175.198, -21.178] },
-      { a3: "WSM", name: "Samoa", coords: [-172.104, -13.759] },
-      { a3: "MCO", name: "Monaco", coords: [7.424, 43.738] },
-      { a3: "SMR", name: "San Marino", coords: [12.457, 43.942] },
-      { a3: "VAT", name: "Vatican City", coords: [12.453, 41.902] },
-      { a3: "LIE", name: "Liechtenstein", coords: [9.521, 47.166] },
-      { a3: "AND", name: "Andorra", coords: [1.521, 42.506] },
-      { a3: "MLT", name: "Malta", coords: [14.375, 35.937] },
-      { a3: "SGP", name: "Singapore", coords: [103.819, 1.352] },
-      { a3: "BHR", name: "Bahrain", coords: [50.557, 26.066] },
-      { a3: "SYC", name: "Seychelles", coords: [55.491, -4.679] }
+      { a3: "TUV", name: "Tuvalu", a2: "TV", coords: [179.196, -8.517] },
+      { a3: "NRU", name: "Nauru", a2: "NR", coords: [166.931, -0.522] },
+      { a3: "PLW", name: "Palau", a2: "PW", coords: [134.582, 7.514] },
+      { a3: "MHL", name: "Marshall Islands", a2: "MH", coords: [171.184, 7.131] },
+      { a3: "KIR", name: "Kiribati", a2: "KI", coords: [-157.363, 1.870] },
+      { a3: "TON", name: "Tonga", a2: "TO", coords: [-175.198, -21.178] },
+      { a3: "WSM", name: "Samoa", a2: "WS", coords: [-172.104, -13.759] },
+      { a3: "MCO", name: "Monaco", a2: "MC", coords: [7.424, 43.738] },
+      { a3: "SMR", name: "San Marino", a2: "SM", coords: [12.457, 43.942] },
+      { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.453, 41.902] },
+      { a3: "LIE", name: "Liechtenstein", a2: "LI", coords: [9.521, 47.166] },
+      { a3: "AND", name: "Andorra", a2: "AD", coords: [1.521, 42.506] },
+      { a3: "MLT", name: "Malta", a2: "MT", coords: [14.375, 35.937] },
+      { a3: "SGP", name: "Singapore", a2: "SG", coords: [103.819, 1.352] },
+      { a3: "BHR", name: "Bahrain", a2: "BH", coords: [50.557, 26.066] },
+      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.491, -4.679] }
     ];
 
     const SOVEREIGN_LIST = [
-      { a3: "AFG", name: "Afghanistan", a2: "AF" }, { a3: "ALB", name: "Albania", a2: "AL" }, { a3: "DZA", name: "Algeria", a2: "DZ" },
-      { a3: "AND", name: "Andorra", a2: "AD" }, { a3: "AGO", name: "Angola", a2: "AO" }, { a3: "ATG", name: "Antigua and Barbuda", a2: "AG" },
-      { a3: "ARG", name: "Argentina", a2: "AR" }, { a3: "ARM", name: "Armenia", a2: "AM" }, { a3: "AUS", name: "Australia", a2: "AU" },
-      { a3: "AUT", name: "Austria", a2: "AT" }, { a3: "AZE", name: "Azerbaijan", a2: "AZ" }, { a3: "BHS", name: "Bahamas", a2: "BS" },
-      { a3: "BHR", name: "Bahrain", a2: "BH" }, { a3: "BGD", name: "Bangladesh", a2: "BD" }, { a3: "BRB", name: "Barbados", a2: "BB" },
-      { a3: "BLR", name: "Belarus", a2: "BY" }, { a3: "BEL", name: "Belgium", a2: "BE" }, { a3: "BLZ", name: "Belize", a2: "BZ" },
-      { a3: "BEN", name: "Benin", a2: "BJ" }, { a3: "BTN", name: "Bhutan", a2: "BT" }, { a3: "BOL", name: "Bolivia", a2: "BO" },
-      { a3: "BIH", name: "Bosnia and Herzegovina", a2: "BA" }, { a3: "BWA", name: "Botswana", a2: "BW" }, { a3: "BRA", name: "Brazil", a2: "BR" },
-      { a3: "BRN", name: "Brunei", a2: "BN" }, { a3: "BGR", name: "Bulgaria", a2: "BG" }, { a3: "BFA", name: "Burkina Faso", a2: "BF" },
-      { a3: "BDI", name: "Burundi", a2: "BI" }, { a3: "CPV", name: "Cabo Verde", a2: "CV" }, { a3: "KHM", name: "Cambodia", a2: "KH" },
-      { a3: "CMR", name: "Cameroon", a2: "CM" }, { a3: "CAN", name: "Canada", a2: "CA" }, { a3: "CAF", name: "Central African Republic", a2: "CF" },
-      { a3: "TCD", name: "Chad", a2: "TD" }, { a3: "CHL", name: "Chile", a2: "CL" }, { a3: "CHN", name: "China", a2: "CN" },
-      { a3: "COL", name: "Colombia", a2: "CO" }, { a3: "COM", name: "Comoros", a2: "KM" }, { a3: "COG", name: "Congo", a2: "CG" },
-      { a3: "COD", name: "Congo (DRC)", a2: "CD" }, { a3: "CRI", name: "Costa Rica", a2: "CR" }, { a3: "CIV", name: "Côte d'Ivoire", a2: "CI" },
-      { a3: "HRV", name: "Croatia", a2: "HR" }, { a3: "CUB", name: "Cuba", a2: "CU" }, { a3: "CYP", name: "Cyprus", a2: "CY" },
-      { a3: "CZE", name: "Czech Republic", a2: "CZ" }, { a3: "DNK", name: "Denmark", a2: "DK" }, { a3: "DJI", name: "Djibouti", a2: "DJ" },
-      { a3: "DMA", name: "Dominica", a2: "DM" }, { a3: "DOM", name: "Dominican Republic", a2: "DO" }, { a3: "ECU", name: "Ecuador", a2: "EC" },
-      { a3: "EGY", name: "Egypt", a2: "EG" }, { a3: "SLV", name: "El Salvador", a2: "SV" }, { a3: "GNQ", name: "Equatorial Guinea", a2: "GQ" },
-      { a3: "ERI", name: "Eritrea", a2: "ER" }, { a3: "EST", name: "Estonia", a2: "EE" }, { a3: "SWZ", name: "Eswatini", a2: "SZ" },
-      { a3: "ETH", name: "Ethiopia", a2: "ET" }, { a3: "FJI", name: "Fiji", a2: "FJ" }, { a3: "FIN", name: "Finland", a2: "FI" },
-      { a3: "FRA", name: "France", a2: "FR" }, { a3: "GAB", name: "Gabon", a2: "GA" }, { a3: "GMB", name: "Gambia", a2: "GM" },
-      { a3: "GEO", name: "Georgia", a2: "GE" }, { a3: "DEU", name: "Germany", a2: "DE" }, { a3: "GHA", name: "Ghana", a2: "GH" },
-      { a3: "GRC", name: "Greece", a2: "GR" }, { a3: "GRD", name: "Grenada", a2: "GD" }, { a3: "GTM", name: "Guatemala", a2: "GT" },
-      { a3: "GIN", name: "Guinea", a2: "GN" }, { a3: "GNB", name: "Guinea-Bissau", a2: "GW" }, { a3: "GUY", name: "Guyana", a2: "GY" },
-      { a3: "HTI", name: "Haiti", a2: "HT" }, { a3: "HND", name: "Honduras", a2: "HN" }, { a3: "HUN", name: "Hungary", a2: "HU" },
-      { a3: "ISL", name: "Iceland", a2: "IS" }, { a3: "IND", name: "India", a2: "IN" }, { a3: "IDN", name: "Indonesia", a2: "ID" },
-      { a3: "IRN", name: "Iran", a2: "IR" }, { a3: "IRQ", name: "Iraq", a2: "IQ" }, { a3: "IRL", name: "Ireland", a2: "IE" },
-      { a3: "ISR", name: "Israel", a2: "IL" }, { a3: "ITA", name: "Italy", a2: "IT" }, { a3: "JAM", name: "Jamaica", a2: "JM" },
-      { a3: "JPN", name: "Japan", a2: "JP" }, { a3: "JOR", name: "Jordan", a2: "JO" }, { a3: "KAZ", name: "Kazakhstan", a2: "KZ" },
-      { a3: "KEN", name: "Kenya", a2: "KE" }, { a3: "KIR", name: "Kiribati", a2: "KI" }, { a3: "PRK", name: "North Korea", a2: "KP" },
-      { a3: "KOR", name: "South Korea", a2: "KR" }, { a3: "KWT", name: "Kuwait", a2: "KW" }, { a3: "KGZ", name: "Kyrgyzstan", a2: "KG" },
-      { a3: "LAO", name: "Laos", a2: "LA" }, { a3: "LVA", name: "Latvia", a2: "LV" }, { a3: "LBN", name: "Lebanon", a2: "LB" },
-      { a3: "LSO", name: "Lesotho", a2: "LS" }, { a3: "LBR", name: "Liberia", a2: "LR" }, { a3: "LBY", name: "Libya", a2: "LY" },
-      { a3: "LIE", name: "Liechtenstein", a2: "LI" }, { a3: "LTU", name: "Lithuania", a2: "LT" }, { a3: "LUX", name: "Luxembourg", a2: "LU" },
-      { a3: "MDG", name: "Madagascar", a2: "MG" }, { a3: "MWI", name: "Malawi", a2: "MW" }, { a3: "MYS", name: "Malaysia", a2: "MY" },
-      { a3: "MDV", name: "Maldives", a2: "MV" }, { a3: "MLI", name: "Mali", a2: "ML" }, { a3: "MLT", name: "Malta", a2: "MT" },
-      { a3: "MHL", name: "Marshall Islands", a2: "MH" }, { a3: "MRT", name: "Mauritania", a2: "MR" }, { a3: "MUS", name: "Mauritius", a2: "MU" },
-      { a3: "MEX", name: "Mexico", a2: "MX" }, { a3: "FSM", name: "Micronesia", a2: "FM" }, { a3: "MDA", name: "Moldova", a2: "MD" },
-      { a3: "MCO", name: "Monaco", a2: "MC" }, { a3: "MNG", name: "Mongolia", a2: "MN" }, { a3: "MNE", name: "Montenegro", a2: "ME" },
-      { a3: "MAR", name: "Morocco", a2: "MA" }, { a3: "MOZ", name: "Mozambique", a2: "MZ" }, { a3: "MMR", name: "Myanmar", a2: "MM" },
-      { a3: "NAM", name: "Namibia", a2: "NA" }, { a3: "NRU", name: "Nauru", a2: "NR" }, { a3: "NPL", name: "Nepal", a2: "NP" },
-      { a3: "NLD", name: "Netherlands", a2: "NL" }, { a3: "NZL", name: "New Zealand", a2: "NZ" }, { a3: "NIC", name: "Nicaragua", a2: "NI" },
-      { a3: "NER", name: "Niger", a2: "NE" }, { a3: "NGA", name: "Nigeria", a2: "NG" }, { a3: "MKD", name: "North Macedonia", a2: "MK" },
-      { a3: "NOR", name: "Norway", a2: "NO" }, { a3: "OMN", name: "Oman", a2: "OM" }, { a3: "PAK", name: "Pakistan", a2: "PK" },
-      { a3: "PLW", name: "Palau", a2: "PW" }, { a3: "PAN", name: "Panama", a2: "PA" }, { a3: "PNG", name: "Papua New Guinea", a2: "PG" },
-      { a3: "PRY", name: "Paraguay", a2: "PY" }, { a3: "PER", name: "Peru", a2: "PE" }, { a3: "PHL", name: "Philippines", a2: "PH" },
-      { a3: "POL", name: "Poland", a2: "PL" }, { a3: "PRT", name: "Portugal", a2: "PT" }, { a3: "QAT", name: "Qatar", a2: "QA" },
-      { a3: "ROU", name: "Romania", a2: "RO" }, { a3: "RUS", name: "Russia", a2: "RU" }, { a3: "RWA", name: "Rwanda", a2: "RW" },
-      { a3: "KNA", name: "Saint Kitts and Nevis", a2: "KN" }, { a3: "LCA", name: "Saint Lucia", a2: "LC" }, { a3: "VCT", name: "Saint Vincent and the Grenadines", a2: "VC" },
-      { a3: "WSM", name: "Samoa", a2: "WS" }, { a3: "SMR", name: "San Marino", a2: "SM" }, { a3: "STP", name: "Sao Tome and Principe", a2: "ST" },
-      { a3: "SAU", name: "Saudi Arabia", a2: "SA" }, { a3: "SEN", name: "Senegal", a2: "SN" }, { a3: "SRB", name: "Serbia", a2: "RS" },
-      { a3: "SYC", name: "Seychelles", a2: "SC" }, { a3: "SLE", name: "Sierra Leone", a2: "SL" }, { a3: "SGP", name: "Singapore", a2: "SG" },
-      { a3: "SVK", name: "Slovakia", a2: "SK" }, { a3: "SVN", name: "Slovenia", a2: "SI" }, { a3: "SLB", name: "Solomon Islands", a2: "SB" },
-      { a3: "SOM", name: "Somalia", a2: "SO" }, { a3: "ZAF", name: "South Africa", a2: "ZA" }, { a3: "SSD", name: "South Sudan", a2: "SS" },
-      { a3: "ESP", name: "Spain", a2: "ES" }, { a3: "LKA", name: "Sri Lanka", a2: "LK" }, { a3: "SDN", name: "Sudan", a2: "SD" },
-      { a3: "SUR", name: "Suriname", a2: "SR" }, { a3: "SWE", name: "Sweden", a2: "SE" }, { a3: "CHE", name: "Switzerland", a2: "CH" },
-      { a3: "SYR", name: "Syria", a2: "SY" }, { a3: "TWN", name: "Taiwan", a2: "TW" }, { a3: "TJK", name: "Tajikistan", a2: "TJ" },
-      { a3: "TZA", name: "Tanzania", a2: "TZ" }, { a3: "THA", name: "Thailand", a2: "TH" }, { a3: "TLS", name: "Timor-Leste", a2: "TL" },
-      { a3: "TGO", name: "Togo", a2: "TG" }, { a3: "TON", name: "Tonga", a2: "TO" }, { a3: "TTO", name: "Trinidad and Tobago", a2: "TT" },
-      { a3: "TUN", name: "Tunisia", a2: "TN" }, { a3: "TUR", name: "Turkey", a2: "TR" }, { a3: "TKM", name: "Turkmenistan", a2: "TM" },
-      { a3: "TUV", name: "Tuvalu", a2: "TV" }, { a3: "UGA", name: "Uganda", a2: "UG" }, { a3: "UKR", name: "Ukraine", a2: "UA" },
-      { a3: "ARE", name: "United Arab Emirates", a2: "AE" }, { a3: "GBR", name: "United Kingdom", a2: "GB" }, { a3: "USA", name: "United States", a2: "US" },
-      { a3: "URY", name: "Uruguay", a2: "UY" }, { a3: "UZB", name: "Uzbekistan", a2: "UZ" }, { a3: "VUT", name: "Vanuatu", a2: "VU" },
-      { a3: "VAT", name: "Vatican City", a2: "VA" }, { a3: "VEN", name: "Venezuela", a2: "VE" }, { a3: "VNM", name: "Vietnam", a2: "VN" },
-      { a3: "YEM", name: "Yemen", a2: "YE" }, { a3: "ZMB", name: "Zambia", a2: "ZM" }, { a3: "ZWE", name: "Zimbabwe", a2: "ZW" }
+      { a3: "AFG", name: "Afghanistan", a2: "AF", coords: [67.7099, 33.9391] },
+      { a3: "ALB", name: "Albania", a2: "AL", coords: [20.1683, 41.1533] },
+      { a3: "DZA", name: "Algeria", a2: "DZ", coords: [1.6596, 28.0339] },
+      { a3: "AND", name: "Andorra", a2: "AD", coords: [1.5218, 42.5063] },
+      { a3: "AGO", name: "Angola", a2: "AO", coords: [17.8739, -11.2027] },
+      { a3: "ATG", name: "Antigua and Barbuda", a2: "AG", coords: [-61.7964, 17.0608] },
+      { a3: "ARG", name: "Argentina", a2: "AR", coords: [-63.6167, -38.4161] },
+      { a3: "ARM", name: "Armenia", a2: "AM", coords: [45.0382, 40.0691] },
+      { a3: "AUS", name: "Australia", a2: "AU", coords: [133.7751, -25.2744] },
+      { a3: "AUT", name: "Austria", a2: "AT", coords: [14.5501, 47.5162] },
+      { a3: "AZE", name: "Azerbaijan", a2: "AZ", coords: [47.5769, 40.1431] },
+      { a3: "BHS", name: "Bahamas", a2: "BS", coords: [-77.3963, 25.0343] },
+      { a3: "BHR", name: "Bahrain", a2: "BH", coords: [50.5577, 26.0667] },
+      { a3: "BGD", name: "Bangladesh", a2: "BD", coords: [90.3563, 23.6850] },
+      { a3: "BRB", name: "Barbados", a2: "BB", coords: [-59.5432, 13.1939] },
+      { a3: "BLR", name: "Belarus", a2: "BY", coords: [27.9534, 53.7098] },
+      { a3: "BEL", name: "Belgium", a2: "BE", coords: [4.4699, 50.5039] },
+      { a3: "BLZ", name: "Belize", a2: "BZ", coords: [-88.4976, 17.1899] },
+      { a3: "BEN", name: "Benin", a2: "BJ", coords: [2.3158, 9.3077] },
+      { a3: "BTN", name: "Bhutan", a2: "BT", coords: [90.4336, 27.5142] },
+      { a3: "BOL", name: "Bolivia", a2: "BO", coords: [-63.5887, -16.2902] },
+      { a3: "BIH", name: "Bosnia and Herz.", a2: "BA", coords: [17.6791, 43.9159] },
+      { a3: "BWA", name: "Botswana", a2: "BW", coords: [24.6849, -22.3285] },
+      { a3: "BRA", name: "Brazil", a2: "BR", coords: [-51.9253, -14.2350] },
+      { a3: "BRN", name: "Brunei", a2: "BN", coords: [114.7277, 4.5353] },
+      { a3: "BGR", name: "Bulgaria", a2: "BG", coords: [25.4858, 42.7339] },
+      { a3: "BFA", name: "Burkina Faso", a2: "BF", coords: [-1.5616, 12.2383] },
+      { a3: "BDI", name: "Burundi", a2: "BI", coords: [29.9189, -3.3731] },
+      { a3: "CPV", name: "Cabo Verde", a2: "CV", coords: [-24.0132, 16.0021] },
+      { a3: "KHM", name: "Cambodia", a2: "KH", coords: [104.9910, 12.5657] },
+      { a3: "CMR", name: "Cameroon", a2: "CM", coords: [12.3547, 7.3697] },
+      { a3: "CAN", name: "Canada", a2: "CA", coords: [-106.3468, 56.1304] },
+      { a3: "CAF", name: "Central African Rep.", a2: "CF", coords: [20.9394, 6.6111] },
+      { a3: "TCD", name: "Chad", a2: "TD", coords: [18.7322, 15.4542] },
+      { a3: "CHL", name: "Chile", a2: "CL", coords: [-71.5430, -35.6751] },
+      { a3: "CHN", name: "China", a2: "CN", coords: [104.1954, 35.8617] },
+      { a3: "COL", name: "Colombia", a2: "CO", coords: [-74.2973, 4.5709] },
+      { a3: "COM", name: "Comoros", a2: "KM", coords: [43.8726, -11.8753] },
+      { a3: "COG", name: "Congo", a2: "CG", coords: [15.8277, -0.2280] },
+      { a3: "COD", name: "Congo (DRC)", a2: "CD", coords: [21.7587, -4.0383] },
+      { a3: "CRI", name: "Costa Rica", a2: "CR", coords: [-83.7534, 9.7489] },
+      { a3: "CIV", name: "Côte d'Ivoire", a2: "CI", coords: [-5.5471, 7.5400] },
+      { a3: "HRV", name: "Croatia", a2: "HR", coords: [15.2000, 45.1000] },
+      { a3: "CUB", name: "Cuba", a2: "CU", coords: [-77.7812, 21.5218] },
+      { a3: "CYP", name: "Cyprus", a2: "CY", coords: [33.4299, 35.1264] },
+      { a3: "CZE", name: "Czech Republic", a2: "CZ", coords: [15.4730, 49.8175] },
+      { a3: "DNK", name: "Denmark", a2: "DK", coords: [9.5018, 56.2639] },
+      { a3: "DJI", name: "Djibouti", a2: "DJ", coords: [42.5903, 11.8251] },
+      { a3: "DMA", name: "Dominica", a2: "DM", coords: [-61.3710, 15.4150] },
+      { a3: "DOM", name: "Dominican Republic", a2: "DO", coords: [-70.1627, 18.7357] },
+      { a3: "ECU", name: "Ecuador", a2: "EC", coords: [-78.1834, -1.8312] },
+      { a3: "EGY", name: "Egypt", a2: "EG", coords: [30.8025, 26.8206] },
+      { a3: "SLV", name: "El Salvador", a2: "SV", coords: [-88.8965, 13.7942] },
+      { a3: "GNQ", name: "Equatorial Guinea", a2: "GQ", coords: [10.2679, 1.6508] },
+      { a3: "ERI", name: "Eritrea", a2: "ER", coords: [39.7823, 15.1794] },
+      { a3: "EST", name: "Estonia", a2: "EE", coords: [25.0136, 58.5953] },
+      { a3: "SWZ", name: "Eswatini", a2: "SZ", coords: [31.4659, -26.5225] },
+      { a3: "ETH", name: "Ethiopia", a2: "ET", coords: [40.4897, 9.1450] },
+      { a3: "FJI", name: "Fiji", a2: "FJ", coords: [178.0650, -17.7134] },
+      { a3: "FIN", name: "Finland", a2: "FI", coords: [25.7482, 61.9241] },
+      { a3: "FRA", name: "France", a2: "FR", coords: [2.2137, 46.2276] },
+      { a3: "GAB", name: "Gabon", a2: "GA", coords: [11.6094, -0.8037] },
+      { a3: "GMB", name: "Gambia", a2: "GM", coords: [-15.3101, 13.4432] },
+      { a3: "GEO", name: "Georgia", a2: "GE", coords: [43.3569, 42.3154] },
+      { a3: "DEU", name: "Germany", a2: "DE", coords: [10.4515, 51.1657] },
+      { a3: "GHA", name: "Ghana", a2: "GH", coords: [-1.0232, 7.9465] },
+      { a3: "GRC", name: "Greece", a2: "GR", coords: [21.8243, 39.0742] },
+      { a3: "GRD", name: "Grenada", a2: "GD", coords: [-61.6042, 12.1165] },
+      { a3: "GTM", name: "Guatemala", a2: "GT", coords: [-90.2308, 15.7835] },
+      { a3: "GIN", name: "Guinea", a2: "GN", coords: [-9.6966, 9.9456] },
+      { a3: "GNB", name: "Guinea-Bissau", a2: "GW", coords: [-15.1804, 11.8037] },
+      { a3: "GUY", name: "Guyana", a2: "GY", coords: [-58.9302, 4.8604] },
+      { a3: "HTI", name: "Haiti", a2: "HT", coords: [-72.2852, 18.9712] },
+      { a3: "HND", name: "Honduras", a2: "HN", coords: [-86.2419, 15.2000] },
+      { a3: "HUN", name: "Hungary", a2: "HU", coords: [19.5033, 47.1625] },
+      { a3: "ISL", name: "Iceland", a2: "IS", coords: [-19.0208, 64.9631] },
+      { a3: "IND", name: "India", a2: "IN", coords: [78.9629, 20.5937] },
+      { a3: "IDN", name: "Indonesia", a2: "ID", coords: [113.9213, -0.7893] },
+      { a3: "IRN", name: "Iran", a2: "IR", coords: [53.6880, 32.4279] },
+      { a3: "IRQ", name: "Iraq", a2: "IQ", coords: [43.6793, 33.2232] },
+      { a3: "IRL", name: "Ireland", a2: "IE", coords: [-8.2439, 53.4129] },
+      { a3: "ISR", name: "Israel", a2: "IL", coords: [34.8516, 31.0461] },
+      { a3: "ITA", name: "Italy", a2: "IT", coords: [12.5674, 41.8719] },
+      { a3: "JAM", name: "Jamaica", a2: "JM", coords: [-77.2975, 18.1096] },
+      { a3: "JPN", name: "Japan", a2: "JP", coords: [138.2529, 36.2048] },
+      { a3: "JOR", name: "Jordan", a2: "JO", coords: [36.2384, 30.5852] },
+      { a3: "KAZ", name: "Kazakhstan", a2: "KZ", coords: [66.9237, 48.0196] },
+      { a3: "KEN", name: "Kenya", a2: "KE", coords: [37.9062, -0.0236] },
+      { a3: "KIR", name: "Kiribati", a2: "KI", coords: [-157.363, 1.870] },
+      { a3: "PRK", name: "North Korea", a2: "KP", coords: [127.5101, 40.3399] },
+      { a3: "KOR", name: "South Korea", a2: "KR", coords: [127.7669, 35.9078] },
+      { a3: "KWT", name: "Kuwait", a2: "KW", coords: [47.4818, 29.3117] },
+      { a3: "KGZ", name: "Kyrgyzstan", a2: "KG", coords: [74.7661, 41.2044] },
+      { a3: "LAO", name: "Laos", a2: "LA", coords: [102.4955, 19.8563] },
+      { a3: "LVA", name: "Latvia", a2: "LV", coords: [24.6032, 56.8796] },
+      { a3: "LBN", name: "Lebanon", a2: "LB", coords: [35.8623, 33.8547] },
+      { a3: "LSO", name: "Lesotho", a2: "LS", coords: [28.2336, -29.6099] },
+      { a3: "LBR", name: "Liberia", a2: "LR", coords: [-9.4295, 6.4281] },
+      { a3: "LBY", name: "Libya", a2: "LY", coords: [17.2283, 26.3351] },
+      { a3: "LIE", name: "Liechtenstein", a2: "LI", coords: [9.521, 47.166] },
+      { a3: "LTU", name: "Lithuania", a2: "LT", coords: [23.8813, 55.1694] },
+      { a3: "LUX", name: "Luxembourg", a2: "LU", coords: [6.1296, 49.8153] },
+      { a3: "MDG", name: "Madagascar", a2: "MG", coords: [46.8691, -18.7669] },
+      { a3: "MWI", name: "Malawi", a2: "MW", coords: [34.3015, -13.2543] },
+      { a3: "MYS", name: "Malaysia", a2: "MY", coords: [101.9758, 4.2105] },
+      { a3: "MDV", name: "Maldives", a2: "MV", coords: [73.2207, 3.2028] },
+      { a3: "MLI", name: "Mali", a2: "ML", coords: [-3.9962, 17.5707] },
+      { a3: "MLT", name: "Malta", a2: "MT", coords: [14.3754, 35.9375] },
+      { a3: "MHL", name: "Marshall Islands", a2: "MH", coords: [171.184, 7.131] },
+      { a3: "MRT", name: "Mauritania", a2: "MR", coords: [-10.9408, 21.0079] },
+      { a3: "MUS", name: "Mauritius", a2: "MU", coords: [57.5522, -20.3484] },
+      { a3: "MEX", name: "Mexico", a2: "MX", coords: [-102.5528, 23.6345] },
+      { a3: "FSM", name: "Micronesia", a2: "FM", coords: [150.5508, 7.4256] },
+      { a3: "MDA", name: "Moldova", a2: "MD", coords: [28.3699, 47.4116] },
+      { a3: "MCO", name: "Monaco", a2: "MC", coords: [7.4246, 43.7384] },
+      { a3: "MNG", name: "Mongolia", a2: "MN", coords: [103.8467, 46.8625] },
+      { a3: "MNE", name: "Montenegro", a2: "ME", coords: [19.3744, 42.7087] },
+      { a3: "MAR", name: "Morocco", a2: "MA", coords: [-7.0926, 31.7917] },
+      { a3: "MOZ", name: "Mozambique", a2: "MZ", coords: [35.5296, -18.6657] },
+      { a3: "MMR", name: "Myanmar", a2: "MM", coords: [95.9560, 21.9162] },
+      { a3: "NAM", name: "Namibia", a2: "NA", coords: [18.4904, -22.9576] },
+      { a3: "NRU", name: "Nauru", a2: "NR", coords: [166.931, -0.522] },
+      { a3: "NPL", name: "Nepal", a2: "NP", coords: [84.1240, 28.3949] },
+      { a3: "NLD", name: "Netherlands", a2: "NL", coords: [5.2913, 52.1326] },
+      { a3: "NZL", name: "New Zealand", a2: "NZ", coords: [174.8860, -40.9006] },
+      { a3: "NIC", name: "Nicaragua", a2: "NI", coords: [-85.2072, 12.8654] },
+      { a3: "NER", name: "Niger", a2: "NE", coords: [8.0817, 17.6078] },
+      { a3: "NGA", name: "Nigeria", a2: "NG", coords: [8.6753, 9.0820] },
+      { a3: "MKD", name: "North Macedonia", a2: "MK", coords: [21.7453, 41.6086] },
+      { a3: "NOR", name: "Norway", a2: "NO", coords: [8.4689, 60.4720] },
+      { a3: "OMN", name: "Oman", a2: "OM", coords: [55.9233, 21.4735] },
+      { a3: "PAK", name: "Pakistan", a2: "PK", coords: [69.3451, 30.3753] },
+      { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150] },
+      { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380] },
+      { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150] },
+      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425] },
+      { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899] },
+      { a3: "PHL", name: "Philippines", a2: "PH", coords: [121.7740, 12.8797] },
+      { a3: "POL", name: "Poland", a2: "PL", coords: [19.1451, 51.9194] },
+      { a3: "PRT", name: "Portugal", a2: "PT", coords: [-8.2245, 39.3999] },
+      { a3: "QAT", name: "Qatar", a2: "QA", coords: [51.1839, 25.3548] },
+      { a3: "ROU", name: "Romania", a2: "RO", coords: [24.9668, 45.9432] },
+      { a3: "RUS", name: "Russia", a2: "RU", coords: [105.3188, 61.5240] },
+      { a3: "RWA", name: "Rwanda", a2: "RW", coords: [29.8739, -1.9403] },
+      { a3: "KNA", name: "Saint Kitts & Nevis", a2: "KN", coords: [-62.7830, 17.3578] },
+      { a3: "LCA", name: "Saint Lucia", a2: "LC", coords: [-60.9789, 13.9094] },
+      { a3: "VCT", name: "St. Vincent & Gren.", a2: "VC", coords: [-61.2872, 12.9843] },
+      { a3: "WSM", name: "Samoa", a2: "WS", coords: [-172.1046, -13.7590] },
+      { a3: "SMR", name: "San Marino", a2: "SM", coords: [12.4578, 43.9424] },
+      { a3: "STP", name: "Sao Tome & Principe", a2: "ST", coords: [6.6131, 0.1864] },
+      { a3: "SAU", name: "Saudi Arabia", a2: "SA", coords: [45.0792, 23.8859] },
+      { a3: "SEN", name: "Senegal", a2: "SN", coords: [-14.4524, 14.4974] },
+      { a3: "SRB", name: "Serbia", a2: "RS", coords: [21.0059, 44.0165] },
+      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.4920, -4.6796] },
+      { a3: "SLE", name: "Sierra Leone", a2: "SL", coords: [-11.7799, 8.4606] },
+      { a3: "SGP", name: "Singapore", a2: "SG", coords: [103.8198, 1.3521] },
+      { a3: "SVK", name: "Slovakia", a2: "SK", coords: [19.6990, 48.6690] },
+      { a3: "SVN", name: "Slovenia", a2: "SI", coords: [14.9955, 46.1512] },
+      { a3: "SLB", name: "Solomon Islands", a2: "SB", coords: [160.1562, -9.6457] },
+      { a3: "SOM", name: "Somalia", a2: "SO", coords: [46.1996, 5.1521] },
+      { a3: "ZAF", name: "South Africa", a2: "ZA", coords: [22.9375, -30.5595] },
+      { a3: "SSD", name: "South Sudan", a2: "SS", coords: [31.3070, 6.8770] },
+      { a3: "ESP", name: "Spain", a2: "ES", coords: [-3.7492, 40.4637] },
+      { a3: "LKA", name: "Sri Lanka", a2: "LK", coords: [80.7718, 7.8731] },
+      { a3: "SDN", name: "Sudan", a2: "SD", coords: [30.2176, 12.8628] },
+      { a3: "SUR", name: "Suriname", a2: "SR", coords: [-56.0278, 3.9193] },
+      { a3: "SWE", name: "Sweden", a2: "SE", coords: [18.6435, 60.1282] },
+      { a3: "CHE", name: "Switzerland", a2: "CH", coords: [8.2275, 46.8182] },
+      { a3: "SYR", name: "Syria", a2: "SY", coords: [38.9968, 34.8021] },
+      { a3: "TWN", name: "Taiwan", a2: "TW", coords: [120.9605, 23.6978] },
+      { a3: "TJK", name: "Tajikistan", a2: "TJ", coords: [71.2761, 38.8610] },
+      { a3: "TZA", name: "Tanzania", a2: "TZ", coords: [34.8888, -6.3690] },
+      { a3: "THA", name: "Thailand", a2: "TH", coords: [100.9925, 15.8700] },
+      { a3: "TLS", name: "Timor-Leste", a2: "TL", coords: [125.7275, -8.8742] },
+      { a3: "TGO", name: "Togo", a2: "TG", coords: [0.8248, 8.6195] },
+      { a3: "TON", name: "Tonga", a2: "TO", coords: [-175.1982, -21.1789] },
+      { a3: "TTO", name: "Trinidad & Tobago", a2: "TT", coords: [-61.2225, 10.6918] },
+      { a3: "TUN", name: "Tunisia", a2: "TN", coords: [9.5375, 33.8869] },
+      { a3: "TUR", name: "Turkey", a2: "TR", coords: [35.2433, 38.9637] },
+      { a3: "TKM", name: "Turkmenistan", a2: "TM", coords: [59.5563, 38.9697] },
+      { a3: "TUV", name: "Tuvalu", a2: "TV", coords: [179.194, -8.506] },
+      { a3: "UGA", name: "Uganda", a2: "UG", coords: [32.2903, 1.3733] },
+      { a3: "UKR", name: "Ukraine", a2: "UA", coords: [31.1656, 48.3794] },
+      { a3: "ARE", name: "United Arab Emirates", a2: "AE", coords: [53.8478, 23.4241] },
+      { a3: "GBR", name: "United Kingdom", a2: "GB", coords: [-3.4360, 55.3781] },
+      { a3: "USA", name: "United States", a2: "US", coords: [-95.7129, 37.0902] },
+      { a3: "URY", name: "Uruguay", a2: "UY", coords: [-55.7658, -32.5228] },
+      { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775] },
+      { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767] },
+      { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029] },
+      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238] },
+      { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583] },
+      { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527] },
+      { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339] },
+      { a3: "ZWE", name: "Zimbabwe", a2: "ZW", coords: [29.1549, -19.0154] }
     ];
 
     const getFlagEmoji = (a2) => {
@@ -194,6 +324,7 @@
       const [showTerritories, setShowTerritories] = useState(false);
 
       const [scrubberYear, setScrubberYear] = useState(1600);
+      const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       useEffect(() => {
         setIsSyncing(true);
@@ -289,14 +420,35 @@
         alert(`Saved ${coinInfo.denomination} (${coinInfo.year}) to ${coinInfo.countryName}!`);
       };
 
+      const handleNavigateToCoinOnMap = (coin) => {
+        if (coin.isHistorical) {
+          const matchedEntity = (vaultData.historicalEntities || []).find(e => e.id === coin.entityId);
+          if (matchedEntity) {
+            setScrubberYear(matchedEntity.startYear);
+            setView("historical");
+            const coords = matchedEntity.mint?.coords || matchedEntity.polygons?.[0]?.points?.[0];
+            if (coords) setMapFocusTarget({ coords: coords, zoomLevel: 25 });
+          } else {
+            setView("historical");
+          }
+        } else {
+          const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
+          const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
+          const coords = sov ? sov.coords : (ter ? ter.coords : [15, 50]);
+          setView("map");
+          setMapFocusTarget({ coords: coords, zoomLevel: 14 });
+        }
+      };
+
       return (
         <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
           
           <header className="p-3 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between">
             <div>
-              <h1 className="text-sm font-black tracking-wider text-white flex items-center gap-2">
+              <h1 className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
-                MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span>
+                <span>MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span></span>
+                <span className="text-[9px] bg-slate-800 text-slate-400 font-mono px-1.5 py-0.5 rounded border border-slate-700/60 ml-1">est. 2013</span>
               </h1>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
                 {cloudStatus === "saving" && <span className="text-cyan-400 animate-pulse font-bold">• Saving to Cloud...</span>}
@@ -358,11 +510,12 @@
                     <button
                       key={t.code}
                       onClick={() => {
-                        setSelectedCountry({ a3: t.code, name: t.name, isTerritory: true, mother: t.mother, coords: t.coords });
+                        setSelectedCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother, coords: t.coords });
                         setIsModalOpen(true);
                       }}
-                      className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300">
-                      {t.name} ({t.mother})
+                      className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300 flex items-center gap-1.5">
+                      <span>{getFlagEmoji(t.a2)}</span>
+                      <span>{t.name} ({t.mother})</span>
                     </button>
                   ))}
                 </div>
@@ -388,16 +541,85 @@
             </div>
           )}
 
-          <main className="flex-1 overflow-hidden relative">
+          <main className="flex-1 overflow-hidden relative flex flex-col">
             {view === "map" && (
-              <InteractiveWorldMap 
-                coins={vaultData.coins || []}
-                onSelectModernCountry={(info) => {
-                  setSelectedCountry(info);
-                  setEditingCoin(null);
-                  setIsModalOpen(true);
-                }}
-              />
+              <div className="flex flex-col h-full">
+                {/* Upper Map Area */}
+                <div className="h-[48vh] sm:h-[55vh] relative border-b border-slate-800/80 bg-[#05070d]">
+                  <InteractiveWorldMap 
+                    coins={vaultData.coins || []}
+                    focusTarget={mapFocusTarget}
+                    onSelectModernCountry={(info) => {
+                      setSelectedCountry(info);
+                      setEditingCoin(null);
+                      setIsModalOpen(true);
+                    }}
+                  />
+                </div>
+
+                {/* Bottom Interactive Vault Dashboard */}
+                <div className="flex-1 p-3.5 overflow-y-auto hide-scrollbar bg-[#080b14] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#00f0ff]"></span>
+                        <span>Collection Feed</span>
+                      </h2>
+                      <p className="text-[10px] text-slate-400">Tap any coin below to locate on map</p>
+                    </div>
+                    <button 
+                      onClick={() => { setSelectedCountry(null); setEditingCoin(null); setIsModalOpen(true); }}
+                      className="bg-[#00f0ff] hover:bg-cyan-400 text-black font-extrabold text-[11px] px-2.5 py-1 rounded-xl shadow">
+                      + Quick Add
+                    </button>
+                  </div>
+
+                  {/* Horizontal Feed of Coins */}
+                  <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-1">
+                    {(vaultData.coins || []).slice(0, 10).map(coin => {
+                      const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
+                      const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
+                      const flag = getFlagEmoji(sov?.a2 || ter?.a2);
+
+                      return (
+                        <div 
+                          key={coin.id}
+                          onClick={() => handleNavigateToCoinOnMap(coin)}
+                          className="min-w-[140px] max-w-[150px] p-2.5 bg-[#0f1424] border border-slate-800 hover:border-cyan-400/60 rounded-2xl cursor-pointer transition-all active:scale-95 flex flex-col justify-between space-y-1.5 shadow-md">
+                          <div>
+                            <div className="flex items-center justify-between text-base">
+                              <span>{coin.isHistorical ? "🏛️" : flag}</span>
+                              <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-1 rounded">{coin.grade || "UNC"}</span>
+                            </div>
+                            <h3 className="text-xs font-bold text-white truncate mt-1">{coin.countryName}</h3>
+                            <p className="text-[11px] text-[#00f0ff] font-semibold truncate">{coin.denomination}</p>
+                          </div>
+                          <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800/60 font-mono">
+                            <span>{formatYearDisplay(coin.year)}</span>
+                            <span className="text-cyan-400 text-[10px]">🗺️</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Mini Stats Bar */}
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                      <div className="text-[10px] text-slate-400">Total Coins</div>
+                      <div className="text-sm font-black text-white">{(vaultData.coins || []).length}</div>
+                    </div>
+                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                      <div className="text-[10px] text-slate-400">Sovereign</div>
+                      <div className="text-sm font-black text-[#39ff14]">{sovereignCount}/195</div>
+                    </div>
+                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                      <div className="text-[10px] text-slate-400">Empires</div>
+                      <div className="text-sm font-black text-amber-400">{(vaultData.historicalEntities || []).length}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {view === "vault" && (
@@ -410,6 +632,7 @@
                   setSelectedCountry({ a3: c.countryCode, name: c.countryName });
                   setIsModalOpen(true);
                 }}
+                onNavigateToCoin={handleNavigateToCoinOnMap}
                 onAddClick={() => {
                   setEditingCoin(null);
                   setSelectedCountry(null);
@@ -423,6 +646,7 @@
                 entities={vaultData.historicalEntities || []}
                 coins={vaultData.coins || []}
                 scrubberYear={scrubberYear}
+                focusTarget={mapFocusTarget}
                 onSaveEntity={handleSaveHistoricalEntity}
                 onAddHistoricalCoin={handleAddHistoricalCoin}
               />
@@ -442,8 +666,10 @@
       );
     }
 
-    function InteractiveWorldMap({ coins, onSelectModernCountry }) {
+    function InteractiveWorldMap({ coins, focusTarget, onSelectModernCountry }) {
       const svgRef = useRef(null);
+      const zoomBehaviorRef = useRef(null);
+      const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 240]));
 
       const statusMap = useMemo(() => {
         const map = {};
@@ -475,11 +701,12 @@
         hatch.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
           .attr("stroke", "#ff1744").attr("stroke-width", 2.5);
 
-        const g = svg.append("g");
-        const projection = d3.geoNaturalEarth1().scale(150).translate([width / 2, height / 1.9]);
+        const g = svg.append("g").attr("id", "modern-map-root");
+        const projection = projectionRef.current;
         const path = d3.geoPath().projection(projection);
 
         const zoom = d3.zoom().scaleExtent([1, 250]).on("zoom", (e) => g.attr("transform", e.transform));
+        zoomBehaviorRef.current = zoom;
         svg.call(zoom);
 
         Promise.all([
@@ -487,7 +714,9 @@
           d3.tsv("https://unpkg.com/world-atlas@1.1.4/world/110m.tsv")
         ]).then(([atlasData, tsvData]) => {
           const nameMap = {};
-          tsvData.forEach(d => { nameMap[d.iso_n3] = { a3: d.iso_a3, name: d.name }; });
+          tsvData.forEach(d => { 
+            nameMap[d.iso_n3] = { a3: d.iso_a3, name: d.name }; 
+          });
           nameMap["728"] = { a3: "SSD", name: "South Sudan" };
 
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
@@ -503,7 +732,11 @@
               if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer";
               return `neon-${st.neonColor} cursor-pointer ${st.abroadOnly ? "border-red-glow" : "stroke-white/30 stroke-[0.35]"}`;
             })
-            .on("click", (e, d) => onSelectModernCountry(nameMap[d.id] || { a3: "WLD", name: "Selected Territory" }));
+            .on("click", (e, d) => {
+              const baseInfo = nameMap[d.id] || { a3: "WLD", name: "Selected Territory" };
+              const match = SOVEREIGN_LIST.find(s => s.a3 === baseInfo.a3);
+              onSelectModernCountry(match || baseInfo);
+            });
 
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
@@ -516,7 +749,7 @@
               if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer";
               return `neon-${st.neonColor} ${st.abroadOnly ? "border-red-glow stroke-[1.2]" : "stroke-white/70"}`;
             })
-            .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name }));
+            .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name, a2: d.a2 }));
 
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
@@ -528,9 +761,17 @@
             .attr("stroke", "#ff1744")
             .attr("stroke-width", 0.8)
             .attr("class", "cursor-pointer")
-            .on("click", (e, d) => onSelectModernCountry({ a3: d.code, name: d.name, isTerritory: true, mother: d.mother }));
+            .on("click", (e, d) => onSelectModernCountry({ a3: d.code, name: d.name, a2: d.a2, isTerritory: true, mother: d.mother }));
         });
       }, [statusMap]);
+
+      useEffect(() => {
+        if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
+        const [x, y] = projectionRef.current(focusTarget.coords);
+        const k = focusTarget.zoomLevel || 12;
+        const transform = d3.zoomIdentity.translate(400 - x * k, 240 - y * k).scale(k);
+        d3.select(svgRef.current).transition().duration(900).call(zoomBehaviorRef.current.transform, transform);
+      }, [focusTarget]);
 
       return (
         <div className="w-full h-full bg-[#05070d] flex items-center justify-center overflow-hidden">
@@ -539,7 +780,7 @@
       );
     }
 
-    function HistoricalStudio({ entities, coins, scrubberYear, onSaveEntity, onAddHistoricalCoin }) {
+    function HistoricalStudio({ entities, coins, scrubberYear, focusTarget, onSaveEntity, onAddHistoricalCoin }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
       const isVertexModeRef = useRef(false);
@@ -550,7 +791,6 @@
       const [closedPolygons, setClosedPolygons] = useState([]);
       const [inspectingEntity, setInspectingEntity] = useState(null);
 
-      // Color customization modal state
       const [colorPaletteModalEntity, setColorPaletteModalEntity] = useState(null);
       const [tempColor, setTempColor] = useState("#ffd600");
       const [tempStriped, setTempStriped] = useState(false);
@@ -599,7 +839,6 @@
 
         const defs = svg.append("defs");
 
-        // Generate striping patterns dynamically for each entity
         entities.forEach(ent => {
           (ent.polygons || []).forEach((poly, idx) => {
             if (poly.striped) {
@@ -800,6 +1039,14 @@
         updateDynamicOverlay();
       }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint, entityMeta]);
 
+      useEffect(() => {
+        if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
+        const [x, y] = projectionRef.current(focusTarget.coords);
+        const k = focusTarget.zoomLevel || 18;
+        const transform = d3.zoomIdentity.translate(400 - x * k, 250 - y * k).scale(k);
+        d3.select(svgRef.current).transition().duration(900).call(zoomBehaviorRef.current.transform, transform);
+      }, [focusTarget]);
+
       const detectCountry = (coords) => {
         if (!worldGeoRef.current || !coords) return "Coastal / Ocean Waters";
         const found = worldGeoRef.current.features.find(feature => d3.geoContains(feature, coords));
@@ -810,24 +1057,29 @@
         return "Coastal Waters";
       };
 
-      // Detect modern countries inside an entity's polygon
       const getCountriesInsideEmpire = (entity) => {
-        if (!worldGeoRef.current || !entity?.polygons || entity.polygons.length === 0) return [];
-        const polyPoints = entity.polygons[0].points;
-        const matches = [];
+        if (!entity?.polygons || entity.polygons.length === 0) return [];
+        const polyGeoPoints = entity.polygons[0].points;
+        const projectedPoly = polyGeoPoints.map(p => projectionRef.current(p));
+        const matched = [];
 
-        worldGeoRef.current.features.forEach(feat => {
-          const center = d3.geoCentroid(feat);
-          if (d3.polygonContains(polyPoints, center)) {
-            const tsvItem = worldGeoRef.current.tsv.find(t => t.iso_n3 === feat.id);
-            const a3 = tsvItem ? tsvItem.iso_a3 : null;
-            const sovereignItem = SOVEREIGN_LIST.find(s => s.a3 === a3);
-            if (sovereignItem) {
-              matches.push(sovereignItem);
-            }
+        SOVEREIGN_LIST.forEach(nation => {
+          const projCenter = projectionRef.current(nation.coords);
+          if (d3.polygonContains(projectedPoly, projCenter)) {
+            matched.push(nation);
+            return;
+          }
+          const hasNearbyVertex = polyGeoPoints.some(gp => {
+            const dx = gp[0] - nation.coords[0];
+            const dy = gp[1] - nation.coords[1];
+            return (dx * dx + dy * dy) < 18;
+          });
+          if (hasNearbyVertex) {
+            matched.push(nation);
           }
         });
-        return matches;
+
+        return matched;
       };
 
       const handleCompletePolygon = () => {
@@ -882,7 +1134,6 @@
         );
       };
 
-      // Confirms and permanently applies the color to an entity
       const handleConfirmColorChange = () => {
         if (!colorPaletteModalEntity) return;
         const updated = {
@@ -921,7 +1172,6 @@
             className="w-full h-full object-contain map-canvas-touch">
           </svg>
 
-          {/* Clean Setup Button in History View */}
           <div className="absolute top-3 left-3 z-20 flex gap-2">
             <button 
               onClick={() => setMetaModalOpen(true)}
@@ -951,7 +1201,6 @@
             </button>
           </div>
 
-          {/* Bottom Floating Empire Pill */}
           {activeTimelineEntities && (
             <div className="absolute bottom-24 inset-x-4 z-20 flex justify-center pointer-events-none">
               <div className="pointer-events-auto bg-[#0b101eee] border border-amber-400/50 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-2xl flex items-center gap-3">
@@ -996,7 +1245,6 @@
             </div>
           )}
 
-          {/* Elevated Bottom Control Bar */}
           <div className="absolute bottom-9 sm:bottom-8 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
             <div className="pointer-events-auto">
               <button 
@@ -1149,7 +1397,6 @@
             </div>
           )}
 
-          {/* Quick Color Palette Switcher Modal with Explicit Save Confirmation */}
           {colorPaletteModalEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3.5 shadow-2xl">
@@ -1204,7 +1451,6 @@
             </div>
           )}
 
-          {/* Empire Inspector with Modern Countries & Flags Inside */}
           {inspectingEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
@@ -1226,15 +1472,14 @@
                   <div className="col-span-2"><span className="text-slate-400">Mint:</span> <span className="text-white">{inspectingEntity.mint?.city || "—"} ({inspectingEntity.mint?.country || "—"})</span></div>
                 </div>
 
-                {/* Modern Countries & Flags in Empire */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-bold text-amber-400">Countries in this Empire ({modernNationsInEmpire.length}):</span>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto hide-scrollbar p-2 bg-[#090d18] rounded-xl border border-slate-800">
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto hide-scrollbar p-2 bg-[#090d18] rounded-xl border border-slate-800">
                     {modernNationsInEmpire.length === 0 ? (
-                      <span className="text-xs text-slate-500 italic">No sovereign state centers detected inside polygon.</span>
+                      <span className="text-xs text-slate-500 italic">No sovereign states detected inside boundary polygon.</span>
                     ) : (
                       modernNationsInEmpire.map(nation => (
                         <span 
@@ -1249,7 +1494,6 @@
                   </div>
                 </div>
 
-                {/* Inline Color & Stripe Modifier Button */}
                 <div className="flex items-center justify-between bg-[#10162a] p-2.5 rounded-xl border border-slate-800">
                   <div className="flex items-center gap-2">
                     <div 
@@ -1269,7 +1513,6 @@
                   </button>
                 </div>
 
-                {/* Attached Historical Coins */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-bold text-cyan-400">Coins in Vault ({coinsForInspectedEntity.length})</span>
@@ -1305,7 +1548,6 @@
             </div>
           )}
 
-          {/* Add Historical Coin Modal */}
           {isAddingCoinForEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
@@ -1407,7 +1649,7 @@
       );
     }
 
-    function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onAddClick }) {
+    function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onNavigateToCoin, onAddClick }) {
       const [query, setQuery] = useState("");
       const [vaultMode, setVaultMode] = useState("all");
 
@@ -1459,36 +1701,52 @@
                 No coins found in this category.
               </div>
             ) : (
-              filtered.map(coin => (
-                <div 
-                  key={coin.id} 
-                  className={`bg-[#0f1424] border rounded-2xl p-3 space-y-2 relative ${coin.isHistorical ? "border-amber-400/40" : (!coin.inPossession ? "border-[#ff1744]" : "border-slate-800")}`}>
-                  
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        {coin.isHistorical && <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 px-1 rounded font-semibold">Historical</span>}
-                        <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
+              filtered.map(coin => {
+                const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
+                const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
+                const flag = getFlagEmoji(sov?.a2 || ter?.a2);
+
+                return (
+                  <div 
+                    key={coin.id} 
+                    className={`bg-[#0f1424] border rounded-2xl p-3 space-y-2 relative ${coin.isHistorical ? "border-amber-400/40" : (!coin.inPossession ? "border-[#ff1744]" : "border-slate-800")}`}>
+                    
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base">{coin.isHistorical ? "🏛️" : flag}</span>
+                          {coin.isHistorical && <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/30 px-1 rounded font-semibold">Historical</span>}
+                          <h3 className="font-bold text-sm text-white">{coin.countryName}</h3>
+                        </div>
+                        <p className={`text-[11px] font-semibold ${coin.isHistorical ? "text-amber-400" : "text-[#00f0ff]"}`}>{coin.denomination}</p>
                       </div>
-                      <p className={`text-[11px] font-semibold ${coin.isHistorical ? "text-amber-400" : "text-[#00f0ff]"}`}>{coin.denomination}</p>
+
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => onEditCoin(coin)} className="text-slate-400 hover:text-white p-1 text-xs" title="Edit">✏️</button>
+                        <button onClick={() => onDeleteCoin(coin.id)} className="text-slate-400 hover:text-red-400 p-1 text-xs" title="Delete">🗑</button>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => onEditCoin(coin)} className="text-slate-400 hover:text-white p-1 text-xs" title="Edit">✏️</button>
-                      <button onClick={() => onDeleteCoin(coin.id)} className="text-slate-400 hover:text-red-400 p-1 text-xs" title="Delete">🗑</button>
+                    <div className="grid grid-cols-2 gap-1 bg-[#080b14] p-1.5 rounded-lg text-[10px] text-slate-300">
+                      <div><span className="text-slate-500">Year:</span> {formatYearDisplay(coin.year)}</div>
+                      <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
+                      <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
+                      <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "—"}</div>
+                    </div>
+
+                    {coin.notes && <p className="text-[10px] text-slate-400 italic">"{coin.notes}"</p>}
+
+                    <div className="pt-1 border-t border-slate-800/80 flex justify-end">
+                      <button 
+                        onClick={() => onNavigateToCoin(coin)}
+                        className="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-950/40 border border-cyan-800/50">
+                        <span>View on Map</span>
+                        <span>🗺️</span>
+                      </button>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-1 bg-[#080b14] p-1.5 rounded-lg text-[10px] text-slate-300">
-                    <div><span className="text-slate-500">Year:</span> {formatYearDisplay(coin.year)}</div>
-                    <div><span className="text-slate-500">Grade:</span> {coin.grade || "UNC"}</div>
-                    <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
-                    <div className="truncate"><span className="text-slate-500">Ruler:</span> {coin.ruler || "—"}</div>
-                  </div>
-
-                  {coin.notes && <p className="text-[10px] text-slate-400 italic">"{coin.notes}"</p>}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -1499,8 +1757,8 @@
       const [formData, setFormData] = useState(() => {
         if (editingCoin) return { ...editingCoin };
         return {
-          countryCode: initialCountry?.a3 || "TUV",
-          countryName: initialCountry?.name || "Tuvalu",
+          countryCode: initialCountry?.a3 || "POL",
+          countryName: initialCountry?.name || "Poland",
           isTerritory: !!initialCountry?.isTerritory,
           motherCountry: initialCountry?.mother || "",
           denomination: "",
@@ -1516,12 +1774,20 @@
         };
       });
 
+      const currentFlag = useMemo(() => {
+        const sov = SOVEREIGN_LIST.find(s => s.a3 === formData.countryCode);
+        const ter = TERRITORIES_LIST.find(t => t.code === formData.countryCode);
+        return getFlagEmoji(sov?.a2 || ter?.a2);
+      }, [formData.countryCode]);
+
       return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-4 max-h-[90vh] overflow-y-auto hide-scrollbar space-y-3.5">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h2 className="text-xs font-bold text-white">
-                {editingCoin ? "Edit Coin:" : "Add Coin:"} <span className="text-[#00f0ff]">{formData.countryName}</span>
+              <h2 className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span className="text-base">{currentFlag}</span>
+                <span>{editingCoin ? "Edit Coin:" : "Add Coin:"}</span>
+                <span className="text-[#00f0ff]">{formData.countryName}</span>
               </h2>
               <button onClick={onClose} className="text-slate-400 hover:text-white font-bold text-base">✕</button>
             </div>
@@ -1540,10 +1806,18 @@
                   }}
                   className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white">
                   <optgroup label="Sovereign Nations">
-                    {SOVEREIGN_LIST.map(s => <option key={s.a3} value={s.a3}>{s.name} ({s.a3})</option>)}
+                    {SOVEREIGN_LIST.map(s => (
+                      <option key={s.a3} value={s.a3}>
+                        {getFlagEmoji(s.a2)} {s.name} ({s.a3})
+                      </option>
+                    ))}
                   </optgroup>
                   <optgroup label="Territories & Dependencies">
-                    {TERRITORIES_LIST.map(t => <option key={t.code} value={t.code}>{t.name} ({t.mother})</option>)}
+                    {TERRITORIES_LIST.map(t => (
+                      <option key={t.code} value={t.code}>
+                        {getFlagEmoji(t.a2)} {t.name} ({t.mother})
+                      </option>
+                    ))}
                   </optgroup>
                 </select>
               </div>
