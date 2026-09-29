@@ -19,15 +19,15 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: manipulation;
     }
-    .neon-cyan { fill: #00f0ff; filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.5)); }
-    .neon-magenta { fill: #ff007f; filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.5)); }
-    .neon-lime { fill: #39ff14; filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.5)); }
-    .neon-amber { fill: #ffaa00; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.5)); }
-    .neon-purple { fill: #b026ff; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.5)); }
+    .neon-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.6)); }
+    .neon-magenta { fill: #ff007f !important; filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.6)); }
+    .neon-lime { fill: #39ff14 !important; filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.6)); }
+    .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.6)); }
+    .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.6)); }
     
     .border-red-glow {
       stroke: #ff1744 !important;
-      stroke-width: 0.9px !important;
+      stroke-width: 1px !important;
       filter: drop-shadow(0 0 2px #ff1744);
     }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -50,6 +50,95 @@
 
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
+
+    // Comprehensive list of countries for the dropdown selector
+    const SOVEREIGN_LIST = [
+      { a3: "AFG", name: "Afghanistan" }, { a3: "ALB", name: "Albania" }, { a3: "DZA", name: "Algeria" },
+      { a3: "AND", name: "Andorra" }, { a3: "AGO", name: "Angola" }, { a3: "ATG", name: "Antigua and Barbuda" },
+      { a3: "ARG", name: "Argentina" }, { a3: "ARM", name: "Armenia" }, { a3: "AUS", name: "Australia" },
+      { a3: "AUT", name: "Austria" }, { a3: "AZE", name: "Azerbaijan" }, { a3: "BHS", name: "Bahamas" },
+      { a3: "BHR", name: "Bahrain" }, { a3: "BGD", name: "Bangladesh" }, { a3: "BRB", name: "Barbados" },
+      { a3: "BLR", name: "Belarus" }, { a3: "BEL", name: "Belgium" }, { a3: "BLZ", name: "Belize" },
+      { a3: "BEN", name: "Benin" }, { a3: "BTN", name: "Bhutan" }, { a3: "BOL", name: "Bolivia" },
+      { a3: "BIH", name: "Bosnia and Herzegovina" }, { a3: "BWA", name: "Botswana" }, { a3: "BRA", name: "Brazil" },
+      { a3: "BRN", name: "Brunei" }, { a3: "BGR", name: "Bulgaria" }, { a3: "BFA", name: "Burkina Faso" },
+      { a3: "BDI", name: "Burundi" }, { a3: "CPV", name: "Cabo Verde" }, { a3: "KHM", name: "Cambodia" },
+      { a3: "CMR", name: "Cameroon" }, { a3: "CAN", name: "Canada" }, { a3: "CAF", name: "Central African Republic" },
+      { a3: "TCD", name: "Chad" }, { a3: "CHL", name: "Chile" }, { a3: "CHN", name: "China" },
+      { a3: "COL", name: "Colombia" }, { a3: "COM", name: "Comoros" }, { a3: "COG", name: "Congo" },
+      { a3: "COD", name: "Congo (DRC)" }, { a3: "CRI", name: "Costa Rica" }, { a3: "CIV", name: "Côte d'Ivoire" },
+      { a3: "HRV", name: "Croatia" }, { a3: "CUB", name: "Cuba" }, { a3: "CYP", name: "Cyprus" },
+      { a3: "CZE", name: "Czech Republic" }, { a3: "DNK", name: "Denmark" }, { a3: "DJI", name: "Djibouti" },
+      { a3: "DMA", name: "Dominica" }, { a3: "DOM", name: "Dominican Republic" }, { a3: "ECU", name: "Ecuador" },
+      { a3: "EGY", name: "Egypt" }, { a3: "SLV", name: "El Salvador" }, { a3: "GNQ", name: "Equatorial Guinea" },
+      { a3: "ERI", name: "Eritrea" }, { a3: "EST", name: "Estonia" }, { a3: "SWZ", name: "Eswatini" },
+      { a3: "ETH", name: "Ethiopia" }, { a3: "FJI", name: "Fiji" }, { a3: "FIN", name: "Finland" },
+      { a3: "FRA", name: "France" }, { a3: "GAB", name: "Gabon" }, { a3: "GMB", name: "Gambia" },
+      { a3: "GEO", name: "Georgia" }, { a3: "DEU", name: "Germany" }, { a3: "GHA", name: "Ghana" },
+      { a3: "GRC", name: "Greece" }, { a3: "GRD", name: "Grenada" }, { a3: "GTM", name: "Guatemala" },
+      { a3: "GIN", name: "Guinea" }, { a3: "GNB", name: "Guinea-Bissau" }, { a3: "GUY", name: "Guyana" },
+      { a3: "HTI", name: "Haiti" }, { a3: "HND", name: "Honduras" }, { a3: "HUN", name: "Hungary" },
+      { a3: "ISL", name: "Iceland" }, { a3: "IND", name: "India" }, { a3: "IDN", name: "Indonesia" },
+      { a3: "IRN", name: "Iran" }, { a3: "IRQ", name: "Iraq" }, { a3: "IRL", name: "Ireland" },
+      { a3: "ISR", name: "Israel" }, { a3: "ITA", name: "Italy" }, { a3: "JAM", name: "Jamaica" },
+      { a3: "JPN", name: "Japan" }, { a3: "JOR", name: "Jordan" }, { a3: "KAZ", name: "Kazakhstan" },
+      { a3: "KEN", name: "Kenya" }, { a3: "KIR", name: "Kiribati" }, { a3: "PRK", name: "North Korea" },
+      { a3: "KOR", name: "South Korea" }, { a3: "KWT", name: "Kuwait" }, { a3: "KGZ", name: "Kyrgyzstan" },
+      { a3: "LAO", name: "Laos" }, { a3: "LVA", name: "Latvia" }, { a3: "LBN", name: "Lebanon" },
+      { a3: "LSO", name: "Lesotho" }, { a3: "LBR", name: "Liberia" }, { a3: "LBY", name: "Libya" },
+      { a3: "LIE", name: "Liechtenstein" }, { a3: "LTU", name: "Lithuania" }, { a3: "LUX", name: "Luxembourg" },
+      { a3: "MDG", name: "Madagascar" }, { a3: "MWI", name: "Malawi" }, { a3: "MYS", name: "Malaysia" },
+      { a3: "MDV", name: "Maldives" }, { a3: "MLI", name: "Mali" }, { a3: "MLT", name: "Malta" },
+      { a3: "MHL", name: "Marshall Islands" }, { a3: "MRT", name: "Mauritania" }, { a3: "MUS", name: "Mauritius" },
+      { a3: "MEX", name: "Mexico" }, { a3: "FSM", name: "Micronesia" }, { a3: "MDA", name: "Moldova" },
+      { a3: "MCO", name: "Monaco" }, { a3: "MNG", name: "Mongolia" }, { a3: "MNE", name: "Montenegro" },
+      { a3: "MAR", name: "Morocco" }, { a3: "MOZ", name: "Mozambique" }, { a3: "MMR", name: "Myanmar" },
+      { a3: "NAM", name: "Namibia" }, { a3: "NRU", name: "Nauru" }, { a3: "NPL", name: "Nepal" },
+      { a3: "NLD", name: "Netherlands" }, { a3: "NZL", name: "New Zealand" }, { a3: "NIC", name: "Nicaragua" },
+      { a3: "NER", name: "Niger" }, { a3: "NGA", name: "Nigeria" }, { a3: "MKD", name: "North Macedonia" },
+      { a3: "NOR", name: "Norway" }, { a3: "OMN", name: "Oman" }, { a3: "PAK", name: "Pakistan" },
+      { a3: "PLW", name: "Palau" }, { a3: "PAN", name: "Panama" }, { a3: "PNG", name: "Papua New Guinea" },
+      { a3: "PRY", name: "Paraguay" }, { a3: "PER", name: "Peru" }, { a3: "PHL", name: "Philippines" },
+      { a3: "POL", name: "Poland" }, { a3: "PRT", name: "Portugal" }, { a3: "QAT", name: "Qatar" },
+      { a3: "ROU", name: "Romania" }, { a3: "RUS", name: "Russia" }, { a3: "RWA", name: "Rwanda" },
+      { a3: "KNA", name: "Saint Kitts and Nevis" }, { a3: "LCA", name: "Saint Lucia" }, { a3: "VCT", name: "Saint Vincent and the Grenadines" },
+      { a3: "WSM", name: "Samoa" }, { a3: "SMR", name: "San Marino" }, { a3: "STP", name: "Sao Tome and Principe" },
+      { a3: "SAU", name: "Saudi Arabia" }, { a3: "SEN", name: "Senegal" }, { a3: "SRB", name: "Serbia" },
+      { a3: "SYC", name: "Seychelles" }, { a3: "SLE", name: "Sierra Leone" }, { a3: "SGP", name: "Singapore" },
+      { a3: "SVK", name: "Slovakia" }, { a3: "SVN", name: "Slovenia" }, { a3: "SLB", name: "Solomon Islands" },
+      { a3: "SOM", name: "Somalia" }, { a3: "ZAF", name: "South Africa" }, { a3: "SSD", name: "South Sudan" },
+      { a3: "ESP", name: "Spain" }, { a3: "LKA", name: "Sri Lanka" }, { a3: "SDN", name: "Sudan" },
+      { a3: "SUR", name: "Suriname" }, { a3: "SWE", name: "Sweden" }, { a3: "CHE", name: "Switzerland" },
+      { a3: "SYR", name: "Syria" }, { a3: "TWN", name: "Taiwan" }, { a3: "TJK", name: "Tajikistan" },
+      { a3: "TZA", name: "Tanzania" }, { a3: "THA", name: "Thailand" }, { a3: "TLS", name: "Timor-Leste" },
+      { a3: "TGO", name: "Togo" }, { a3: "TON", name: "Tonga" }, { a3: "TTO", name: "Trinidad and Tobago" },
+      { a3: "TUN", name: "Tunisia" }, { a3: "TUR", name: "Turkey" }, { a3: "TKM", name: "Turkmenistan" },
+      { a3: "TUV", name: "Tuvalu" }, { a3: "UGA", name: "Uganda" }, { a3: "UKR", name: "Ukraine" },
+      { a3: "ARE", name: "United Arab Emirates" }, { a3: "GBR", name: "United Kingdom" }, { a3: "USA", name: "United States" },
+      { a3: "URY", name: "Uruguay" }, { a3: "UZB", name: "Uzbekistan" }, { a3: "VUT", name: "Vanuatu" },
+      { a3: "VAT", name: "Vatican City" }, { a3: "VEN", name: "Venezuela" }, { a3: "VNM", name: "Vietnam" },
+      { a3: "YEM", name: "Yemen" }, { a3: "ZMB", name: "Zambia" }, { a3: "ZWE", name: "Zimbabwe" }
+    ];
+
+    // Micro-states and small island pins with explicit coordinates
+    const MICRO_STATES = [
+      { a3: "TUV", name: "Tuvalu", coords: [179.196, -8.517] },
+      { a3: "NRU", name: "Nauru", coords: [166.931, -0.522] },
+      { a3: "PLW", name: "Palau", coords: [134.582, 7.514] },
+      { a3: "MHL", name: "Marshall Islands", coords: [171.184, 7.131] },
+      { a3: "KIR", name: "Kiribati", coords: [-157.363, 1.870] },
+      { a3: "TON", name: "Tonga", coords: [-175.198, -21.178] },
+      { a3: "WSM", name: "Samoa", coords: [-172.104, -13.759] },
+      { a3: "MCO", name: "Monaco", coords: [7.424, 43.738] },
+      { a3: "SMR", name: "San Marino", coords: [12.457, 43.942] },
+      { a3: "VAT", name: "Vatican City", coords: [12.453, 41.902] },
+      { a3: "LIE", name: "Liechtenstein", coords: [9.521, 47.166] },
+      { a3: "AND", name: "Andorra", coords: [1.521, 42.506] },
+      { a3: "MLT", name: "Malta", coords: [14.375, 35.937] },
+      { a3: "SGP", name: "Singapore", coords: [103.819, 1.352] },
+      { a3: "BHR", name: "Bahrain", coords: [50.557, 26.066] },
+      { a3: "SYC", name: "Seychelles", coords: [55.491, -4.679] }
+    ];
 
     const ADJACENCY_MAP = {
       DZA: ["TUN", "LBY", "NER", "MLI", "MRT", "MAR"],
@@ -133,7 +222,7 @@
       };
 
       const handleDeleteCoin = (coinId) => {
-        if (window.confirm("Are you sure you want to delete this coin? If it's the only one for this country, the country will become uncolored.")) {
+        if (window.confirm("Are you sure you want to delete this coin?")) {
           setCoins(prev => prev.filter(c => c.id !== coinId));
         }
       };
@@ -160,7 +249,6 @@
       return (
         <div className="flex flex-col h-screen max-w-md mx-auto sm:max-w-xl md:max-w-4xl bg-[#090b10] border-x border-slate-800">
           
-          {/* Header */}
           <header className="p-4 bg-[#0d111a] border-b border-slate-800 flex items-center justify-between">
             <div>
               <h1 className="text-lg font-black tracking-wider text-white flex items-center gap-2">
@@ -184,7 +272,6 @@
             </div>
           </header>
 
-          {/* Main Area */}
           <main className="flex-1 overflow-hidden relative">
             {view === "map" ? (
               <InteractiveWorldMap 
@@ -213,7 +300,6 @@
             )}
           </main>
 
-          {/* Add Coin Modal */}
           {isModalOpen && (
             <AddCoinModal 
               initialCountry={selectedCountry}
@@ -222,7 +308,6 @@
             />
           )}
 
-          {/* Image Full-Screen Lightbox */}
           {lightboxImg && (
             <div 
               onClick={() => setLightboxImg(null)}
@@ -235,7 +320,6 @@
       );
     }
 
-    // --- Interactive World Map ---
     function InteractiveWorldMap({ statusMap, onSelectCountry }) {
       const svgRef = useRef(null);
 
@@ -250,7 +334,7 @@
         const path = d3.geoPath().projection(projection);
 
         const zoom = d3.zoom()
-          .scaleExtent([1, 10])
+          .scaleExtent([1, 14])
           .on("zoom", (event) => g.attr("transform", event.transform));
         svg.call(zoom);
 
@@ -266,6 +350,7 @@
 
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
 
+          // Render Main Polygons
           g.selectAll("path")
             .data(countries)
             .enter()
@@ -285,6 +370,32 @@
             .on("click", (event, d) => {
               const info = nameMap[d.id] || { a3: "WLD", name: "Selected Territory" };
               onSelectCountry(info);
+            });
+
+          // Render Micro-State Indicator Pins (Tuvalu, Monaco, etc.)
+          g.selectAll(".micro-pin")
+            .data(MICRO_STATES)
+            .enter()
+            .append("circle")
+            .attr("class", d => {
+              const st = statusMap[d.a3];
+              if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer transition-all";
+              let classes = `neon-${st.neonColor} cursor-pointer `;
+              classes += st.hasOverseasOnly ? "border-red-glow stroke-[1.2]" : "stroke-white/70";
+              return classes;
+            })
+            .attr("cx", d => {
+              const p = projection(d.coords);
+              return p ? p[0] : -999;
+            })
+            .attr("cy", d => {
+              const p = projection(d.coords);
+              return p ? p[1] : -999;
+            })
+            .attr("r", 2.5)
+            .attr("stroke-width", 0.6)
+            .on("click", (event, d) => {
+              onSelectCountry({ a3: d.a3, name: d.name });
             });
         });
       }, [statusMap]);
@@ -311,7 +422,6 @@
       );
     }
 
-    // --- Collection Vault with Image View & Delete Feature ---
     function CollectionVault({ coins, searchQuery, setSearchQuery, filterPossession, setFilterPossession, sortBy, setSortBy, onDeleteCoin, onOpenImage, onAddClick }) {
       return (
         <div className="flex flex-col h-full p-4 overflow-y-auto hide-scrollbar space-y-4">
@@ -354,7 +464,7 @@
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
             {coins.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 text-xs">
-                No coins in your vault yet. Tap any country on the map to add one!
+                No coins in your vault yet. Tap "+ Add" above or tap a country on the map!
               </div>
             ) : (
               coins.map((coin) => (
@@ -374,7 +484,6 @@
                           Abroad
                         </span>
                       )}
-                      {/* Delete Coin Button */}
                       <button 
                         onClick={() => onDeleteCoin(coin.id)}
                         className="text-slate-500 hover:text-red-400 p-1 text-sm font-bold ml-1 transition-colors"
@@ -391,7 +500,6 @@
                     <div className="truncate"><span className="text-slate-500">Mint:</span> {coin.mint || "—"}</div>
                   </div>
 
-                  {/* Coin Photos Display */}
                   {(coin.obverseImage || coin.reverseImage) && (
                     <div className="flex items-center gap-2 pt-1">
                       {coin.obverseImage && (
@@ -418,11 +526,10 @@
       );
     }
 
-    // --- Add Coin Modal with Live Image Previews ---
     function AddCoinModal({ initialCountry, onClose, onSave }) {
       const [formData, setFormData] = useState({
-        countryCode: initialCountry?.a3 || "WLD",
-        countryName: initialCountry?.name || "",
+        countryCode: initialCountry?.a3 || "TUV",
+        countryName: initialCountry?.name || "Tuvalu",
         denomination: "",
         year: "",
         ruler: "",
@@ -437,7 +544,13 @@
         reverseImage: ""
       });
 
-      // Compress and convert image to lightweight DataURL
+      const handleCountrySelect = (code) => {
+        const found = SOVEREIGN_LIST.find(c => c.a3 === code);
+        if (found) {
+          setFormData(prev => ({ ...prev, countryCode: found.a3, countryName: found.name }));
+        }
+      };
+
       const handleImageUpload = (e, field) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -447,7 +560,6 @@
           const img = new Image();
           img.src = event.target.result;
           img.onload = () => {
-            // Resize to max 600px width/height for fast phone performance
             const canvas = document.createElement("canvas");
             const maxDim = 600;
             let width = img.width;
@@ -475,13 +587,26 @@
             
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <h2 className="text-sm font-bold text-white">
-                Add Coin: <span className="text-[#00f0ff]">{formData.countryName || "Selected Nation"}</span>
+                Add Coin: <span className="text-[#00f0ff]">{formData.countryName}</span>
               </h2>
               <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold">✕</button>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-3 text-xs">
               
+              {/* Country Selection Dropdown */}
+              <div>
+                <label className="text-slate-400 block mb-1">Country (Syncs directly to map)</label>
+                <select 
+                  value={formData.countryCode} 
+                  onChange={(e) => handleCountrySelect(e.target.value)}
+                  className="w-full bg-[#161c2e] border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#00f0ff]">
+                  {SOVEREIGN_LIST.map(c => (
+                    <option key={c.a3} value={c.a3}>{c.name} ({c.a3})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-slate-400 block mb-1">Denomination *</label>
@@ -532,7 +657,6 @@
                 </div>
               )}
 
-              {/* Photo Uploads with Live Preview */}
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="text-slate-400 block mb-1">Front (Obverse) Photo</label>
