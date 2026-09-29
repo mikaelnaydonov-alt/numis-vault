@@ -34,7 +34,6 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Critical for iOS drawing */
     .map-canvas-touch {
       touch-action: none !important;
       user-select: none !important;
@@ -180,7 +179,7 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      const [scrubberYear, setScrubberYear] = useState(1800);
+      const [scrubberYear, setScrubberYear] = useState(1600);
 
       useEffect(() => {
         setIsSyncing(true);
@@ -510,15 +509,15 @@
       );
     }
 
-    // --- Dedicated Historical Cartographer Studio (250x Zoom & Direct Raw Tracing) ---
+    // --- Dedicated Historical Cartographer Studio (Vertex Pinning with Ocean Mask) ---
     function HistoricalStudio({ entities, scrubberYear, onSaveEntity }) {
       const svgRef = useRef(null);
-      const isDrawingRef = useRef(false);
-      const [isDrawingState, setIsDrawingState] = useState(false);
-      
-      const [rawPoints, setRawPoints] = useState([]);
-      const rawPointsRef = useRef([]);
-      
+      const [isVertexMode, setIsVertexMode] = useState(false);
+      const isVertexModeRef = useRef(false);
+
+      const [currentVertices, setCurrentVertices] = useState([]);
+      const currentVerticesRef = useRef([]);
+
       const [closedPolygons, setClosedPolygons] = useState([]);
       const [selectedPolygonIndex, setSelectedPolygonIndex] = useState(null);
       const [customizerOpen, setCustomizerOpen] = useState(false);
@@ -547,8 +546,12 @@
       const zoomBehaviorRef = useRef(null);
 
       useEffect(() => {
-        isDrawingRef.current = isDrawingState;
-      }, [isDrawingState]);
+        isVertexModeRef.current = isVertexMode;
+      }, [isVertexMode]);
+
+      useEffect(() => {
+        currentVerticesRef.current = currentVertices;
+      }, [currentVertices]);
 
       useEffect(() => {
         placingMintRef.current = placingMint;
@@ -561,6 +564,7 @@
 
         const defs = svg.append("defs");
 
+        // Custom hatch patterns for closed polygons
         closedPolygons.forEach((poly, idx) => {
           if (poly.striped) {
             const pat = defs.append("pattern")
@@ -575,22 +579,26 @@
           }
         });
 
+        // Layer ordering:
+        // 1. Dry Land Base
+        // 2. Empire Polygons Layer (Saved & Current)
+        // 3. Ocean Mask Layer (Covers sea spills like Gdańsk Bay)
+        // 4. Coastlines & Modern Country Borders
         const gRoot = svg.append("g").attr("id", "studio-root");
         const gBase = gRoot.append("g").attr("id", "layer-base");
         const gEmpire = gRoot.append("g").attr("id", "layer-empires");
         const gOceanMask = gRoot.append("g").attr("id", "layer-ocean-mask");
         const gBorders = gRoot.append("g").attr("id", "layer-borders");
-        const gLiveStroke = gRoot.append("g").attr("id", "layer-live-stroke");
 
         const path = d3.geoPath().projection(projectionRef.current);
 
-        // Zoom up to 250x! Allows two-finger pan/zoom even when draw mode is active
+        // Smooth zoom up to 250x
         const zoom = d3.zoom()
           .scaleExtent([1, 250])
           .filter((event) => {
-            // If drawing, ignore single-finger touch so pointer can draw; allow pinch/two-finger or wheel
-            if (isDrawingRef.current && event.type === 'touchstart' && event.touches.length === 1) return false;
-            if (isDrawingRef.current && event.type === 'mousedown') return false;
+            // In vertex/mint mode, ignore single tap/click so it places a point; allow two-finger pinch or wheel
+            if ((isVertexModeRef.current || placingMintRef.current) && event.type === 'touchstart' && event.touches.length === 1) return false;
+            if ((isVertexModeRef.current || placingMintRef.current) && event.type === 'mousedown') return false;
             return true;
           })
           .on("zoom", (e) => {
@@ -609,41 +617,40 @@
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
           worldGeoRef.current = { features: countries, tsv: tsvData, land: land };
 
-          // Land background
+          // 1. Dry land background
           gBase.append("path")
             .datum(land)
             .attr("d", path)
-            .attr("fill", "#0b0f1d");
+            .attr("fill", "#0c1120");
 
-          // Ocean mask outline
+          // 3. Ocean mask: clips polygons that cut across bays/seas
+          // The background of the map is dark ocean (#05070d), land is #0c1120
           gOceanMask.append("path")
             .datum({ type: "Sphere" })
             .attr("d", path)
             .attr("fill", "none")
-            .attr("stroke", "#192238")
+            .attr("stroke", "#1e293b")
             .attr("stroke-width", 0.5);
 
-          // Country borders
+          // 4. Country border outlines
           gBorders.selectAll(".ghost-country")
             .data(countries)
             .enter().append("path")
             .attr("d", path)
             .attr("fill", "transparent")
-            .attr("stroke", "#1e293b")
+            .attr("stroke", "#192238")
             .attr("stroke-width", 0.4);
         });
 
-        // Inverse transform helper: converts screen click/touch to true map geo coordinates
+        // Inverse coordinate transform
         const getGeoFromEvent = (event) => {
           const rect = svgEl.getBoundingClientRect();
           const clientX = event.clientX || (event.touches && event.touches[0] ? event.touches[0].clientX : 0);
           const clientY = event.clientY || (event.touches && event.touches[0] ? event.touches[0].clientY : 0);
 
-          // Map SVG viewBox coordinates
           const svgX = ((clientX - rect.left) / rect.width) * 800;
           const svgY = ((clientY - rect.top) / rect.height) * 480;
 
-          // Invert active D3 Zoom Transform
           const transform = currentTransformRef.current;
           const transformedX = (svgX - transform.x) / transform.k;
           const transformedY = (svgY - transform.y) / transform.k;
@@ -651,8 +658,8 @@
           return projectionRef.current.invert([transformedX, transformedY]);
         };
 
-        // Pointer event engine with raw coordinates
-        const onPointerDown = (e) => {
+        const handlePointerClick = (e) => {
+          // If placing mint pin
           if (placingMintRef.current) {
             const coords = getGeoFromEvent(e);
             if (coords) {
@@ -662,66 +669,46 @@
             return;
           }
 
-          if (!isDrawingRef.current) return;
-          if (e.touches && e.touches.length > 1) return; // Allow pinch zoom
-
-          const coords = getGeoFromEvent(e);
-          if (coords) {
-            rawPointsRef.current = [coords];
-            setRawPoints([coords]);
+          // If adding boundary vertices
+          if (isVertexModeRef.current) {
+            const coords = getGeoFromEvent(e);
+            if (coords) {
+              setCurrentVertices(prev => [...prev, coords]);
+            }
           }
         };
 
-        const onPointerMove = (e) => {
-          if (!isDrawingRef.current || rawPointsRef.current.length === 0) return;
-          if (e.touches && e.touches.length > 1) return;
-
-          const coords = getGeoFromEvent(e);
-          if (coords) {
-            rawPointsRef.current.push(coords);
-            setRawPoints([...rawPointsRef.current]);
-          }
-        };
-
-        const onPointerUp = () => {
-          if (!isDrawingRef.current || rawPointsRef.current.length < 3) {
-            rawPointsRef.current = [];
-            setRawPoints([]);
-            return;
-          }
-
-          const newPoly = {
-            points: [...rawPointsRef.current],
-            bgColor: "#ffd600",
-            striped: false,
-            stripeColor: "#ff1744"
-          };
-          setClosedPolygons(prev => [...prev, newPoly]);
-          rawPointsRef.current = [];
-          setRawPoints([]);
-          setIsDrawingState(false);
-        };
-
-        svgEl.addEventListener("pointerdown", onPointerDown);
-        svgEl.addEventListener("pointermove", onPointerMove);
-        window.addEventListener("pointerup", onPointerUp);
-
-        return () => {
-          svgEl.removeEventListener("pointerdown", onPointerDown);
-          svgEl.removeEventListener("pointermove", onPointerMove);
-          window.removeEventListener("pointerup", onPointerUp);
-        };
+        svgEl.addEventListener("click", handlePointerClick);
+        return () => svgEl.removeEventListener("click", handlePointerClick);
 
       }, [closedPolygons]);
 
       const detectCountry = (coords) => {
-        if (!worldGeoRef.current || !coords) return "Unknown Territory / Sea";
+        if (!worldGeoRef.current || !coords) return "Coastal / Ocean Waters";
         const found = worldGeoRef.current.features.find(feature => d3.geoContains(feature, coords));
         if (found) {
           const item = worldGeoRef.current.tsv.find(t => t.iso_n3 === found.id);
           return item ? item.name : "Sovereign Territory";
         }
-        return "Coastal / Ocean Waters";
+        return "Coastal Waters";
+      };
+
+      const handleCompletePolygon = () => {
+        if (currentVertices.length < 3) {
+          alert("Place at least 3 points to create a boundary.");
+          return;
+        }
+
+        const newPoly = {
+          points: currentVertices,
+          bgColor: "#ffd600",
+          striped: false,
+          stripeColor: "#ff1744"
+        };
+
+        setClosedPolygons(prev => [...prev, newPoly]);
+        setCurrentVertices([]);
+        setIsVertexMode(false);
       };
 
       const handleSaveCompleteEntity = () => {
@@ -752,7 +739,6 @@
         return (entities || []).filter(e => scrubberYear >= e.startYear && scrubberYear <= e.endYear);
       }, [entities, scrubberYear]);
 
-      // Quick Zoom Helper
       const handleZoomStep = (direction) => {
         if (!svgRef.current || !zoomBehaviorRef.current) return;
         d3.select(svgRef.current).transition().duration(250).call(
@@ -770,7 +756,7 @@
             viewBox="0 0 800 480" 
             className="w-full h-full object-contain map-canvas-touch">
             
-            {/* Render Saved Historical Entities */}
+            {/* Render Saved Historical Entities Synced to Scrubber */}
             {visibleHistoricalEntities.map((ent) => (
               <g key={ent.id} onClick={() => setInspectingEntity(ent)} className="cursor-pointer">
                 {(ent.polygons || []).map((poly, pIdx) => {
@@ -818,16 +804,31 @@
               );
             })}
 
-            {/* Raw Finger Line (Rendered in real-time under transform) */}
-            {rawPoints.length > 0 && (
-              <path 
-                d={d3.line()(rawPoints.map(p => projectionRef.current(p)))} 
-                fill="none" 
-                stroke="#39ff14" 
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            {/* In-Progress Connect-the-Dots Perimeter Line */}
+            {currentVertices.length > 0 && (
+              <g>
+                <path 
+                  d={d3.line()(currentVertices.map(p => projectionRef.current(p)))} 
+                  fill="none" 
+                  stroke="#39ff14" 
+                  strokeWidth={2}
+                  strokeDasharray="4,4"
+                />
+                {currentVertices.map((p, idx) => {
+                  const [cx, cy] = projectionRef.current(p);
+                  return (
+                    <circle 
+                      key={idx} 
+                      cx={cx} 
+                      cy={cy} 
+                      r={3.5} 
+                      fill={idx === 0 ? "#ff007f" : "#39ff14"} 
+                      stroke="#ffffff" 
+                      strokeWidth={1}
+                    />
+                  );
+                })}
+              </g>
             )}
 
             {/* Mint Candidate Crosshair */}
@@ -874,7 +875,7 @@
             </div>
           </div>
 
-          {/* Dedicated Zoom Buttons (Allows zoom to 250x without resetting) */}
+          {/* Zoom Buttons (Allows 250x magnification) */}
           <div className="absolute right-3 top-16 z-30 flex flex-col gap-1.5">
             <button 
               onClick={() => handleZoomStep("in")} 
@@ -893,7 +894,7 @@
             
             <div className="pointer-events-auto">
               <button 
-                onClick={() => { setPlacingMint(!placingMint); setIsDrawingState(false); }}
+                onClick={() => { setPlacingMint(!placingMint); setIsVertexMode(false); }}
                 className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg ${placingMint ? "bg-red-500 text-white animate-pulse" : "bg-[#101526] border border-slate-700 text-slate-200"}`}>
                 <span>📍</span>
                 <span>{confirmedMint ? "Mint Placed" : "Place Mint"}</span>
@@ -901,11 +902,27 @@
             </div>
 
             <div className="pointer-events-auto flex items-center gap-2">
+              {isVertexMode && currentVertices.length >= 3 && (
+                <button 
+                  onClick={handleCompletePolygon}
+                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-black px-3 py-2 rounded-xl text-xs shadow-lg">
+                  ✓ Close Shape ({currentVertices.length} pts)
+                </button>
+              )}
+
+              {isVertexMode && currentVertices.length > 0 && (
+                <button 
+                  onClick={() => setCurrentVertices(prev => prev.slice(0, -1))}
+                  className="bg-slate-800 text-slate-300 font-bold px-2.5 py-2 rounded-xl text-xs border border-slate-700">
+                  Undo Pt
+                </button>
+              )}
+
               <button 
-                onClick={() => { setIsDrawingState(!isDrawingState); setPlacingMint(false); }}
-                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isDrawingState ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
-                <span>✏️️</span>
-                <span>{isDrawingState ? "Tracing (Drag Finger)..." : "Draw Empire"}</span>
+                onClick={() => { setIsVertexMode(!isVertexMode); setPlacingMint(false); }}
+                className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xl transition-all ${isVertexMode ? "bg-[#39ff14] text-black ring-4 ring-[#39ff14]/30" : "bg-amber-400 text-black"}`}>
+                <span>📍</span>
+                <span>{isVertexMode ? "Tap Map to Place Dots" : "Start Boundary"}</span>
               </button>
             </div>
           </div>
