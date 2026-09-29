@@ -31,6 +31,7 @@
       filter: drop-shadow(0 0 2px #ff1744);
     }
 
+    /* Coin Geometric Masks */
     .coin-mask-round { border-radius: 9999px; }
     .coin-mask-scalloped {
       clip-path: polygon(50% 0%, 63% 4%, 75% 0%, 82% 10%, 93% 10%, 95% 22%, 100% 30%, 98% 42%, 100% 50%, 98% 58%, 100% 70%, 95% 78%, 93% 90%, 82% 90%, 75% 100%, 63% 96%, 50% 100%, 37% 96%, 25% 100%, 18% 90%, 7% 90%, 5% 78%, 0% 70%, 2% 58%, 0% 50%, 2% 42%, 0% 30%, 5% 22%, 7% 10%, 18% 10%, 25% 0%, 37% 4%);
@@ -39,7 +40,7 @@
     .coin-mask-octagon { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
     .coin-mask-decagon { clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 95% 70%, 70% 95%, 30% 95%, 5% 70%, 0% 35%, 20% 10%, 50% 0%); }
     .coin-mask-dodecagon { clip-path: polygon(50% 0%, 75% 7%, 93% 25%, 100% 50%, 93% 75%, 75% 93%, 50% 100%, 25% 93%, 7% 75%, 0% 50%, 7% 25%, 25% 7%); }
-    .coin-mask-square { border-radius: 12px; }
+    .coin-mask-square { border-radius: 14px; }
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -184,7 +185,10 @@
       const [lightboxImg, setLightboxImg] = useState(null);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      // Fetch Latest Data from JSONBin on Launch
+      // Camera Viewfinder Modal State
+      const [cameraTargetField, setCameraTargetField] = useState(null);
+      const [activeCameraShape, setActiveCameraShape] = useState("round");
+
       useEffect(() => {
         setIsSyncing(true);
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -203,7 +207,6 @@
           .finally(() => setIsSyncing(false));
       }, []);
 
-      // Auto-Sync to JSONBin whenever data updates
       const pushToCloud = (updated) => {
         setVaultData(updated);
         setIsSyncing(true);
@@ -265,7 +268,7 @@
                 MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span>
               </h1>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                <span>Cloud Synced</span>
+                <span>Live Cloud Linked</span>
                 {isSyncing && <span className="text-cyan-400 animate-pulse font-bold">• Saving...</span>}
               </div>
             </div>
@@ -380,6 +383,25 @@
               editingCoin={editingCoin}
               onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
               onSave={handleSaveCoin}
+              onOpenLiveCamera={(field, shape) => {
+                setCameraTargetField(field);
+                setActiveCameraShape(shape);
+              }}
+            />
+          )}
+
+          {/* In-App Live Camera Viewfinder Modal with Dashed Coin Silhouette */}
+          {cameraTargetField && (
+            <LiveCoinCameraModal 
+              shape={activeCameraShape}
+              onClose={() => setCameraTargetField(null)}
+              onCapture={(base64Img) => {
+                // Pass captured image back into the open modal form
+                window.dispatchEvent(new CustomEvent("coin-photo-captured", {
+                  detail: { field: cameraTargetField, image: base64Img }
+                }));
+                setCameraTargetField(null);
+              }}
             />
           )}
 
@@ -819,6 +841,106 @@
       );
     }
 
+    // --- In-App Live Camera Viewfinder Modal with Dashed Silhouette HUD ---
+    function LiveCoinCameraModal({ shape, onClose, onCapture }) {
+      const videoRef = useRef(null);
+      const [stream, setStream] = useState(null);
+
+      useEffect(() => {
+        navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1080 }, height: { ideal: 1080 } },
+          audio: false
+        })
+          .then(mediaStream => {
+            setStream(mediaStream);
+            if (videoRef.current) {
+              videoRef.current.srcObject = mediaStream;
+              videoRef.current.play();
+            }
+          })
+          .catch(err => {
+            alert("Could not access camera. Please allow camera permissions in Safari / browser settings.");
+            onClose();
+          });
+
+        return () => {
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+          }
+        };
+      }, []);
+
+      const captureFrame = () => {
+        if (!videoRef.current) return;
+        const video = videoRef.current;
+        const canvas = document.createElement("canvas");
+        const size = Math.min(video.videoWidth, video.videoHeight);
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+
+        // Center square crop
+        const sx = (video.videoWidth - size) / 2;
+        const sy = (video.videoHeight - size) / 2;
+        ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+
+        // Downscale to 600px for speedy cloud syncing
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = 600;
+        finalCanvas.height = 600;
+        const fctx = finalCanvas.getContext("2d");
+        fctx.drawImage(canvas, 0, 0, 600, 600);
+
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        onCapture(finalCanvas.toDataURL("image/jpeg", 0.8));
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-4">
+          <div className="w-full flex items-center justify-between text-white z-10 pt-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#00f0ff] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-ping"></span>
+              Align Coin Inside Guide
+            </span>
+            <button 
+              onClick={() => {
+                if (stream) stream.getTracks().forEach(track => track.stop());
+                onClose();
+              }} 
+              className="text-white bg-slate-800 px-3 py-1 rounded-full text-xs font-bold">
+              ✕ Cancel
+            </button>
+          </div>
+
+          {/* Camera Viewport & Dashed Silhouette Overlay */}
+          <div className="relative w-72 h-72 sm:w-80 sm:h-80 flex items-center justify-center overflow-hidden rounded-3xl border border-slate-800 shadow-2xl">
+            <video 
+              ref={videoRef} 
+              playsInline 
+              muted 
+              className="absolute inset-0 w-full h-full object-cover" 
+            />
+
+            {/* Glowing Dashed HUD Matching Selected Shape */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div 
+                className={`w-64 h-64 border-2 border-dashed border-[#00f0ff] shadow-[0_0_15px_rgba(0,240,255,0.7)] coin-mask-${shape}`}>
+              </div>
+            </div>
+          </div>
+
+          {/* Shutter Button */}
+          <div className="w-full flex flex-col items-center gap-2 pb-6 z-10">
+            <button 
+              onClick={captureFrame}
+              className="w-16 h-16 rounded-full bg-white border-4 border-[#00f0ff] shadow-[0_0_20px_#00f0ff] active:scale-90 transition-transform">
+            </button>
+            <span className="text-[10px] text-slate-400">Tap to Snap & Cut to Silhouette</span>
+          </div>
+        </div>
+      );
+    }
+
     // --- Vault Cards Tab ---
     function CollectionVault({ coins, onDeleteCoin, onEditCoin, onOpenImage, onAddClick }) {
       const [query, setQuery] = useState("");
@@ -900,7 +1022,7 @@
     }
 
     // --- Coin Entry & Edit Drawer ---
-    function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave }) {
+    function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave, onOpenLiveCamera }) {
       const [formData, setFormData] = useState(() => {
         if (editingCoin) return { ...editingCoin };
         return {
@@ -922,6 +1044,17 @@
           reverseImage: ""
         };
       });
+
+      // Listen for camera captures
+      useEffect(() => {
+        const handler = (e) => {
+          if (e.detail) {
+            setFormData(prev => ({ ...prev, [e.detail.field]: e.detail.image }));
+          }
+        };
+        window.addEventListener("coin-photo-captured", handler);
+        return () => window.removeEventListener("coin-photo-captured", handler);
+      }, []);
 
       const handleImageUpload = (e, field) => {
         const file = e.target.files[0];
@@ -997,7 +1130,7 @@
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Coin Silhouette Shape</label>
+                <label className="text-slate-400 block mb-1">Coin Silhouette Shape (Guides Camera)</label>
                 <select 
                   value={formData.shape} 
                   onChange={e => setFormData({...formData, shape: e.target.value})}
@@ -1036,6 +1169,7 @@
                 />
               </div>
 
+              {/* Photo Actions with Custom Dashed Viewfinder Button */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="text-slate-400 block mb-1">Front Photo</label>
@@ -1045,7 +1179,18 @@
                       <button type="button" onClick={() => setFormData({...formData, obverseImage: ""})} className="absolute top-1 right-1 bg-black/80 text-white rounded-full w-4 h-4 text-[9px]">✕</button>
                     </div>
                   ) : (
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'obverseImage')} className="text-[9px] text-slate-400 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-slate-800 file:text-white" />
+                    <div className="flex gap-1.5">
+                      <button 
+                        type="button" 
+                        onClick={() => onOpenLiveCamera('obverseImage', formData.shape)}
+                        className="flex-1 py-2 bg-[#172138] hover:bg-[#1f2d4d] border border-[#00f0ff]/50 text-[#00f0ff] rounded-xl text-[10px] font-bold">
+                        📸 Camera
+                      </button>
+                      <label className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-center text-slate-300 rounded-xl text-[10px] cursor-pointer">
+                        📁 File
+                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'obverseImage')} className="hidden" />
+                      </label>
+                    </div>
                   )}
                 </div>
 
@@ -1057,7 +1202,18 @@
                       <button type="button" onClick={() => setFormData({...formData, reverseImage: ""})} className="absolute top-1 right-1 bg-black/80 text-white rounded-full w-4 h-4 text-[9px]">✕</button>
                     </div>
                   ) : (
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'reverseImage')} className="text-[9px] text-slate-400 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-slate-800 file:text-white" />
+                    <div className="flex gap-1.5">
+                      <button 
+                        type="button" 
+                        onClick={() => onOpenLiveCamera('reverseImage', formData.shape)}
+                        className="flex-1 py-2 bg-[#172138] hover:bg-[#1f2d4d] border border-[#00f0ff]/50 text-[#00f0ff] rounded-xl text-[10px] font-bold">
+                        📸 Camera
+                      </button>
+                      <label className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-center text-slate-300 rounded-xl text-[10px] cursor-pointer">
+                        📁 File
+                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'reverseImage')} className="hidden" />
+                      </label>
+                    </div>
                   )}
                 </div>
               </div>
