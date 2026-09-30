@@ -61,6 +61,11 @@
       "#aa00ff","#6200ea","#304ffe","#2962ff","#0091ea","#00b8d4","#00bfa5","#00c853"
     ];
 
+    // 8 Pastel colors for manual modern country coloring
+    const PASTEL_PALETTE_8 = [
+      "#fbcfe8", "#e9d5ff", "#bae6fd", "#bbf7d0", "#fef08a", "#fed7aa", "#fecdd3", "#e2e8f0"
+    ];
+
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
 
@@ -300,7 +305,7 @@
     ];
 
     const getFlagEmoji = (a2) => {
-      if (!a2 || a2.length !== 2) return "🏳️";
+      if (!a2 || a2.length !== 2) return "🏳️️";
       return String.fromCodePoint(...a2.toUpperCase().split("").map(c => 127397 + c.charCodeAt(0)));
     };
 
@@ -347,6 +352,9 @@
       const [scrubberYear, setScrubberYear] = useState(1600);
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
+      // Modern country manual pastel color overrides
+      const [modernCountryColors, setModernCountryColors] = useState({});
+
       useEffect(() => {
         setIsSyncing(true);
         fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
@@ -359,6 +367,9 @@
                 coins: data.record.coins || [],
                 historicalEntities: data.record.historicalEntities || []
               });
+              if (data.record.modernCountryColors) {
+                setModernCountryColors(data.record.modernCountryColors);
+              }
             }
           })
           .catch(err => console.error("Cloud fetch error:", err))
@@ -449,6 +460,12 @@
         const updatedCoins = [newCoin, ...(vaultData.coins || [])];
         pushToCloud({ ...vaultData, coins: updatedCoins });
         alert(`Saved ${coinInfo.denomination} (${coinInfo.year}) to ${coinInfo.countryName}!`);
+      };
+
+      const handleSetModernCountryColor = (countryCode, pastelColor) => {
+        const updatedColors = { ...modernCountryColors, [countryCode]: pastelColor };
+        setModernCountryColors(updatedColors);
+        pushToCloud({ ...vaultData, modernCountryColors: updatedColors });
       };
 
       const handleNavigateToCoinOnMap = (coin) => {
@@ -542,6 +559,7 @@
                       key={t.code}
                       onClick={() => {
                         setSelectedCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother, coords: t.coords });
+                        setEditingCoin(null);
                         setIsModalOpen(true);
                       }}
                       className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300 flex items-center gap-1.5">
@@ -578,6 +596,7 @@
                 <div className="h-[48vh] sm:h-[55vh] relative border-b border-slate-800/80 bg-[#05070d]">
                   <InteractiveWorldMap 
                     coins={vaultData.coins || []}
+                    modernCountryColors={modernCountryColors}
                     focusTarget={mapFocusTarget}
                     onSelectModernCountry={(info) => {
                       setSelectedCountry(info);
@@ -685,6 +704,8 @@
             <AddEditCoinModal 
               initialCountry={selectedCountry}
               editingCoin={editingCoin}
+              modernCountryColors={modernCountryColors}
+              onSetModernCountryColor={handleSetModernCountryColor}
               onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
               onSave={handleSaveCoin}
             />
@@ -694,7 +715,7 @@
       );
     }
 
-    function InteractiveWorldMap({ coins, focusTarget, onSelectModernCountry }) {
+    function InteractiveWorldMap({ coins, modernCountryColors, focusTarget, onSelectModernCountry }) {
       const svgRef = useRef(null);
       const zoomBehaviorRef = useRef(null);
       const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 240]));
@@ -753,9 +774,20 @@
             .data(countries)
             .enter().append("path")
             .attr("d", path)
+            .attr("style", d => {
+              const info = nameMap[d.id];
+              const code = info ? info.a3 : null;
+              if (code && modernCountryColors[code]) {
+                return `fill: ${modernCountryColors[code]} !important;`;
+              }
+              return "";
+            })
             .attr("class", d => {
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
+              if (code && modernCountryColors[code]) {
+                return "stroke-[#1b233a] stroke-[0.35] cursor-pointer";
+              }
               const st = code ? statusMap[code] : null;
               if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer";
               return `neon-${st.neonColor} cursor-pointer ${st.abroadOnly ? "border-red-glow" : "stroke-white/30 stroke-[0.35]"}`;
@@ -772,7 +804,9 @@
             .attr("cx", d => projection(d.coords)[0])
             .attr("cy", d => projection(d.coords)[1])
             .attr("r", 2.6)
+            .attr("style", d => modernCountryColors[d.a3] ? `fill: ${modernCountryColors[d.a3]} !important;` : "")
             .attr("class", d => {
+              if (modernCountryColors[d.a3]) return "stroke-cyan-400/60 cursor-pointer";
               const st = statusMap[d.a3];
               if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer";
               return `neon-${st.neonColor} ${st.abroadOnly ? "border-red-glow stroke-[1.2]" : "stroke-white/70"}`;
@@ -785,13 +819,14 @@
             .attr("cx", d => projection(d.coords)[0])
             .attr("cy", d => projection(d.coords)[1])
             .attr("r", 3)
+            .attr("style", d => modernCountryColors[d.code] ? `fill: ${modernCountryColors[d.code]} !important;` : "")
             .attr("fill", "url(#diagonalHatchRed)")
             .attr("stroke", "#ff1744")
             .attr("stroke-width", 0.8)
             .attr("class", "cursor-pointer")
             .on("click", (e, d) => onSelectModernCountry({ a3: d.code, name: d.name, a2: d.a2, isTerritory: true, mother: d.mother }));
         });
-      }, [statusMap]);
+      }, [statusMap, modernCountryColors]);
 
       useEffect(() => {
         if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
@@ -1848,7 +1883,7 @@
       );
     }
 
-    function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave }) {
+    function AddEditCoinModal({ initialCountry, editingCoin, modernCountryColors, onSetModernCountryColor, onClose, onSave }) {
       const [formData, setFormData] = useState(() => {
         if (editingCoin) return { ...editingCoin };
         return {
@@ -1881,7 +1916,7 @@
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <h2 className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span className="text-base">{currentFlag}</span>
-                <span>{editingCoin ? "Edit Coin:" : "Add Coin:"}</span>
+                <span>{editingCoin ? "Edit Coin:" : "Add Coin / Country:"}</span>
                 <span className="text-[#00f0ff]">{formData.countryName}</span>
               </h2>
               <button onClick={onClose} className="text-slate-400 hover:text-white font-bold text-base">✕</button>
@@ -1915,6 +1950,32 @@
                     ))}
                   </optgroup>
                 </select>
+              </div>
+
+              {/* 8 Pastel Colors for Modern Country Customization */}
+              <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-white">Manual Map Color (8 Pastels):</span>
+                  {modernCountryColors[formData.countryCode] && (
+                    <button 
+                      type="button"
+                      onClick={() => onSetModernCountryColor(formData.countryCode, null)}
+                      className="text-[10px] text-red-400 hover:underline">
+                      Reset Color
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2 items-center">
+                  {PASTEL_PALETTE_8.map(color => (
+                    <button
+                      type="button"
+                      key={color}
+                      onClick={() => onSetModernCountryColor(formData.countryCode, color)}
+                      style={{ backgroundColor: color }}
+                      className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors[formData.countryCode] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-80"}`}
+                    />
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
@@ -1958,7 +2019,7 @@
               </div>
 
               <button type="submit" className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg">
-                Save Coin to Vault
+                Save Coin & Color to Vault
               </button>
             </form>
           </div>
