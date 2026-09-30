@@ -317,6 +317,17 @@
       return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
     };
 
+    // Bulletproof chronological checker with auto-normalization
+    const isEntityActiveInYear = (entity, year) => {
+      if (!entity) return false;
+      const start = parseInt(entity.startYear, 10);
+      const end = parseInt(entity.endYear, 10);
+      if (isNaN(start) || isNaN(end)) return false;
+      const min = Math.min(start, end);
+      const max = Math.max(start, end);
+      return year >= min && year <= max;
+    };
+
     const pointInGeoPolygon = (pt, rawRing) => {
       if (!rawRing || rawRing.length < 3) return false;
       const ring = [...rawRing];
@@ -495,7 +506,6 @@
         return { min: -3000, max: 2026, step: 10 };
       }, [timelineRange]);
 
-      // Safe Clamping when changing era zoom ranges
       const handleRangeChange = (newRange) => {
         setTimelineRange(newRange);
         if (newRange === "ancient") setScrubberYear(Math.max(-3000, Math.min(500, scrubberYear)));
@@ -1057,15 +1067,8 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        const visibleEntities = (entities || []).filter(e => {
-          const start = parseInt(e.startYear, 10);
-          const end = parseInt(e.endYear, 10);
-          return !isNaN(start) && !isNaN(end) && scrubberYear >= start && scrubberYear <= end;
-        });
-
-        const currentStart = parseInt(entityMeta.startYear, 10);
-        const currentEnd = parseInt(entityMeta.endYear, 10);
-        const isCurrentActiveInScrubber = !isNaN(currentStart) && !isNaN(currentEnd) && scrubberYear >= currentStart && scrubberYear <= currentEnd;
+        const visibleEntities = (entities || []).filter(e => isEntityActiveInYear(e, scrubberYear));
+        const isCurrentActiveInScrubber = isEntityActiveInYear(entityMeta, scrubberYear);
 
         const gClipped = d3.select("#layer-clipped-empires");
         if (!gClipped.empty()) {
@@ -1312,11 +1315,7 @@
       };
 
       const activeTimelineEntities = useMemo(() => {
-        return (entities || []).find(e => {
-          const start = parseInt(e.startYear, 10);
-          const end = parseInt(e.endYear, 10);
-          return !isNaN(start) && !isNaN(end) && scrubberYear >= start && scrubberYear <= end;
-        });
+        return (entities || []).find(e => isEntityActiveInYear(e, scrubberYear));
       }, [entities, scrubberYear]);
 
       const coinsForInspectedEntity = useMemo(() => {
