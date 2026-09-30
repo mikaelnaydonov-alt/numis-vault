@@ -241,7 +241,7 @@
       { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150], anchors: [[134.5, 7.5]] },
       { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380], anchors: [[-80.7, 8.5]] },
       { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150], anchors: [[143.9, -6.3]] },
-      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [[-58.4, -23.4]] },
+      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [-58.4, -23.4] },
       { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899], anchors: [[-75.0, -9.1]] },
       { a3: "PHL", name: "Philippines", a2: "PH", coords: [121.7740, 12.8797], anchors: [[121.7, 12.8]] },
       { a3: "POL", name: "Poland", a2: "PL", coords: [19.1451, 51.9194], anchors: [[19.1, 51.9], [21.0, 52.2], [19.9, 50.0], [18.6, 54.3], [16.9, 52.4], [22.5, 51.2], [17.0, 51.1]] },
@@ -296,7 +296,7 @@
       { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775], anchors: [[64.5, 41.3]] },
       { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767], anchors: [[166.9, -15.3]] },
       { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029], anchors: [[12.4, 41.9]] },
-      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [-66.5, 6.4] },
+      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [[-66.5, 6.4]] },
       { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583], anchors: [[108.2, 14.0]] },
       { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527], anchors: [[48.5, 15.5]] },
       { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339], anchors: [[27.8, -13.1]] },
@@ -366,6 +366,9 @@
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       const [modernCountryColors, setModernCountryColors] = useState({});
+
+      // State for Country Inspector Modal (when clicking a modern country on the map)
+      const [inspectingCountry, setInspectingCountry] = useState(null);
 
       useEffect(() => {
         setIsSyncing(true);
@@ -586,9 +589,7 @@
                     <button
                       key={t.code}
                       onClick={() => {
-                        setSelectedCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother, coords: t.coords });
-                        setEditingCoin(null);
-                        setIsModalOpen(true);
+                        setInspectingCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother });
                       }}
                       className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300 flex items-center gap-1.5">
                       <span>{getFlagEmoji(t.a2)}</span>
@@ -666,9 +667,7 @@
                     modernCountryColors={modernCountryColors}
                     focusTarget={mapFocusTarget}
                     onSelectModernCountry={(info) => {
-                      setSelectedCountry(info);
-                      setEditingCoin(null);
-                      setIsModalOpen(true);
+                      setInspectingCountry(info);
                     }}
                   />
                 </div>
@@ -766,6 +765,30 @@
               />
             )}
           </main>
+
+          {/* Country Inspector Modal - Shows existing coins/denominations & quick add */}
+          {inspectingCountry && (
+            <CountryInspectorModal
+              country={inspectingCountry}
+              coins={vaultData.coins || []}
+              modernCountryColors={modernCountryColors}
+              onSetModernCountryColor={handleSetModernCountryColor}
+              onClose={() => setInspectingCountry(null)}
+              onAddNewCoin={(cntry) => {
+                setInspectingCountry(null);
+                setSelectedCountry(cntry);
+                setEditingCoin(null);
+                setIsModalOpen(true);
+              }}
+              onEditCoin={(c) => {
+                setInspectingCountry(null);
+                setEditingCoin(c);
+                setSelectedCountry({ a3: c.countryCode, name: c.countryName });
+                setIsModalOpen(true);
+              }}
+              onDeleteCoin={handleDeleteCoin}
+            />
+          )}
 
           {isModalOpen && (
             <AddEditCoinModal 
@@ -1084,6 +1107,7 @@
           visibleEntities.forEach(ent => {
             const gEnt = gClipped.append("g")
               .attr("class", "cursor-pointer")
+              .style("pointer-events", "all")
               .on("click", (evt) => {
                 evt.stopPropagation();
                 setInspectingEntity(ent);
@@ -1097,7 +1121,8 @@
                 .attr("fill", poly.striped ? `url(#stripe-pat-${ent.id}-${idx})` : (poly.bgColor || "#00f0ff"))
                 .attr("fill-opacity", 0.65)
                 .attr("stroke", poly.bgColor || "#00f0ff")
-                .attr("stroke-width", Math.max(0.4, 1.4 / k));
+                .attr("stroke-width", Math.max(0.4, 1.4 / k))
+                .style("pointer-events", "all");
             });
           });
 
@@ -1125,6 +1150,7 @@
               const gMint = gActive.append("g")
                 .attr("transform", `translate(${mx}, ${my})`)
                 .attr("class", "cursor-pointer")
+                .style("pointer-events", "all")
                 .on("click", (evt) => {
                   evt.stopPropagation();
                   setInspectingEntity(ent);
@@ -1850,6 +1876,89 @@
             </div>
           )}
 
+        </div>
+      );
+    }
+
+    // Country Inspector Modal - Lists existing coins/denominations & quick add
+    function CountryInspectorModal({ country, coins, modernCountryColors, onSetModernCountryColor, onClose, onAddNewCoin, onEditCoin, onDeleteCoin }) {
+      const countryCoins = useMemo(() => {
+        return (coins || []).filter(c => c.countryCode === country.a3);
+      }, [coins, country]);
+
+      const flag = getFlagEmoji(country.a2);
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{flag}</span>
+                <h3 className="text-sm font-black text-white">{country.name}</h3>
+              </div>
+              <button onClick={onClose} className="text-slate-400 hover:text-white text-base font-bold">✕</button>
+            </div>
+
+            {/* 8 Vibrant Colors Picker */}
+            <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-white text-xs">Manual Map Color:</span>
+                {modernCountryColors[country.a3] && (
+                  <button 
+                    type="button"
+                    onClick={() => onSetModernCountryColor(country.a3, null)}
+                    className="text-[10px] text-red-400 hover:underline">
+                    Reset Color
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2 items-center">
+                {VIBRANT_PALETTE_8.map(color => (
+                  <button
+                    type="button"
+                    key={color}
+                    onClick={() => onSetModernCountryColor(country.a3, color)}
+                    style={{ backgroundColor: color }}
+                    className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors[country.a3] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-90"}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Add Button */}
+            <button 
+              onClick={() => onAddNewCoin(country)}
+              className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5">
+              <span>+</span>
+              <span>Add New Coin for {country.name}</span>
+            </button>
+
+            {/* Existing Coins & Dates List */}
+            <div>
+              <div className="text-xs font-bold text-cyan-400 mb-1.5">Existing Coins & Dates ({countryCoins.length}):</div>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto hide-scrollbar">
+                {countryCoins.length === 0 ? (
+                  <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
+                    No coins recorded for {country.name} yet.
+                  </div>
+                ) : (
+                  countryCoins.map(coin => (
+                    <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl text-xs flex justify-between items-center">
+                      <div>
+                        <div className="text-white font-bold">{coin.denomination}</div>
+                        <div className="text-[10px] text-slate-400">{formatYearDisplay(coin.year)} • Grade: {coin.grade || "UNC"} {coin.mint ? `• Mint: ${coin.mint}` : ""}</div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => onEditCoin(coin)} className="text-slate-400 hover:text-white p-1 text-xs" title="Edit">✏️</button>
+                        <button onClick={() => onDeleteCoin(coin.id)} className="text-slate-400 hover:text-red-400 p-1 text-xs" title="Delete">🗑</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
         </div>
       );
     }
