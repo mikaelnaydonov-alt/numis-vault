@@ -61,9 +61,9 @@
       "#aa00ff","#6200ea","#304ffe","#2962ff","#0091ea","#00b8d4","#00bfa5","#00c853"
     ];
 
-    // 8 Pastel colors for manual modern country coloring
-    const PASTEL_PALETTE_8 = [
-      "#fbcfe8", "#e9d5ff", "#bae6fd", "#bbf7d0", "#fef08a", "#fed7aa", "#fecdd3", "#e2e8f0"
+    // 8 Distinct, highly vibrant colors for manual modern country coloring
+    const VIBRANT_PALETTE_8 = [
+      "#ff0055", "#7928ca", "#0070f3", "#00dfd8", "#39ff14", "#ffc000", "#ff4d4d", "#f8fafc"
     ];
 
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
@@ -305,7 +305,7 @@
     ];
 
     const getFlagEmoji = (a2) => {
-      if (!a2 || a2.length !== 2) return "🏳️️";
+      if (!a2 || a2.length !== 2) return "🏳️";
       return String.fromCodePoint(...a2.toUpperCase().split("").map(c => 127397 + c.charCodeAt(0)));
     };
 
@@ -352,7 +352,6 @@
       const [scrubberYear, setScrubberYear] = useState(1600);
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
-      // Modern country manual pastel color overrides
       const [modernCountryColors, setModernCountryColors] = useState({});
 
       useEffect(() => {
@@ -462,8 +461,8 @@
         alert(`Saved ${coinInfo.denomination} (${coinInfo.year}) to ${coinInfo.countryName}!`);
       };
 
-      const handleSetModernCountryColor = (countryCode, pastelColor) => {
-        const updatedColors = { ...modernCountryColors, [countryCode]: pastelColor };
+      const handleSetModernCountryColor = (countryCode, vibrantColor) => {
+        const updatedColors = { ...modernCountryColors, [countryCode]: vibrantColor };
         setModernCountryColors(updatedColors);
         pushToCloud({ ...vaultData, modernCountryColors: updatedColors });
       };
@@ -1002,6 +1001,7 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
+        // Strict numeric integer comparisons for timeline scrubber
         const visibleEntities = (entities || []).filter(e => {
           const start = parseInt(e.startYear, 10);
           const end = parseInt(e.endYear, 10);
@@ -1952,10 +1952,10 @@
                 </select>
               </div>
 
-              {/* 8 Pastel Colors for Modern Country Customization */}
+              {/* 8 Vibrant Colors for Modern Country Customization */}
               <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-white">Manual Map Color (8 Pastels):</span>
+                  <span className="font-semibold text-white">Manual Map Color (8 Vibrant Options):</span>
                   {modernCountryColors[formData.countryCode] && (
                     <button 
                       type="button"
@@ -1966,13 +1966,13 @@
                   )}
                 </div>
                 <div className="flex gap-2 items-center">
-                  {PASTEL_PALETTE_8.map(color => (
+                  {VIBRANT_PALETTE_8.map(color => (
                     <button
                       type="button"
                       key={color}
                       onClick={() => onSetModernCountryColor(formData.countryCode, color)}
                       style={{ backgroundColor: color }}
-                      className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors[formData.countryCode] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-80"}`}
+                      className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors[formData.countryCode] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-90"}`}
                     />
                   ))}
                 </div>
