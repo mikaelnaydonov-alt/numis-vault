@@ -865,10 +865,10 @@
             nameMap[d.iso_n3] = { a3: d.iso_a3, name: d.name }; 
           });
           nameMap["728"] = { a3: "SSD", name: "South Sudan" };
+          nameMap["792"] = { a3: "TUR", name: "Turkey" }; // Explicit Turkey mapping
 
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
 
-          // Render Country Paths
           g.selectAll(".country-path")
             .data(countries)
             .enter().append("path")
@@ -902,7 +902,6 @@
               onSelectModernCountry(match || baseInfo);
             });
 
-          // Render Centered Ukrainian Flag Badges on Map for abroad-only countries
           countries.forEach(d => {
             const info = nameMap[d.id];
             const code = info ? info.a3 : null;
@@ -924,7 +923,6 @@
             }
           });
 
-          // Micro States
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
@@ -945,7 +943,6 @@
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name, a2: d.a2 }));
 
-          // Micro State Flags for abroad-only
           MICRO_STATES.forEach(d => {
             const st = countryStatusMap[d.a3];
             if (st && st.abroadOnly) {
@@ -962,7 +959,6 @@
             }
           });
 
-          // Territories
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
             .enter().append("circle")
