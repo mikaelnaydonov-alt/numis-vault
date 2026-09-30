@@ -348,9 +348,8 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      // Scrubber Timeline & Era Zoom Range State
       const [scrubberYear, setScrubberYear] = useState(1600);
-      const [timelineRange, setTimelineRange] = useState("all"); // "all", "ancient", "medieval", "modern"
+      const [timelineRange, setTimelineRange] = useState("all");
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       const [modernCountryColors, setModernCountryColors] = useState({});
@@ -439,7 +438,6 @@
         pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
-      // Fixed: Properly filter state and push deletion to cloud JSONBin
       const handleDeleteHistoricalEntity = (entityId) => {
         const updatedEntities = (vaultData.historicalEntities || []).filter(e => e.id !== entityId);
         const updatedCoins = (vaultData.coins || []).filter(c => c.entityId !== entityId);
@@ -490,12 +488,11 @@
         }
       };
 
-      // Date Range configs for scrubber zooming
       const sliderConfig = useMemo(() => {
         if (timelineRange === "ancient") return { min: -3000, max: 500, step: 5 };
         if (timelineRange === "medieval") return { min: 500, max: 1500, step: 2 };
         if (timelineRange === "modern") return { min: 1500, max: 2026, step: 1 };
-        return { min: -3000, max: 2026, step: 10 }; // all
+        return { min: -3000, max: 2026, step: 10 };
       }, [timelineRange]);
 
       return (
@@ -582,7 +579,6 @@
             </div>
           )}
 
-          {/* Timeline Scrubber with Era Zoom & Direct Year Input Box */}
           {view === "historical" && (
             <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 space-y-2">
               <div className="flex items-center justify-between gap-2">
@@ -590,7 +586,6 @@
                   <span className="text-xs font-bold text-amber-400 font-mono bg-slate-900 px-2.5 py-1 rounded border border-slate-800">
                     {formatYearDisplay(scrubberYear)}
                   </span>
-                  {/* Direct Year Input */}
                   <input 
                     type="number" 
                     value={scrubberYear} 
@@ -603,7 +598,6 @@
                   />
                 </div>
 
-                {/* Era Zoom Pills */}
                 <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px]">
                   <button 
                     onClick={() => { setTimelineRange("all"); setScrubberYear(1600); }}
@@ -1294,6 +1288,16 @@
         setInspectingEntity(null);
         setIsVertexMode(true);
         alert(`Tap on the map to draw new detached territory for "${entity.name}". Tap "Close Shape" when finished.`);
+      };
+
+      const handleDeleteEmpire = (entityToDelete) => {
+        if (!entityToDelete) return;
+        const confirmDelete = window.confirm(`Are you sure you want to permanently delete "${entityToDelete.name}"?\n\nThis will remove all associated boundaries, territories across all continents, and all attached coins.`);
+        if (confirmDelete) {
+          onDeleteEntity(entityToDelete.id);
+          setInspectingEntity(null);
+          setColorPaletteModalEntity(null);
+        }
       };
 
       const activeTimelineEntities = useMemo(() => {
@@ -2002,7 +2006,6 @@
                 </select>
               </div>
 
-              {/* 8 Vibrant Colors for Modern Country Customization */}
               <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-white">Manual Map Color (8 Vibrant Options):</span>
