@@ -97,7 +97,8 @@
       { a3: "MLT", name: "Malta", a2: "MT", coords: [14.375, 35.937] },
       { a3: "SGP", name: "Singapore", a2: "SG", coords: [103.819, 1.352] },
       { a3: "BHR", name: "Bahrain", a2: "BH", coords: [50.557, 26.066] },
-      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.491, -4.679] }
+      { a3: "SYC", name: "Seychelles", a2: "SC", coords: [55.491, -4.679] },
+      { a3: "COM", name: "Comoros", a2: "KM", coords: [43.8726, -11.8753] }
     ];
 
     const SOVEREIGN_LIST = [
@@ -307,7 +308,7 @@
       if (!yr && yr !== 0) return "—";
       const s = String(yr).trim();
       if (s.includes("-") && !s.startsWith("-")) return `${s} AD`;
-      const num = parseInt(s);
+      const num = parseInt(s, 10);
       if (isNaN(num)) return s;
       return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
     };
@@ -427,7 +428,6 @@
         pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
-      // Deletes an empire, its map polygons, and ALL attached coins
       const handleDeleteHistoricalEntity = (entityId) => {
         const updatedEntities = (vaultData.historicalEntities || []).filter(e => e.id !== entityId);
         const updatedCoins = (vaultData.coins || []).filter(c => c.entityId !== entityId);
@@ -819,7 +819,6 @@
       const [closedPolygons, setClosedPolygons] = useState([]);
       const [inspectingEntity, setInspectingEntity] = useState(null);
 
-      // Active empire to append multi-continent territories to
       const [activeAppendingEntityId, setActiveAppendingEntityId] = useState(null);
 
       const [colorPaletteModalEntity, setColorPaletteModalEntity] = useState(null);
@@ -843,7 +842,6 @@
       const [confirmedMint, setConfirmedMint] = useState(null);
 
       const [metaModalOpen, setMetaModalOpen] = useState(false);
-      // Clean, blank default state - No prefilled text or suggestions to delete
       const [entityMeta, setEntityMeta] = useState({
         id: "",
         name: "",
@@ -969,7 +967,6 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        // Strict numeric timeline boundary comparison
         const visibleEntities = (entities || []).filter(e => {
           const start = parseInt(e.startYear, 10);
           const end = parseInt(e.endYear, 10);
@@ -1122,7 +1119,6 @@
           return;
         }
 
-        // If appending a new overseas territory to an existing empire
         if (activeAppendingEntityId) {
           const targetEntity = (entities || []).find(e => e.id === activeAppendingEntityId);
           if (targetEntity) {
@@ -1208,18 +1204,6 @@
         setColorPaletteModalEntity(null);
       };
 
-      // Handler for deleting the empire and its associated assets
-      const handleDeleteEmpire = (entityToDelete) => {
-        if (!entityToDelete) return;
-        const confirmDelete = window.confirm(`Are you sure you want to permanently delete "${entityToDelete.name}"?\n\nThis will remove all associated boundaries, territories across all continents, and all attached coins.`);
-        if (confirmDelete) {
-          onDeleteEntity(entityToDelete.id);
-          setInspectingEntity(null);
-          setColorPaletteModalEntity(null);
-        }
-      };
-
-      // Starts territory append mode on a specific entity
       const handleStartAddTerritory = (entity) => {
         setActiveAppendingEntityId(entity.id);
         setInspectingEntity(null);
@@ -1395,7 +1379,6 @@
             </div>
           )}
 
-          {/* Clean Setup Modal - Starts Completely Blank */}
           {metaModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
@@ -1541,7 +1524,6 @@
             </div>
           )}
 
-          {/* Empire Inspector with Add Territory & Delete Options */}
           {inspectingEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-md p-4 max-h-[88vh] overflow-y-auto hide-scrollbar space-y-3.5 shadow-2xl">
@@ -1563,7 +1545,6 @@
                   <div className="col-span-2"><span className="text-slate-400">Mint:</span> <span className="text-white">{inspectingEntity.mint?.city || "—"} ({inspectingEntity.mint?.country || "—"})</span></div>
                 </div>
 
-                {/* Multi-Continent Add Territory Button */}
                 <div className="flex items-center justify-between bg-[#10162a] p-2.5 rounded-xl border border-slate-800">
                   <div>
                     <div className="text-xs font-bold text-white">Territories / Shapes ({inspectingEntity.polygons?.length || 0})</div>
@@ -1649,7 +1630,6 @@
                   </div>
                 </div>
 
-                {/* Permanent Empire Deletion Button */}
                 <div className="pt-2 border-t border-slate-800/80">
                   <button 
                     onClick={() => handleDeleteEmpire(inspectingEntity)}
@@ -1663,7 +1643,6 @@
             </div>
           )}
 
-          {/* Add Historical Coin Modal - Blank Inputs Without Presets */}
           {isAddingCoinForEntity && (
             <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
               <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl">
