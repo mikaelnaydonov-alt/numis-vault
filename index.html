@@ -61,7 +61,6 @@
       "#aa00ff","#6200ea","#304ffe","#2962ff","#0091ea","#00b8d4","#00bfa5","#00c853"
     ];
 
-    // 8 Distinct, highly vibrant colors for manual modern country coloring
     const VIBRANT_PALETTE_8 = [
       "#ff0055", "#7928ca", "#0070f3", "#00dfd8", "#39ff14", "#ffc000", "#ff4d4d", "#f8fafc"
     ];
@@ -349,7 +348,9 @@
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
+      // Scrubber Timeline & Era Zoom Range State
       const [scrubberYear, setScrubberYear] = useState(1600);
+      const [timelineRange, setTimelineRange] = useState("all"); // "all", "ancient", "medieval", "modern"
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       const [modernCountryColors, setModernCountryColors] = useState({});
@@ -438,14 +439,16 @@
         pushToCloud({ ...vaultData, historicalEntities: updatedEntities });
       };
 
+      // Fixed: Properly filter state and push deletion to cloud JSONBin
       const handleDeleteHistoricalEntity = (entityId) => {
         const updatedEntities = (vaultData.historicalEntities || []).filter(e => e.id !== entityId);
         const updatedCoins = (vaultData.coins || []).filter(c => c.entityId !== entityId);
-        pushToCloud({
+        const updatedPayload = {
           ...vaultData,
           historicalEntities: updatedEntities,
           coins: updatedCoins
-        });
+        };
+        pushToCloud(updatedPayload);
       };
 
       const handleAddHistoricalCoin = (entityId, coinInfo) => {
@@ -486,6 +489,14 @@
           setMapFocusTarget({ coords: coords, zoomLevel: 14 });
         }
       };
+
+      // Date Range configs for scrubber zooming
+      const sliderConfig = useMemo(() => {
+        if (timelineRange === "ancient") return { min: -3000, max: 500, step: 5 };
+        if (timelineRange === "medieval") return { min: 500, max: 1500, step: 2 };
+        if (timelineRange === "modern") return { min: 1500, max: 2026, step: 1 };
+        return { min: -3000, max: 2026, step: 10 }; // all
+      }, [timelineRange]);
 
       return (
         <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
@@ -571,21 +582,61 @@
             </div>
           )}
 
+          {/* Timeline Scrubber with Era Zoom & Direct Year Input Box */}
           {view === "historical" && (
-            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 flex items-center gap-3">
-              <span className="text-xs font-bold text-amber-400 font-mono w-20 text-center bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                {formatYearDisplay(scrubberYear)}
-              </span>
+            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-amber-400 font-mono bg-slate-900 px-2.5 py-1 rounded border border-slate-800">
+                    {formatYearDisplay(scrubberYear)}
+                  </span>
+                  {/* Direct Year Input */}
+                  <input 
+                    type="number" 
+                    value={scrubberYear} 
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val)) setScrubberYear(val);
+                    }}
+                    className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-amber-300 font-mono text-center focus:outline-none focus:border-amber-400"
+                    title="Type exact year"
+                  />
+                </div>
+
+                {/* Era Zoom Pills */}
+                <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px]">
+                  <button 
+                    onClick={() => { setTimelineRange("all"); setScrubberYear(1600); }}
+                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "all" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+                    All
+                  </button>
+                  <button 
+                    onClick={() => { setTimelineRange("ancient"); setScrubberYear(100); }}
+                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "ancient" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+                    Ancient
+                  </button>
+                  <button 
+                    onClick={() => { setTimelineRange("medieval"); setScrubberYear(1000); }}
+                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "medieval" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+                    Medieval
+                  </button>
+                  <button 
+                    onClick={() => { setTimelineRange("modern"); setScrubberYear(1700); }}
+                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "modern" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+                    Modern
+                  </button>
+                </div>
+              </div>
+
               <input 
                 type="range" 
-                min="-3000" 
-                max="2026" 
-                step="5" 
+                min={sliderConfig.min} 
+                max={sliderConfig.max} 
+                step={sliderConfig.step} 
                 value={scrubberYear} 
                 onChange={e => setScrubberYear(parseInt(e.target.value, 10))}
-                className="flex-1 accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                className="w-full accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
               />
-              <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">Timeline Era</span>
             </div>
           )}
 
@@ -1001,7 +1052,6 @@
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
 
-        // Strict numeric integer comparisons for timeline scrubber
         const visibleEntities = (entities || []).filter(e => {
           const start = parseInt(e.startYear, 10);
           const end = parseInt(e.endYear, 10);
