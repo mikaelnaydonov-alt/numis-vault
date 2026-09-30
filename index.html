@@ -495,6 +495,15 @@
         return { min: -3000, max: 2026, step: 10 };
       }, [timelineRange]);
 
+      // Safe Clamping when changing era zoom ranges
+      const handleRangeChange = (newRange) => {
+        setTimelineRange(newRange);
+        if (newRange === "ancient") setScrubberYear(Math.max(-3000, Math.min(500, scrubberYear)));
+        else if (newRange === "medieval") setScrubberYear(Math.max(500, Math.min(1500, scrubberYear)));
+        else if (newRange === "modern") setScrubberYear(Math.max(1500, Math.min(2026, scrubberYear)));
+        else setScrubberYear(Math.max(-3000, Math.min(2026, scrubberYear)));
+      };
+
       return (
         <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
           
@@ -591,7 +600,9 @@
                     value={scrubberYear} 
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val)) setScrubberYear(val);
+                      if (!isNaN(val)) {
+                        setScrubberYear(Math.max(sliderConfig.min, Math.min(sliderConfig.max, val)));
+                      }
                     }}
                     className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-amber-300 font-mono text-center focus:outline-none focus:border-amber-400"
                     title="Type exact year"
@@ -600,22 +611,22 @@
 
                 <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px]">
                   <button 
-                    onClick={() => { setTimelineRange("all"); setScrubberYear(1600); }}
+                    onClick={() => handleRangeChange("all")}
                     className={`px-2 py-0.5 rounded font-bold ${timelineRange === "all" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
                     All
                   </button>
                   <button 
-                    onClick={() => { setTimelineRange("ancient"); setScrubberYear(100); }}
+                    onClick={() => handleRangeChange("ancient")}
                     className={`px-2 py-0.5 rounded font-bold ${timelineRange === "ancient" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
                     Ancient
                   </button>
                   <button 
-                    onClick={() => { setTimelineRange("medieval"); setScrubberYear(1000); }}
+                    onClick={() => handleRangeChange("medieval")}
                     className={`px-2 py-0.5 rounded font-bold ${timelineRange === "medieval" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
                     Medieval
                   </button>
                   <button 
-                    onClick={() => { setTimelineRange("modern"); setScrubberYear(1700); }}
+                    onClick={() => handleRangeChange("modern")}
                     className={`px-2 py-0.5 rounded font-bold ${timelineRange === "modern" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
                     Modern
                   </button>
