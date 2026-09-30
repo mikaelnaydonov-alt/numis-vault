@@ -45,7 +45,7 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef, useMemo } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
     const BIN_ID = "6abc1b08ac6210605a031f30";
     const API_KEY = "$2a$10$2oCVpwPkbYGZxv1JB6qPNuTnfF/9p4UT0f8.rSNqGAy5bq4WmEjey";
@@ -296,7 +296,7 @@
       { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775], anchors: [[64.5, 41.3]] },
       { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767], anchors: [[166.9, -15.3]] },
       { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029], anchors: [[12.4, 41.9]] },
-      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [[-66.5, 6.4]] },
+      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [-66.5, 6.4] },
       { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583], anchors: [[108.2, 14.0]] },
       { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527], anchors: [[48.5, 15.5]] },
       { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339], anchors: [[27.8, -13.1]] },
@@ -317,7 +317,6 @@
       return num < 0 ? `${Math.abs(num)} BC` : `${num} AD`;
     };
 
-    // Bulletproof chronological checker with auto-normalization
     const isEntityActiveInYear = (entity, year) => {
       if (!entity) return false;
       const start = parseInt(entity.startYear, 10);
@@ -611,7 +610,7 @@
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
                       if (!isNaN(val)) {
-                        setScrubberYear(Math.max(sliderConfig.min, Math.min(sliderConfig.max, val)));
+                        setScrubberYear(val);
                       }
                     }}
                     className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-amber-300 font-mono text-center focus:outline-none focus:border-amber-400"
@@ -962,6 +961,15 @@
       useEffect(() => { currentVerticesRef.current = currentVertices; }, [currentVertices]);
       useEffect(() => { placingMintRef.current = placingMint; }, [placingMint]);
 
+      // Memoize visible entities strictly to scrubberYear and entities to prevent zoom redraw corruption
+      const visibleEntities = useMemo(() => {
+        return (entities || []).filter(e => isEntityActiveInYear(e, scrubberYear));
+      }, [entities, scrubberYear]);
+
+      const isCurrentActiveInScrubber = useMemo(() => {
+        return isEntityActiveInYear(entityMeta, scrubberYear);
+      }, [entityMeta, scrubberYear]);
+
       useEffect(() => {
         const svgEl = svgRef.current;
         const svg = d3.select(svgEl);
@@ -1062,13 +1070,10 @@
 
       }, [closedPolygons, entities]);
 
-      const updateDynamicOverlay = () => {
+      const updateDeadOrAliveEmpires = useCallback(() => {
         const k = currentTransformRef.current ? currentTransformRef.current.k : 1;
         const dotRadius = Math.max(0.6, 2.5 / k);
         const strokeW = Math.max(0.3, 1.2 / k);
-
-        const visibleEntities = (entities || []).filter(e => isEntityActiveInYear(e, scrubberYear));
-        const isCurrentActiveInScrubber = isEntityActiveInYear(entityMeta, scrubberYear);
 
         const gClipped = d3.select("#layer-clipped-empires");
         if (!gClipped.empty()) {
@@ -1163,11 +1168,15 @@
             gPin.append("circle").attr("r", 1.8 / k).attr("fill", "#ffffff");
           }
         }
+      }, [visibleEntities, isCurrentActiveInScrubber, closedPolygons, currentVertices, mintCandidate, confirmedMint, activeAppendingEntityId, entityMeta]);
+
+      const updateDynamicOverlay = () => {
+        updateDeadOrAliveEmpires();
       };
 
       useEffect(() => {
-        updateDynamicOverlay();
-      }, [entities, scrubberYear, closedPolygons, currentVertices, mintCandidate, confirmedMint, entityMeta, activeAppendingEntityId]);
+        updateDeadOrAliveEmpires();
+      }, [scrubberYear, updateDeadOrAliveEmpires]);
 
       useEffect(() => {
         if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
@@ -1315,8 +1324,8 @@
       };
 
       const activeTimelineEntities = useMemo(() => {
-        return (entities || []).find(e => isEntityActiveInYear(e, scrubberYear));
-      }, [entities, scrubberYear]);
+        return visibleEntities[0] || null;
+      }, [visibleEntities]);
 
       const coinsForInspectedEntity = useMemo(() => {
         if (!inspectingEntity) return [];
