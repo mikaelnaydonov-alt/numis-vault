@@ -319,6 +319,9 @@
 
     const isEntityActiveInYear = (entity, year) => {
       if (!entity) return false;
+      if (entity.startYear === undefined || entity.endYear === undefined || entity.startYear === "" || entity.endYear === "") {
+        return false;
+      }
       const start = parseInt(entity.startYear, 10);
       const end = parseInt(entity.endYear, 10);
       if (isNaN(start) || isNaN(end)) return false;
@@ -961,7 +964,6 @@
       useEffect(() => { currentVerticesRef.current = currentVertices; }, [currentVertices]);
       useEffect(() => { placingMintRef.current = placingMint; }, [placingMint]);
 
-      // Memoize visible entities strictly to scrubberYear and entities to prevent zoom redraw corruption
       const visibleEntities = useMemo(() => {
         return (entities || []).filter(e => isEntityActiveInYear(e, scrubberYear));
       }, [entities, scrubberYear]);
