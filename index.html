@@ -251,7 +251,7 @@
       { a3: "OMN", name: "Oman", a2: "OM", coords: [55.9233, 21.4735], anchors: [[55.9, 21.4]] },
       { a3: "PAK", name: "Pakistan", a2: "PK", coords: [69.3451, 30.3753], anchors: [[69.3, 30.3]] },
       { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150], anchors: [[134.5, 7.5]] },
-      { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380], anchors: [[-80.7, 8.5]] },
+      { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380], anchors: [-80.7, 8.5] },
       { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150], anchors: [[143.9, -6.3]] },
       { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [-58.4, -23.4] },
       { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899], anchors: [[-75.0, -9.1]] },
@@ -360,6 +360,19 @@
         if (intersect) inside = !inside;
       }
       return inside;
+    };
+
+    // Helper to adjust hex color brightness for custom country stripes
+    const adjustColorBrightness = (hex, percent) => {
+      let num = parseInt(hex.replace("#",""), 16);
+      if (isNaN(num)) return "#333333";
+      let r = (num >> 16) + percent;
+      let g = ((num >> 8) & 0x00ff) + percent;
+      let b = (num & 0x0000ff) + percent;
+      r = Math.min(255, Math.max(0, r));
+      g = Math.min(255, Math.max(0, g));
+      b = Math.min(255, Math.max(0, b));
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
     };
 
     function App() {
@@ -851,7 +864,6 @@
 
         const defs = svg.append("defs");
         
-        // Red territory hatch pattern
         const hatch = defs.append("pattern")
           .attr("id", "diagonalHatchRed")
           .attr("width", 8).attr("height", 8)
@@ -859,19 +871,36 @@
         hatch.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
           .attr("stroke", "#ff1744").attr("stroke-width", 2.5);
 
-        // Dynamically create stripe patterns for each custom country color when abroad
+        // Dynamically create a unique, fine-striped pattern per country using adjusted color shades
         Object.entries(countryStatusMap).forEach(([code, st]) => {
           if (st && st.abroadOnly) {
             const baseCol = modernCountryColors[code] || (st.neonColor === "cyan" ? "#00f0ff" : st.neonColor === "magenta" ? "#ff007f" : st.neonColor === "lime" ? "#39ff14" : st.neonColor === "amber" ? "#ffaa00" : st.neonColor === "purple" ? "#b026ff" : "#00f0ff");
             
+            // Determine if base is dark or bright to choose a complementary shade for stripes
+            const num = parseInt(baseCol.replace("#",""), 16);
+            const r = (num >> 16), g = ((num >> 8) & 0x00ff), b = (num & 0x0000ff);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+            const stripeCol = luminance > 120 ? adjustColorBrightness(baseCol, -45) : adjustColorBrightness(baseCol, 55);
+
             const pat = defs.append("pattern")
-              .attr("id", `stripe-abroad-${code}`)
-              .attr("width", 8).attr("height", 8)
-              .attr("patternTransform", "rotate(45 0 0)").attr("patternUnits", "userSpaceOnUse");
-            
-            pat.append("rect").attr("width", 8).attr("height", 8).attr("fill", baseCol);
-            pat.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
-              .attr("stroke", "#000000").attr("stroke-width", 2.2).attr("stroke-opacity", 0.45);
+              .attr("id", `country-stripe-${code}`)
+              .attr("width", 6)
+              .attr("height", 6)
+              .attr("patternTransform", "rotate(45 0 0)")
+              .attr("patternUnits", "userSpaceOnUse");
+
+            pat.append("rect")
+              .attr("width", 6)
+              .attr("height", 6)
+              .attr("fill", baseCol);
+
+            pat.append("line")
+              .attr("x1", 0)
+              .attr("y1", 0)
+              .attr("x2", 0)
+              .attr("y2", 6)
+              .attr("stroke", stripeCol)
+              .attr("stroke-width", 2);
           }
         });
 
@@ -906,9 +935,9 @@
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
               const st = code ? countryStatusMap[code] : null;
-              
+
               if (st && st.abroadOnly) {
-                return `fill: url(#stripe-abroad-${code}) !important;`;
+                return `fill: url(#country-stripe-${code}) !important;`;
               }
               if (code && modernCountryColors[code]) {
                 return `fill: ${modernCountryColors[code]} !important;`;
@@ -2258,7 +2287,7 @@
               <div className="p-2.5 bg-[#12182b] rounded-xl border border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-white">In Physical Possession</div>
-                  <div className="text-[10px] text-slate-400">If unchecked, marked with subtle dark stripes on map</div>
+                  <div className="text-[10px] text-slate-400">If unchecked, marked with fine country-specific stripes on map</div>
                 </div>
                 <input 
                   type="checkbox" 
