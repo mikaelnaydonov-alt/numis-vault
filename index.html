@@ -25,11 +25,6 @@
     .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.6)); }
     .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.6)); }
     
-    .abroad-border {
-      stroke: #000000 !important;
-      stroke-width: 1.2px !important;
-    }
-
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
@@ -67,7 +62,6 @@
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
 
-    // Continent mapping helper for sorting
     const CONTINENT_MAP = {
       EUR: ["ALB", "AND", "AUT", "BLR", "BEL", "BIH", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "ISL", "IRL", "ITA", "LVA", "LIE", "LTU", "LUX", "MLT", "MDA", "MCO", "MNE", "NLD", "NOR", "POL", "PRT", "ROU", "RUS", "SMR", "SRB", "SVK", "SVN", "ESP", "SWE", "CHE", "TUR", "UKR", "GBR", "VAT"],
       ASI: ["AFG", "ARM", "AZE", "BHR", "BGD", "BTN", "BRN", "KHM", "CHN", "GEO", "IND", "IDN", "IRN", "IRQ", "ISR", "JPN", "JOR", "KAZ", "PRK", "KOR", "KWT", "KGZ", "LAO", "LBN", "MYS", "MDV", "MNG", "MMR", "NPL", "OMN", "PAK", "PHL", "QAT", "SAU", "SGP", "LKA", "SYR", "TWN", "TJK", "THA", "TLS", "TKM", "ARE", "UZB", "VNM", "YEM"],
@@ -856,12 +850,30 @@
         svg.selectAll("*").remove();
 
         const defs = svg.append("defs");
+        
+        // Red territory hatch pattern
         const hatch = defs.append("pattern")
           .attr("id", "diagonalHatchRed")
           .attr("width", 8).attr("height", 8)
           .attr("patternTransform", "rotate(45 0 0)").attr("patternUnits", "userSpaceOnUse");
         hatch.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
           .attr("stroke", "#ff1744").attr("stroke-width", 2.5);
+
+        // Dynamically create stripe patterns for each custom country color when abroad
+        Object.entries(countryStatusMap).forEach(([code, st]) => {
+          if (st && st.abroadOnly) {
+            const baseCol = modernCountryColors[code] || (st.neonColor === "cyan" ? "#00f0ff" : st.neonColor === "magenta" ? "#ff007f" : st.neonColor === "lime" ? "#39ff14" : st.neonColor === "amber" ? "#ffaa00" : st.neonColor === "purple" ? "#b026ff" : "#00f0ff");
+            
+            const pat = defs.append("pattern")
+              .attr("id", `stripe-abroad-${code}`)
+              .attr("width", 8).attr("height", 8)
+              .attr("patternTransform", "rotate(45 0 0)").attr("patternUnits", "userSpaceOnUse");
+            
+            pat.append("rect").attr("width", 8).attr("height", 8).attr("fill", baseCol);
+            pat.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 8)
+              .attr("stroke", "#000000").attr("stroke-width", 2.2).attr("stroke-opacity", 0.45);
+          }
+        });
 
         const g = svg.append("g").attr("id", "modern-map-root");
         const projection = projectionRef.current;
@@ -893,6 +905,11 @@
             .attr("style", d => {
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
+              const st = code ? countryStatusMap[code] : null;
+              
+              if (st && st.abroadOnly) {
+                return `fill: url(#stripe-abroad-${code}) !important;`;
+              }
               if (code && modernCountryColors[code]) {
                 return `fill: ${modernCountryColors[code]} !important;`;
               }
@@ -903,10 +920,10 @@
               const code = info ? info.a3 : null;
               const st = code ? countryStatusMap[code] : null;
               if (code && modernCountryColors[code]) {
-                return `stroke-[#1b233a] stroke-[0.35] cursor-pointer ${st && st.abroadOnly ? "abroad-border" : ""}`;
+                return "stroke-[#1b233a] stroke-[0.35] cursor-pointer";
               }
               if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer";
-              return `neon-${st.neonColor} cursor-pointer stroke-white/30 stroke-[0.35] ${st.abroadOnly ? "abroad-border" : ""}`;
+              return `neon-${st.neonColor} cursor-pointer stroke-white/30 stroke-[0.35]`;
             })
             .on("click", (e, d) => {
               const baseInfo = nameMap[d.id] || { a3: "WLD", name: "Selected Territory" };
@@ -923,9 +940,9 @@
             .attr("style", d => modernCountryColors[d.a3] ? `fill: ${modernCountryColors[d.a3]} !important;` : "")
             .attr("class", d => {
               const st = countryStatusMap[d.a3];
-              if (modernCountryColors[d.a3]) return `stroke-cyan-400/60 cursor-pointer ${st && st.abroadOnly ? "abroad-border" : ""}`;
+              if (modernCountryColors[d.a3]) return "stroke-cyan-400/60 cursor-pointer";
               if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer";
-              return `neon-${st.neonColor} stroke-white/70 ${st.abroadOnly ? "abroad-border" : ""}`;
+              return `neon-${st.neonColor} stroke-white/70`;
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name, a2: d.a2 }));
 
@@ -1991,7 +2008,7 @@
     function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onNavigateToCoin, onAddClick }) {
       const [query, setQuery] = useState("");
       const [vaultMode, setVaultMode] = useState("all");
-      const [sortBy, setSortBy] = useState("default"); // "default", "possession", "continent"
+      const [sortBy, setSortBy] = useState("default");
 
       const filtered = useMemo(() => {
         let result = coins.filter(c => {
@@ -2002,7 +2019,6 @@
           return searchTarget.includes(query.toLowerCase());
         });
 
-        // Sorting logic
         if (sortBy === "possession") {
           result.sort((a, b) => (b.inPossession === true) - (a.inPossession === true));
         } else if (sortBy === "continent") {
@@ -2049,7 +2065,6 @@
               </button>
             </div>
 
-            {/* Sort Dropdown */}
             <select 
               value={sortBy} 
               onChange={e => setSortBy(e.target.value)}
@@ -2243,7 +2258,7 @@
               <div className="p-2.5 bg-[#12182b] rounded-xl border border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-white">In Physical Possession</div>
-                  <div className="text-[10px] text-slate-400">If unchecked, marked with solid black inner border</div>
+                  <div className="text-[10px] text-slate-400">If unchecked, marked with subtle dark stripes on map</div>
                 </div>
                 <input 
                   type="checkbox" 
