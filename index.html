@@ -240,7 +240,7 @@
       { a3: "PLW", name: "Palau", a2: "PW", coords: [134.5825, 7.5150], anchors: [[134.5, 7.5]] },
       { a3: "PAN", name: "Panama", a2: "PA", coords: [-80.7821, 8.5380], anchors: [[-80.7, 8.5]] },
       { a3: "PNG", name: "Papua New Guinea", a2: "PG", coords: [143.9555, -6.3150], anchors: [[143.9, -6.3]] },
-      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [[-58.4, -23.4]] },
+      { a3: "PRY", name: "Paraguay", a2: "PY", coords: [-58.4438, -23.4425], anchors: [-58.4, -23.4] },
       { a3: "PER", name: "Peru", a2: "PE", coords: [-75.0152, -9.1899], anchors: [[-75.0, -9.1]] },
       { a3: "PHL", name: "Philippines", a2: "PH", coords: [121.7740, 12.8797], anchors: [[121.7, 12.8]] },
       { a3: "POL", name: "Poland", a2: "PL", coords: [19.1451, 51.9194], anchors: [[19.1, 51.9], [21.0, 52.2], [19.9, 50.0], [18.6, 54.3], [16.9, 52.4], [22.5, 51.2], [17.0, 51.1]] },
@@ -303,7 +303,7 @@
     ];
 
     const getFlagEmoji = (a2) => {
-      if (!a2 || a2.length !== 2) return "🏳️";
+      if (!a2 || a2.length !== 2) return "🏳️️";
       return String.fromCodePoint(...a2.toUpperCase().split("").map(c => 127397 + c.charCodeAt(0)));
     };
 
@@ -851,7 +851,8 @@
         const zoom = d3.zoom().scaleExtent([1, 250]).on("zoom", (e) => {
           g.attr("transform", e.transform);
           const k = e.transform.k;
-          g.selectAll(".map-flag-label").attr("font-size", `${Math.max(6, 14 / Math.sqrt(k))}px`);
+          // Scale down the Ukrainian flag badge dynamically so it stays proportionately tiny inside countries
+          g.selectAll(".map-flag-label").attr("font-size", `${Math.max(3.5, 9 / Math.sqrt(k))}px`);
         });
         zoomBehaviorRef.current = zoom;
         svg.call(zoom);
@@ -865,7 +866,7 @@
             nameMap[d.iso_n3] = { a3: d.iso_a3, name: d.name }; 
           });
           nameMap["728"] = { a3: "SSD", name: "South Sudan" };
-          nameMap["792"] = { a3: "TUR", name: "Turkey" }; // Explicit Turkey mapping
+          nameMap["792"] = { a3: "TUR", name: "Turkey" };
 
           const countries = topojson.feature(atlasData, atlasData.objects.countries).features;
 
@@ -902,6 +903,7 @@
               onSelectModernCountry(match || baseInfo);
             });
 
+          // Proportionally scaled Ukrainian flag centered in unpossessed countries
           countries.forEach(d => {
             const info = nameMap[d.id];
             const code = info ? info.a3 : null;
@@ -916,7 +918,7 @@
                   .attr("y", centroid[1])
                   .attr("text-anchor", "middle")
                   .attr("dominant-baseline", "central")
-                  .attr("font-size", "12px")
+                  .attr("font-size", "7px")
                   .style("pointer-events", "none")
                   .text("🇺🇦");
               }
@@ -952,7 +954,7 @@
                   .attr("x", pt[0])
                   .attr("y", pt[1] - 5)
                   .attr("text-anchor", "middle")
-                  .attr("font-size", "8px")
+                  .attr("font-size", "6px")
                   .style("pointer-events", "none")
                   .text("🇺🇦");
               }
