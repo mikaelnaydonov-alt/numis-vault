@@ -25,7 +25,10 @@
     .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.6)); }
     .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.6)); }
     
-    .abroad-fade { fill-opacity: 0.35 !important; }
+    .abroad-border {
+      stroke: #000000 !important;
+      stroke-width: 1.2px !important;
+    }
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -63,6 +66,22 @@
 
     const WEST_AFRICAN_CFA = ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"];
     const EASTERN_CARIBBEAN = ["ATG", "DMA", "GRD", "KNA", "LCA", "VCT"];
+
+    // Continent mapping helper for sorting
+    const CONTINENT_MAP = {
+      EUR: ["ALB", "AND", "AUT", "BLR", "BEL", "BIH", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "ISL", "IRL", "ITA", "LVA", "LIE", "LTU", "LUX", "MLT", "MDA", "MCO", "MNE", "NLD", "NOR", "POL", "PRT", "ROU", "RUS", "SMR", "SRB", "SVK", "SVN", "ESP", "SWE", "CHE", "TUR", "UKR", "GBR", "VAT"],
+      ASI: ["AFG", "ARM", "AZE", "BHR", "BGD", "BTN", "BRN", "KHM", "CHN", "GEO", "IND", "IDN", "IRN", "IRQ", "ISR", "JPN", "JOR", "KAZ", "PRK", "KOR", "KWT", "KGZ", "LAO", "LBN", "MYS", "MDV", "MNG", "MMR", "NPL", "OMN", "PAK", "PHL", "QAT", "SAU", "SGP", "LKA", "SYR", "TWN", "TJK", "THA", "TLS", "TKM", "ARE", "UZB", "VNM", "YEM"],
+      AFR: ["DZA", "AGO", "BEN", "BWA", "BFA", "BDI", "CPV", "CMR", "CAF", "TCD", "COM", "COG", "COD", "DJI", "EGY", "GNQ", "ERI", "ETH", "GAB", "GMB", "GHA", "GIN", "GNB", "KEN", "LSO", "LBR", "LBY", "MDG", "MWI", "MLI", "MRT", "MUS", "MAR", "MOZ", "NAM", "NER", "NGA", "RWA", "STP", "SEN", "SYC", "SLE", "SOM", "ZAF", "SSD", "SDN", "SWZ", "TZA", "TGO", "TUN", "UGA", "ZMB", "ZWE"],
+      AME: ["ATG", "ARG", "BHS", "BRB", "BLZ", "BOL", "BRA", "CAN", "CHL", "COL", "CRI", "CUB", "DMA", "DOM", "ECU", "SLV", "GRD", "GTM", "GUY", "HTI", "HND", "JAM", "MEX", "NIC", "PAN", "PRY", "PER", "KNA", "LCA", "VCT", "SUR", "TTO", "USA", "URY", "VEN"],
+      OCE: ["AUS", "FJI", "KIR", "MHL", "FSM", "NRU", "NZL", "PLW", "PNG", "WSM", "SLB", "TON", "TUV", "VUT"]
+    };
+
+    const getContinentForCode = (code) => {
+      for (const [cont, codes] of Object.entries(CONTINENT_MAP)) {
+        if (codes.includes(code)) return cont;
+      }
+      return "OTH";
+    };
 
     const TERRITORIES_LIST = [
       { code: "ABW", name: "Aruba", mother: "NLD", a2: "AW", coords: [-69.968, 12.521] },
@@ -283,7 +302,7 @@
       { a3: "TON", name: "Tonga", a2: "TO", coords: [-175.1982, -21.1789], anchors: [-175.1, -21.1] },
       { a3: "TTO", name: "Trinidad & Tobago", a2: "TT", coords: [-61.2225, 10.6918], anchors: [[-61.2, 10.6]] },
       { a3: "TUN", name: "Tunisia", a2: "TN", coords: [9.5375, 33.8869], anchors: [[9.5, 33.8], [10.1, 36.8], [10.6, 35.8]] },
-      { a3: "TUR", name: "Turkey", a2: "TR", coords: [35.2433, 38.9637], anchors: [[35.2, 38.9], [28.9, 41.0], [27.1, 38.4], [32.8, 39.9], [34.6, 36.8]] },
+      { a3: "TUR", name: "Turkey", a2: "TUR", coords: [35.2433, 38.9637], anchors: [[35.2, 38.9], [28.9, 41.0], [27.1, 38.4], [32.8, 39.9], [34.6, 36.8]] },
       { a3: "TKM", name: "Turkmenistan", a2: "TM", coords: [59.5563, 38.9697], anchors: [[59.5, 38.9]] },
       { a3: "TUV", name: "Tuvalu", a2: "TV", coords: [179.194, -8.506], anchors: [[179.1, -8.5]] },
       { a3: "UGA", name: "Uganda", a2: "UG", coords: [32.2903, 1.3733], anchors: [[32.2, 1.3]] },
@@ -295,7 +314,7 @@
       { a3: "UZB", name: "Uzbekistan", a2: "UZ", coords: [64.5853, 41.3775], anchors: [[64.5, 41.3]] },
       { a3: "VUT", name: "Vanuatu", a2: "VU", coords: [166.9592, -15.3767], anchors: [[166.9, -15.3]] },
       { a3: "VAT", name: "Vatican City", a2: "VA", coords: [12.4534, 41.9029], anchors: [[12.4, 41.9]] },
-      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [[-66.5, 6.4]] },
+      { a3: "VEN", name: "Venezuela", a2: "VE", coords: [-66.5897, 6.4238], anchors: [-66.5, 6.4] },
       { a3: "VNM", name: "Vietnam", a2: "VN", coords: [108.2772, 14.0583], anchors: [[108.2, 14.0]] },
       { a3: "YEM", name: "Yemen", a2: "YE", coords: [48.5164, 15.5527], anchors: [[48.5, 15.5]] },
       { a3: "ZMB", name: "Zambia", a2: "ZM", coords: [27.8493, -13.1339], anchors: [[27.8, -13.1]] },
@@ -303,7 +322,7 @@
     ];
 
     const getFlagEmoji = (a2) => {
-      if (!a2 || a2.length !== 2) return "🏳️️";
+      if (!a2 || a2.length !== 2) return "🏳️";
       return String.fromCodePoint(...a2.toUpperCase().split("").map(c => 127397 + c.charCodeAt(0)));
     };
 
@@ -850,9 +869,6 @@
 
         const zoom = d3.zoom().scaleExtent([1, 250]).on("zoom", (e) => {
           g.attr("transform", e.transform);
-          const k = e.transform.k;
-          // Scale down the Ukrainian flag badge dynamically so it stays proportionately tiny inside countries
-          g.selectAll(".map-flag-label").attr("font-size", `${Math.max(3.5, 9 / Math.sqrt(k))}px`);
         });
         zoomBehaviorRef.current = zoom;
         svg.call(zoom);
@@ -877,25 +893,20 @@
             .attr("style", d => {
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
-              const st = code ? countryStatusMap[code] : null;
-              let styleStr = "";
               if (code && modernCountryColors[code]) {
-                styleStr += `fill: ${modernCountryColors[code]} !important;`;
+                return `fill: ${modernCountryColors[code]} !important;`;
               }
-              if (st && st.abroadOnly) {
-                styleStr += ` fill-opacity: 0.35 !important;`;
-              }
-              return styleStr;
+              return "";
             })
             .attr("class", d => {
               const info = nameMap[d.id];
               const code = info ? info.a3 : null;
               const st = code ? countryStatusMap[code] : null;
               if (code && modernCountryColors[code]) {
-                return `stroke-[#1b233a] stroke-[0.35] cursor-pointer ${st && st.abroadOnly ? "abroad-fade" : ""}`;
+                return `stroke-[#1b233a] stroke-[0.35] cursor-pointer ${st && st.abroadOnly ? "abroad-border" : ""}`;
               }
               if (!st) return "fill-[#0f1320] stroke-[#1b233a] stroke-[0.35] hover:fill-[#182035] cursor-pointer";
-              return `neon-${st.neonColor} cursor-pointer stroke-white/30 stroke-[0.35] ${st.abroadOnly ? "abroad-fade" : ""}`;
+              return `neon-${st.neonColor} cursor-pointer stroke-white/30 stroke-[0.35] ${st.abroadOnly ? "abroad-border" : ""}`;
             })
             .on("click", (e, d) => {
               const baseInfo = nameMap[d.id] || { a3: "WLD", name: "Selected Territory" };
@@ -903,63 +914,20 @@
               onSelectModernCountry(match || baseInfo);
             });
 
-          // Proportionally scaled Ukrainian flag centered in unpossessed countries
-          countries.forEach(d => {
-            const info = nameMap[d.id];
-            const code = info ? info.a3 : null;
-            const st = code ? countryStatusMap[code] : null;
-            if (st && st.abroadOnly) {
-              const centroid = path.centroid(d);
-              if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-                g.append("text")
-                  .datum(d)
-                  .attr("class", "map-flag-label")
-                  .attr("x", centroid[0])
-                  .attr("y", centroid[1])
-                  .attr("text-anchor", "middle")
-                  .attr("dominant-baseline", "central")
-                  .attr("font-size", "7px")
-                  .style("pointer-events", "none")
-                  .text("🇺🇦");
-              }
-            }
-          });
-
           g.selectAll(".micro-pin")
             .data(MICRO_STATES)
             .enter().append("circle")
             .attr("cx", d => projection(d.coords)[0])
             .attr("cy", d => projection(d.coords)[1])
             .attr("r", 2.6)
-            .attr("style", d => {
-              const st = countryStatusMap[d.a3];
-              let styleStr = modernCountryColors[d.a3] ? `fill: ${modernCountryColors[d.a3]} !important;` : "";
-              if (st && st.abroadOnly) styleStr += ` fill-opacity: 0.35 !important;`;
-              return styleStr;
-            })
+            .attr("style", d => modernCountryColors[d.a3] ? `fill: ${modernCountryColors[d.a3]} !important;` : "")
             .attr("class", d => {
               const st = countryStatusMap[d.a3];
-              if (modernCountryColors[d.a3]) return `stroke-cyan-400/60 cursor-pointer ${st && st.abroadOnly ? "abroad-fade" : ""}`;
+              if (modernCountryColors[d.a3]) return `stroke-cyan-400/60 cursor-pointer ${st && st.abroadOnly ? "abroad-border" : ""}`;
               if (!st) return "fill-[#242e44] stroke-cyan-400/60 hover:fill-[#00f0ff] cursor-pointer";
-              return `neon-${st.neonColor} stroke-white/70 ${st.abroadOnly ? "abroad-fade" : ""}`;
+              return `neon-${st.neonColor} stroke-white/70 ${st.abroadOnly ? "abroad-border" : ""}`;
             })
             .on("click", (e, d) => onSelectModernCountry({ a3: d.a3, name: d.name, a2: d.a2 }));
-
-          MICRO_STATES.forEach(d => {
-            const st = countryStatusMap[d.a3];
-            if (st && st.abroadOnly) {
-              const pt = projection(d.coords);
-              if (pt) {
-                g.append("text")
-                  .attr("x", pt[0])
-                  .attr("y", pt[1] - 5)
-                  .attr("text-anchor", "middle")
-                  .attr("font-size", "6px")
-                  .style("pointer-events", "none")
-                  .text("🇺🇦");
-              }
-            }
-          });
 
           g.selectAll(".territory-pin")
             .data(TERRITORIES_LIST)
@@ -2023,16 +1991,30 @@
     function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onNavigateToCoin, onAddClick }) {
       const [query, setQuery] = useState("");
       const [vaultMode, setVaultMode] = useState("all");
+      const [sortBy, setSortBy] = useState("default"); // "default", "possession", "continent"
 
       const filtered = useMemo(() => {
-        return coins.filter(c => {
+        let result = coins.filter(c => {
           if (vaultMode === "sovereign" && c.isHistorical) return false;
           if (vaultMode === "historical" && !c.isHistorical) return false;
 
           const searchTarget = `${c.countryName} ${c.denomination} ${c.mint || ""} ${c.ruler || ""} ${c.year || ""}`.toLowerCase();
           return searchTarget.includes(query.toLowerCase());
         });
-      }, [coins, query, vaultMode]);
+
+        // Sorting logic
+        if (sortBy === "possession") {
+          result.sort((a, b) => (b.inPossession === true) - (a.inPossession === true));
+        } else if (sortBy === "continent") {
+          result.sort((a, b) => {
+            const contA = getContinentForCode(a.countryCode);
+            const contB = getContinentForCode(b.countryCode);
+            return contA.localeCompare(contB);
+          });
+        }
+
+        return result;
+      }, [coins, query, vaultMode, sortBy]);
 
       return (
         <div className="flex flex-col h-full p-3.5 overflow-y-auto hide-scrollbar space-y-3">
@@ -2048,22 +2030,34 @@
             <button onClick={onAddClick} className="bg-[#00f0ff] font-bold text-black text-xs px-3 rounded-xl shadow-lg">+ Add</button>
           </div>
 
-          <div className="flex gap-1.5 bg-[#090d18] p-1 rounded-xl border border-slate-800 text-xs">
-            <button 
-              onClick={() => setVaultMode("all")}
-              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "all" ? "bg-slate-800 text-white" : "text-slate-400"}`}>
-              All ({coins.length})
-            </button>
-            <button 
-              onClick={() => setVaultMode("sovereign")}
-              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "sovereign" ? "bg-cyan-500 text-black" : "text-slate-400"}`}>
-              Modern ({coins.filter(c => !c.isHistorical).length})
-            </button>
-            <button 
-              onClick={() => setVaultMode("historical")}
-              className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "historical" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
-              Ancient & Medieval ({coins.filter(c => c.isHistorical).length})
-            </button>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-1.5 bg-[#090d18] p-1 rounded-xl border border-slate-800 text-xs flex-1">
+              <button 
+                onClick={() => setVaultMode("all")}
+                className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "all" ? "bg-slate-800 text-white" : "text-slate-400"}`}>
+                All ({coins.length})
+              </button>
+              <button 
+                onClick={() => setVaultMode("sovereign")}
+                className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "sovereign" ? "bg-cyan-500 text-black" : "text-slate-400"}`}>
+                Modern ({coins.filter(c => !c.isHistorical).length})
+              </button>
+              <button 
+                onClick={() => setVaultMode("historical")}
+                className={`flex-1 py-1 rounded-lg font-bold ${vaultMode === "historical" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
+                History ({coins.filter(c => c.isHistorical).length})
+              </button>
+            </div>
+
+            {/* Sort Dropdown */}
+            <select 
+              value={sortBy} 
+              onChange={e => setSortBy(e.target.value)}
+              className="bg-[#101524] border border-slate-800 text-xs text-slate-300 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-[#00f0ff]">
+              <option value="default">Sort: Default</option>
+              <option value="possession">Sort: In Hand / Abroad</option>
+              <option value="continent">Sort: Continents</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-8">
@@ -2249,7 +2243,7 @@
               <div className="p-2.5 bg-[#12182b] rounded-xl border border-slate-800 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-white">In Physical Possession</div>
-                  <div className="text-[10px] text-slate-400">If unchecked, marked with 🇺🇦 flag badge</div>
+                  <div className="text-[10px] text-slate-400">If unchecked, marked with solid black inner border</div>
                 </div>
                 <input 
                   type="checkbox" 
