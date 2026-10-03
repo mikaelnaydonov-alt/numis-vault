@@ -397,50 +397,39 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       useEffect(() => {
         setIsSyncing(true);
-        fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": API_KEY }
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.record) {
-              setVaultData({
-                coins: data.record.coins || [],
-                historicalEntities: data.record.historicalEntities || []
-              });
-              if (data.record.modernCountryColors) {
-                setModernCountryColors(data.record.modernCountryColors);
-              }
-            }
-          })
-          .catch(err => console.error("Cloud fetch error:", err))
-          .finally(() => setIsSyncing(false));
-      }, []);
+_supabase
+  .from('coins')
+  .select('*')
+  .then(({ data, error }) => {
+      if (error) throw error;
+      if (data) {
+          setVaultData(prev => ({
+              ...prev,
+              coins: data || []
+          }));
+      }
+  })
+  .catch(err => console.error("Cloud fetch error:", err))
+  .finally(() => setIsSyncing(false));
 
-      const pushToCloud = async (updated) => {
-        setVaultData(updated);
-        setIsSyncing(true);
-        setCloudStatus("saving");
-
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Master-Key": API_KEY,
-              "X-Bin-Versioning": "false"
-            },
-            body: JSON.stringify(updated)
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          setCloudStatus("saved");
-          setTimeout(() => setCloudStatus("idle"), 3000);
-        } catch (err) {
-          console.error("Cloud sync error:", err);
-          setCloudStatus("error");
-        } finally {
-          setIsSyncing(false);
-        }
-      };
+     const pushToCloud = async (updated) => {
+    setVaultData(updated);
+    setIsSyncing(true);
+    setCloudStatus("saving");
+    try {
+        const { error } = await _supabase
+            .from('coins')
+            .upsert(updated.coins);
+        
+        if (error) throw error;
+        setCloudStatus("saved");
+    } catch (err) {
+        console.error("Cloud save error:", err);
+        setCloudStatus("error");
+    } finally {
+        setIsSyncing(false);
+    }
+};
 
       const sovereignCount = useMemo(() => {
         const set = new Set();
