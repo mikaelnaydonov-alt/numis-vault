@@ -2221,35 +2221,36 @@ useEffect(() => {
   });
 };
 
-    function AddEditCoinModal({ initialCountry, editingCoin }) {
-  if (editingCoin) {
+function AddEditCoinModal({ initialCountry, editingCoin, onClose, onSave }) {
+  const [formData, setFormData] = useState(() => {
+    if (editingCoin) {
+      return {
+        ...editingCoin,
+        shape: editingCoin.shape || "round",
+        obverse_image: editingCoin.obverse_image || null,
+        reverse_image: editingCoin.reverse_image || null
+      };
+    }
     return {
-      ...editingCoin,
-      shape: editingCoin.shape || "round",
-      obverse_image: editingCoin.obverse_image || null,
-      reverse_image: editingCoin.reverse_image || null
+      countryCode: initialCountry?.a3 || "",
+      countryName: initialCountry?.name || "",
+      isTerritory: !!initialCountry?.isTerritory,
+      motherCountry: initialCountry?.motherCountry || "",
+      denomination: "",
+      year: "",
+      ruler: "",
+      mint: "",
+      grade: "UNC",
+      inPossession: true,
+      isUnion: false,
+      isHistorical: false,
+      neonColor: "cyan",
+      shape: "round",
+      obverse_image: null,
+      reverse_image: null,
+      notes: ""
     };
-  }
-  return {
-    countryCode: initialCountry?.a3 || "",
-    countryName: initialCountry?.name || "",
-    isTerritory: !!initialCountry?.isTerritory,
-    motherCountry: initialCountry?.motherCountry || "",
-    denomination: "",
-    year: "",
-    ruler: "",
-    mint: "",
-    grade: "UNC",
-    inPossession: true,
-    isUnion: false,
-    isHistorical: false,
-    neonColor: "cyan",
-    shape: "round",
-    obverse_image: null,
-    reverse_image: null,
-    notes: ""
-  };
-}
+  });
 
 
       const currentFlag = useMemo(() => {
