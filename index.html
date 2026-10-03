@@ -11,6 +11,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://unpkg.com/topojson-client@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -41,8 +42,10 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-    const BIN_ID = "6abc1b08ac6210605a031f30";
-    const API_KEY = "$2a$10$2oCVpwPkbYGZxv1JB6qPNuTnfF/9p4UT0f8.rSNqGAy5bq4WmEjey";
+const SUPABASE_URL = "https://enouipxcxbailtyjnpd.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_mXpY5hNS9Jc-7vyJbg-EL8w_ZcAYt8ir";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
     const PALETTE_64 = [
       "#00f0ff","#ff007f","#39ff14","#ffaa00","#b026ff","#ff1744","#00e5ff","#76ff03",
