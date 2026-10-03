@@ -1943,7 +1943,16 @@ useEffect(() => {
         </div>
       );
     }
-function CountryInspectorModal({ country, coins, modernCountryColors, onSetModernCountryColor, onClose, onAddNewCoin, onEditCoin, onDeleteCoin }) {
+function CountryInspectorModal({
+  country,
+  coins,
+  modernCountryColors,
+  onSetModernCountryColor,
+  onClose,
+  onAddNewCoin,
+  onEditCoin,
+  onDeleteCoin
+}) {
   const countryCoins = useMemo(() => {
     return (coins || []).filter(c => c.countryCode === country.a3);
   }, [coins, country]);
@@ -1953,45 +1962,68 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-[#0e1424] border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-        
+
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800 px-4 pt-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">{flag}</span>
-            <h3 className="text-sm font-black text-white">{country.name}</h3>
+            <h3 className="text-sm font-black text-white">
+              {country.name}
+            </h3>
           </div>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white text-sm">
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-white text-sm"
+          >
             ✕
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="p-4 overflow-y-auto space-y-4">
-          
+
           {/* Manual Color Selection */}
           <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-2">
+
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-white text-xs">Manual Map Color:</span>
-              {modernCountryColors && modernCountryColors[country.a3] && (
-                <button
-                  type="button"
-                  onClick={() => onSetModernCountryColor(country.a3, null)}
-                  className="text-[10px] text-red-400 hover:underline"
-                >
-                  Reset Color
-                </button>
-              )}
+              <span className="font-semibold text-white text-xs">
+                Manual Map Color:
+              </span>
+
+              {modernCountryColors &&
+                modernCountryColors[country.a3] && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onSetModernCountryColor(country.a3, null)
+                    }
+                    className="text-[10px] text-red-400 hover:underline"
+                  >
+                    Reset Color
+                  </button>
+                )}
             </div>
+
             <div className="flex gap-2 items-center">
-              {typeof VIBRANT_PALETTE_8 !== 'undefined' && VIBRANT_PALETTE_8.map(color => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => onSetModernCountryColor(country.a3, color)}
-                  className="w-5 h-5 rounded-full border border-slate-700 transition-transform hover:scale-110"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+              {typeof VIBRANT_PALETTE_8 !== "undefined" &&
+                VIBRANT_PALETTE_8.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() =>
+                      onSetModernCountryColor(country.a3, color)
+                    }
+                    style={{ backgroundColor: color }}
+                    className={`w-7 h-7 rounded-lg transition-transform ${
+                      modernCountryColors &&
+                      modernCountryColors[country.a3] === color
+                        ? "scale-115 ring-2 ring-white"
+                        : "hover:scale-105 opacity-90"
+                    }`}
+                  />
+                ))}
             </div>
           </div>
 
@@ -2008,19 +2040,29 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
           </div>
 
           {/* Coin List Section */}
-          <div className="text-xs font-bold text-cyan-400">Coins in Vault</div>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {countryCoins.length === 0 ? (
-              <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
-                No coins recorded for {country.name} yet.
-              </div>
-            ) : (
-              countryCoins.map(coin => (
-                <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
-                  <span className="text-white text-xs">{coin.name || "Coin"}</span>
+          <div>
+            <div className="text-xs font-bold text-cyan-400 mb-1.5">
+              Existing Coins & Dates ({countryCoins.length}):
+            </div>
+
+            <div className="space-y-1.5 max-h-48 overflow-y-auto hide-scrollbar">
+              {countryCoins.length === 0 ? (
+                <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
+                  No coins recorded for {country.name} yet.
                 </div>
-              ))
-            )}
+              ) : (
+                countryCoins.map(coin => (
+                  <div
+                    key={coin.id}
+                    className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between"
+                  >
+                    <span className="text-white text-xs">
+                      {coin.name || "Coin"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
         </div>
@@ -2029,58 +2071,6 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
   );
 }
 
-
-
-
-           <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-2">
-  <div className="flex items-center justify-between">
-    <span className="font-semibold text-white text-xs">Manual Map Color:</span>
-    {modernCountryColors[country.a3] && (
-      <button
-        type="button"
-        onClick={() => onSetModernCountryColor(country.a3, null)}
-        className="text-[10px] text-red-400 hover:underline"
-      >
-        Reset Color
-      </button>
-    )}
-  </div>
-</div>
-
-              </div>
-              <div className="flex gap-2 items-center">
-                {VIBRANT_PALETTE_8.map(color => (
-                  <button
-                    type="button"
-                    key={color}
-                    onClick={() => onSetModernCountryColor(country.a3, color)}
-                    style={{ backgroundColor: color }}
-                    className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors[country.a3] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-90"}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <button 
-              onClick={() => onAddNewCoin(country)}
-              className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5">
-              <span>+</span>
-              <span>Add New Coin for {country.name}</span>
-            </button>
-
-            <div>
-              <div className="text-xs font-bold text-cyan-400 mb-1.5">Existing Coins & Dates ({countryCoins.length}):</div>
-              <div className="space-y-1.5 max-h-48 overflow-y-auto hide-scrollbar">
-                {countryCoins.length === 0 ? (
-                  <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
-                    No coins recorded for {country.name} yet.
-                  </div>
-                ) : (
-                  countryCoins.map(coin => (
-  <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
-    <span className="text-white text-xs">{coin.name || "Coin"}</span>
-  </div>
-))
 
     // --- COLLECTION VAULT COMPONENT ---
     function CollectionVault({ coins, historicalEntities, onDeleteCoin, onEditCoin, onNavigateToCoin, onAddClick }) {
