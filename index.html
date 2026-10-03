@@ -395,23 +395,23 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const [modernCountryColors, setModernCountryColors] = useState({});
       const [inspectingCountry, setInspectingCountry] = useState(null);
 
-      useEffect(() => {
-        setIsSyncing(true);
-_supabase
-  .from('coins')
-  .select('*')
-  .then(({ data, error }) => {
-      if (error) throw error;
-      if (data) {
-          setVaultData(prev => ({
-              ...prev,
-              coins: data || []
-          }));
-      }
-  })
-  .catch(err => console.error("Cloud fetch error:", err))
-  .finally(() => setIsSyncing(false));
-
+useEffect(() => {
+    setIsSyncing(true);
+    _supabase
+      .from('coins')
+      .select('*')
+      .then(({ data, error }) => {
+          if (error) throw error;
+          if (data) {
+              setVaultData(prev => ({
+                  ...prev,
+                  coins: data || []
+              }));
+          }
+      })
+      .catch(err => console.error("Cloud fetch error:", err))
+      .finally(() => setIsSyncing(false));
+}, []);
      const pushToCloud = async (updated) => {
     setVaultData(updated);
     setIsSyncing(true);
