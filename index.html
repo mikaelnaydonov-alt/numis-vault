@@ -458,10 +458,9 @@ useEffect(() => {
         
         if (error) throw error;
         setCloudStatus("saved");
-    } catch (err) {
-        console.error("Cloud save error:", err);
-        setCloudStatus("error");
-    } finally {
+   } catch (err) {
+  console.error("Cloud fetch error:", err);
+ finally {
         setIsSyncing(false);
     }
 };
