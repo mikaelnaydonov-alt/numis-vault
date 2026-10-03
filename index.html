@@ -398,21 +398,54 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const [inspectingCountry, setInspectingCountry] = useState(null);
 
 useEffect(() => {
+  let cancelled = false;
+
+  const loadVault = async () => {
     setIsSyncing(true);
-    _supabase
-      .from('coins')
-      .select('*')
-      .then(({ data, error }) => {
-          if (error) throw error;
-          if (data) {
-              setVaultData(prev => ({
-                  ...prev,
-                  coins: data || []
-              }));
-          }
-      })
-      .catch(err => console.error("Cloud fetch error:", err))
-      .finally(() => setIsSyncing(false));
+    setCloudStatus("saving");
+
+    try {
+      const { data, error } = await _supabase
+        .from("vault")
+        .select("data")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!cancelled && data?.data) {
+        const cloudVault = data.data;
+
+        setVaultData({
+          coins: Array.isArray(cloudVault.coins)
+            ? cloudVault.coins
+            : [],
+          historicalEntities: Array.isArray(cloudVault.historicalEntities)
+            ? cloudVault.historicalEntities
+            : []
+        });
+
+        setModernCountryColors(
+          cloudVault.modernCountryColors || {}
+        );
+
+        setCloudStatus("saved");
+      }
+    } catch (err) {
+      console.error("Cloud fetch error:", err);
+      setCloudStatus("error");
+    } finally {
+      if (!cancelled) {
+        setIsSyncing(false);
+      }
+    }
+  };
+
+  loadVault();
+
+  return () => {
+    cancelled = true;
+  };
 }, []);
      const pushToCloud = async (updated) => {
     setVaultData(updated);
