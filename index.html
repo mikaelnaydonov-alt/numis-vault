@@ -1960,7 +1960,7 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
             <span className="text-xl">{flag}</span>
             <h3 className="text-sm font-black text-white">{country.name}</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm">
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-white text-sm">
             ✕
           </button>
         </div>
@@ -1995,10 +1995,12 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
             </div>
           </div>
 
+          {/* Add New Coin Button */}
           <div>
             <button
+              type="button"
               onClick={() => onAddNewCoin(country)}
-              className="w-full py-2.5 bg-[#00f0ff] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 bg-[#00f0ff] hover:bg-[#00d0df] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5"
             >
               <span>+</span>
               <span>Add New Coin for {country.name}</span>
@@ -2014,13 +2016,6 @@ function CountryInspectorModal({ country, coins, modernCountryColors, onSetModer
               </div>
             ) : (
               countryCoins.map(coin => (
-                <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
-                  <span className="text-white text-xs">{coin.name || "Coin"}</span>
-                </div>
-              ))
-            )}
-          </div>
-
                 <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
                   <span className="text-white text-xs">{coin.name || "Coin"}</span>
                 </div>
