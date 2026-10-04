@@ -454,21 +454,39 @@ useEffect(() => {
 }, []);
 
 const pushToCloud = async (updated) => {
-     const pushToCloud = async (updated) => {
-    setVaultData(updated);
-    setIsSyncing(true);
-    setCloudStatus("saving");
-    try {
-        const { error } = await _supabase
-            .from('coins')
-            .upsert(updated.coins);
-        
-        if (error) throw error;
-        setCloudStatus("saved");
-   } catch (err) {
-  console.error("Cloud fetch error:", err);
+  setVaultData(updated);
+  setIsSyncing(true);
+  setCloudStatus("saving");
 
+  try {
+    const { error } = await _supabase
+      .from("vault")
+      .upsert({
+        id: 1,
+        data: {
+          coins: updated.coins || [],
+          historicalEntities: updated.historicalEntities || [],
+          modernCountryColors: updated.modernCountryColors || {}
+        },
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+
+    setCloudStatus("saved");
+  } catch (err) {
+    console.error("Cloud save error:", err);
+
+    alert(
+      `Supabase save failed:\n\n${err.message || JSON.stringify(err)}`
+    );
+
+    setCloudStatus("error");
+  } finally {
+    setIsSyncing(false);
+  }
 };
+
 
       const sovereignCount = useMemo(() => {
         const set = new Set();
