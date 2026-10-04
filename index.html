@@ -467,9 +467,7 @@ const pushToCloud = async (updated) => {
         setCloudStatus("saved");
    } catch (err) {
   console.error("Cloud fetch error:", err);
- finally {
-        setIsSyncing(false);
-    }
+
 };
 
       const sovereignCount = useMemo(() => {
