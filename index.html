@@ -431,21 +431,27 @@ useEffect(() => {
 
         setCloudStatus("saved");
       }
-   } catch (err) {
-  console.error("Cloud fetch error:", err);
+      } catch (err) {
+      console.error("Cloud fetch error:", err);
 
-  alert(
-    `Supabase load failed:\n\n${err.message || JSON.stringify(err)}`
-  );
+      alert(
+        `Supabase load failed:\n\n${err.message || JSON.stringify(err)}`
+      );
 
-  setCloudStatus("error");
-} finally {
+      setCloudStatus("error");
+    } finally {
       if (!cancelled) {
         setIsSyncing(false);
       }
     }
   };
 
+  loadVault();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
   loadVault();
 
   return () => {
