@@ -431,7 +431,7 @@ useEffect(() => {
 
         setCloudStatus("saved");
       }
-      } catch (err) {
+    } catch (err) {
       console.error("Cloud fetch error:", err);
 
       alert(
@@ -452,12 +452,7 @@ useEffect(() => {
     cancelled = true;
   };
 }, []);
-  loadVault();
-
-  return () => {
-    cancelled = true;
-  };
-}, []);
+      
      const pushToCloud = async (updated) => {
     setVaultData(updated);
     setIsSyncing(true);
