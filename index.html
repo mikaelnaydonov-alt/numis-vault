@@ -452,7 +452,8 @@ useEffect(() => {
     cancelled = true;
   };
 }, []);
-      
+
+const pushToCloud = async (updated) => {
      const pushToCloud = async (updated) => {
     setVaultData(updated);
     setIsSyncing(true);
