@@ -21,13 +21,24 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       touch-action: manipulation;
     }
-    .neon-cyan { fill: #00f0ff !important; filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.6)); }
-    .neon-magenta { fill: #ff007f !important; filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.6)); }
-    .neon-lime { fill: #39ff14 !important; filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.6)); }
-    .neon-amber { fill: #ffaa00 !important; filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.6)); }
-    .neon-purple { fill: #b026ff !important; filter: drop-shadow(0 0 5px rgba(176, 38, 255, 0.6)); }
-    .neon-orange { fill: #ff6600 !important; }
+    .neon-blue { fill: #0066ff !important; filter: drop-shadow(0 0 5px rgba(0, 102, 255, 0.6)); }
+.neon-pink { fill: #ff1493 !important; filter: drop-shadow(0 0 5px rgba(255, 20, 147, 0.6)); }
+.neon-green { fill: #00ff88 !important; filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.6)); }
+.neon-yellow { fill: #fff000 !important; filter: drop-shadow(0 0 5px rgba(255, 240, 0, 0.6)); }
+.neon-violet { fill: #7f00ff !important; filter: drop-shadow(0 0 5px rgba(127, 0, 255, 0.6)); }
+.neon-red { fill: #ff1744 !important; filter: drop-shadow(0 0 5px rgba(255, 23, 68, 0.6)); }
 
+.neon-teal { fill: #00ffd5 !important; filter: drop-shadow(0 0 5px rgba(0, 255, 213, 0.6)); }
+.neon-sky { fill: #00bfff !important; filter: drop-shadow(0 0 5px rgba(0, 191, 255, 0.6)); }
+.neon-rose { fill: #ff3377 !important; filter: drop-shadow(0 0 5px rgba(255, 51, 119, 0.6)); }
+.neon-gold { fill: #ffd700 !important; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.6)); }
+.neon-aqua { fill: #00ffea !important; filter: drop-shadow(0 0 5px rgba(0, 255, 234, 0.6)); }
+.neon-coral { fill: #ff4f5e !important; filter: drop-shadow(0 0 5px rgba(255, 79, 94, 0.6)); }
+
+.neon-indigo { fill: #4b00ff !important; filter: drop-shadow(0 0 5px rgba(75, 0, 255, 0.6)); }
+.neon-mint { fill: #00ffb3 !important; filter: drop-shadow(0 0 5px rgba(0, 255, 179, 0.6)); }
+.neon-fuchsia { fill: #ff00ff !important; filter: drop-shadow(0 0 5px rgba(255, 0, 255, 0.6)); }
+.neon-electric-blue { fill: #008cff !important; filter: drop-shadow(0 0 5px rgba(0, 140, 255, 0.6)); }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
@@ -44,7 +55,7 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const SUPABASE_URL = "https://enouipxcxbailtyjnpd.supabase.co";
+const SUPABASE_URL = "https://enouipxcdxbailtyjnpd.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_mXpY5hNS9Jc-7vyJbg-EL8w_ZcAYt8ir";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
