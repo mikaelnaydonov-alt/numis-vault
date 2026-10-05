@@ -919,24 +919,37 @@ const pushToCloud = async (updated) => {
       const zoomBehaviorRef = useRef(null);
       const projectionRef = useRef(d3.geoNaturalEarth1().scale(150).translate([400, 240]));
 
-      const countryStatusMap = useMemo(() => {
-        const map = {};
-        coins.forEach(c => {
-          if (c.isHistorical) return;
-          let targets = [c.countryCode];
-          if (WEST_AFRICAN_CFA.includes(c.countryCode) && c.isUnion) targets = WEST_AFRICAN_CFA;
-          if (EASTERN_CARIBBEAN.includes(c.countryCode) && c.isUnion) targets = EASTERN_CARIBBEAN;
+     const countryStatusMap = useMemo(() => {
+  const map = {};
 
-          targets.forEach(code => {
-            if (!map[code]) {
-              map[code] = { collected: true, neonColor: c.neonColor, abroadOnly: !c.inPossession };
-            } else if (c.inPossession) {
-              map[code].abroadOnly = false;
-            }
-          });
-        });
-        return map;
-      }, [coins]);
+  coins.forEach(c => {
+    if (c.isHistorical) return;
+
+    let targets = [c.countryCode];
+
+    if (WEST_AFRICAN_CFA.includes(c.countryCode) && c.isUnion) {
+      targets = WEST_AFRICAN_CFA;
+    }
+
+    if (EASTERN_CARIBBEAN.includes(c.countryCode) && c.isUnion) {
+      targets = EASTERN_CARIBBEAN;
+    }
+
+    targets.forEach(code => {
+      if (!map[code]) {
+        map[code] = {
+          collected: true,
+          neonColor: c.neonColor || "cyan",
+          abroadOnly: c.inPossession !== true
+        };
+      } else if (c.inPossession === true) {
+        map[code].abroadOnly = false;
+      }
+    });
+  });
+
+  return map;
+}, [coins]);
 
       useEffect(() => {
         const width = 800;
@@ -1904,18 +1917,49 @@ const pushToCloud = async (updated) => {
                         No coins attached to this empire yet.
                       </div>
                     ) : (
-                      coinsForInspectedEntity.map(coin => (
-                        <div key={coin.id} className="bg-[#10162a] border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center">
-                          <div>
-                            <div className="text-white font-bold">{coin.denomination}</div>
-                            <div className="text-[10px] text-slate-400">{coin.ruler ? `${coin.ruler} • ` : ""}{formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}</div>
-                          </div>
-                          <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
-                            {coin.grade || "UNC"}
-                          </span>
-                        </div>
-                      ))
-                    )}
+             coinsForInspectedEntity.map(coin => {
+  const notInHand = coin.inPossession !== true;
+
+  return (
+    <div
+      key={coin.id}
+      onClick={() => onEditCoin(coin)}
+      className="border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center cursor-pointer transition-all hover:border-cyan-400/70 hover:brightness-110"
+      style={{
+        background: notInHand
+          ? "repeating-linear-gradient(135deg, #10162a 0px, #10162a 7px, #26304a 7px, #26304a 10px)"
+          : "#10162a"
+      }}
+    >
+      <div>
+        <div className="text-white font-bold">
+          {coin.denomination}
+        </div>
+
+        <div className="text-[10px] text-slate-400">
+          {coin.ruler ? `${coin.ruler} • ` : ""}
+          {formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}
+        </div>
+
+        {notInHand && (
+          <div className="text-[9px] text-yellow-400 mt-1 font-semibold">
+            NOT IN HAND
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
+          {coin.grade || "UNC"}
+        </span>
+
+        <span className="text-[10px] text-cyan-400">
+          ✏️
+        </span>
+      </div>
+    </div>
+  );
+})
                   </div>
                 </div>
 
