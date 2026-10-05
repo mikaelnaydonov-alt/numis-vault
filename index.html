@@ -1916,7 +1916,7 @@ const pushToCloud = async (updated) => {
                       <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
                         No coins attached to this empire yet.
                       </div>
-                   ) : (
+                  ) : (
   coinsForInspectedEntity.map(coin => {
     const notInHand = coin.inPossession !== true;
 
@@ -1961,7 +1961,6 @@ const pushToCloud = async (updated) => {
     );
   })
 )
-
       <div className="flex items-center gap-2">
         <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
           {coin.grade || "UNC"}
