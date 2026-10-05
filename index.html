@@ -1916,50 +1916,51 @@ const pushToCloud = async (updated) => {
                       <div className="p-3 bg-[#101526] rounded-xl text-center text-slate-500 text-xs">
                         No coins attached to this empire yet.
                       </div>
-                    ) : (
-             {coinsForInspectedEntity.map(coin => {
-  const notInHand = coin.inPossession !== true;
+                   ) : (
+  coinsForInspectedEntity.map(coin => {
+    const notInHand = coin.inPossession !== true;
 
-  return (
-    <div
-      key={coin.id}
-      onClick={() => onEditCoin(coin)}
-      className="border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center cursor-pointer transition-all hover:border-cyan-400/70 hover:brightness-110"
-      style={{
-        background: notInHand
-          ? "repeating-linear-gradient(135deg, #10162a 0px, #10162a 7px, #26304a 7px, #26304a 10px)"
-          : "#10162a"
-      }}
-    >
-      <div>
-        <div className="text-white font-bold">
-          {coin.denomination}
-        </div>
-
-        <div className="text-[10px] text-slate-400">
-          {coin.ruler ? `${coin.ruler} • ` : ""}
-          {formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}
-        </div>
-
-        {notInHand && (
-          <div className="text-[9px] text-yellow-400 mt-1 font-semibold">
-            NOT IN HAND
+    return (
+      <div
+        key={coin.id}
+        onClick={() => onEditCoin(coin)}
+        className="border border-slate-800 p-2 rounded-xl text-xs flex justify-between items-center cursor-pointer transition-all hover:border-cyan-400/70 hover:brightness-110"
+        style={{
+          background: notInHand
+            ? "repeating-linear-gradient(135deg, #10162a 0px, #10162a 7px, #26304a 7px, #26304a 10px)"
+            : "#10162a"
+        }}
+      >
+        <div>
+          <div className="text-white font-bold">
+            {coin.denomination}
           </div>
-        )}
-      </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
-          {coin.grade || "UNC"}
-        </span>
+          <div className="text-[10px] text-slate-400">
+            {coin.ruler ? `${coin.ruler} • ` : ""}
+            {formatYearDisplay(coin.year)} • {coin.mint || "Mint unknown"}
+          </div>
 
-        <span className="text-[10px] text-cyan-400">
-          ✏️
-        </span>
+          {notInHand && (
+            <div className="text-[9px] text-yellow-400 mt-1 font-semibold">
+              NOT IN HAND
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
+            {coin.grade || "UNC"}
+          </span>
+
+          <span className="text-[10px] text-cyan-400">
+            ✏️
+          </span>
+        </div>
       </div>
-    </div>
-  );
-})}
+    );
+  })
+)
 
       <div className="flex items-center gap-2">
         <span className="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-mono">
