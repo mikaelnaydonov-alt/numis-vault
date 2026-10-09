@@ -1696,7 +1696,7 @@ const pushToCloud = async (updated) => {
                       required 
                       value={entityMeta.name} 
                       onChange={e => setEntityMeta({...entityMeta, name: e.target.value})}
-                      placeholder="" 
+                       placeholder=""
                       className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2 text-white" 
                     />
                   </div>
@@ -2190,9 +2190,9 @@ function CountryInspectorModal({
                     key={coin.id}
                     className="bg-[#10162a] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between"
                   >
-                    <span className="text-white text-xs">
-                      {coin.name || "Coin"}
-                    </span>
+                 <span className="text-white text-xs">
+  {coin.denomination || coin.name || "Unnamed coin"}
+</span>
                   </div>
                 ))
               )}
@@ -2434,7 +2434,7 @@ function CountryInspectorModal({
               {onSetModernCountryColor && (
                 <div className="bg-[#12182b] p-2.5 rounded-xl border border-slate-800 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-white">Manual Map Color (8 Vibrant Options):</span>
+                    <span className="font-semibold text-white">Manual Map Color (24 Vibrant Options):</span>
                     {modernCountryColors && modernCountryColors[formData.countryCode] && (
                       <button 
                         type="button"
@@ -2465,7 +2465,6 @@ function CountryInspectorModal({
                     required
                     value={formData.denomination}
                     onChange={e => setFormData({...formData, denomination: e.target.value})}
-                    placeholder="e.g. Denarius, Dollar"
                     className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white"
                   />
                 </div>
@@ -2474,7 +2473,6 @@ function CountryInspectorModal({
                   <input 
                     value={formData.year}
                     onChange={e => setFormData({...formData, year: e.target.value})}
-                    placeholder="e.g. 112"
                     className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white"
                   />
                 </div>
@@ -2486,7 +2484,6 @@ function CountryInspectorModal({
                   <input 
                     value={formData.ruler}
                     onChange={e => setFormData({...formData, ruler: e.target.value})}
-                    placeholder="e.g. Trajan"
                     className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white"
                   />
                 </div>
@@ -2495,7 +2492,6 @@ function CountryInspectorModal({
                   <input 
                     value={formData.mint}
                     onChange={e => setFormData({...formData, mint: e.target.value})}
-                    placeholder="e.g. Rome"
                     className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white"
                   />
                 </div>
@@ -2576,7 +2572,6 @@ function CountryInspectorModal({
                 <textarea 
                   value={formData.notes}
                   onChange={e => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Additional details..."
                   rows="2"
                   className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white resize-none"
                 />
