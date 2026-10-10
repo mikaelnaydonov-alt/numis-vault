@@ -2649,11 +2649,24 @@ function CountryInspectorModal({
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1 font-bold text-amber-400">Coin Shape</label>
-                  <select 
-                    value={formData.shape}
-                    onChange={e => setFormData({...formData, shape: e.target.value})}
-                    <div 
+  <label className="text-slate-400 block mb-1 font-bold text-amber-400">
+    Coin Shape
+  </label>
+
+  <select
+    value={formData.shape}
+    onChange={e =>
+      setFormData({ ...formData, shape: e.target.value })
+    }
+    className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white font-medium"
+  >
+    <option value="round">Round</option>
+    <option value="square">Square</option>
+    <option value="rectangular">Rectangular</option>
+    <option value="octagonal">Octagonal</option>
+    <option value="irregular">Irregular</option>
+  </select>
+</div>
   className="w-full bg-[#151c30] border border-slate-700 rounded-xl p-2.5 text-white font-medium"
 >
 </div>
