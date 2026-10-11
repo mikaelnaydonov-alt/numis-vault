@@ -607,262 +607,251 @@ const handleNavigateToCoinOnMap = (coin) => {
 };
 
       return (
-        <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
-          
-          <header className="p-3 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h1 className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
-                <span>MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span></span>
-                <span className="text-[9px] bg-slate-800 text-slate-400 font-mono px-1.5 py-0.5 rounded border border-slate-700/60 ml-1">est. 2013</span>
-              </h1>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                {cloudStatus === "saving" && <span className="text-cyan-400 animate-pulse font-bold">• Saving to Cloud...</span>}
-                {cloudStatus === "saved" && <span className="text-emerald-400 font-bold">✓ Saved to Cloud</span>}
-                {cloudStatus === "error" && <span className="text-red-400 font-bold">✕ Sync Warning</span>}
-                {cloudStatus === "idle" && <span>Live Cloud Linked</span>}
-              </div>
+      <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
+        
+        <header className="p-3 bg-[#0a0e1a] border-b border-slate-800 flex items-center justify-between">
+          <div>
+            <h1 className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_8px_#00f0ff]"></span>
+              <span>MISHA’S <span className="text-[#00f0ff]">COIN VAULT</span></span>
+              <span className="text-[9px] bg-slate-800 text-slate-400 font-mono px-1.5 py-0.5 rounded border border-slate-700/60 ml-1">est. 2013</span>
+            </h1>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+              {cloudStatus === "saving" && <span className="text-cyan-400 animate-pulse font-bold">• Saving to Cloud...</span>}
+              {cloudStatus === "saved" && <span className="text-emerald-400 font-bold">✓ Saved to Cloud</span>}
+              {cloudStatus === "error" && <span className="text-red-400 font-bold">✕ Sync Warning</span>}
+              {cloudStatus === "idle" && <span>Live Cloud Linked</span>}
             </div>
+          </div>
 
-            <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-              <button 
-                onClick={() => setView("map")} 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                Map
-              </button>
-              <button 
-                onClick={() => setView("vault")} 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
-                Vault ({(vaultData.coins || []).length})
-              </button>
-              <button 
-                onClick={() => setView("historical")} 
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "historical" ? "bg-amber-400 text-black shadow-md" : "text-amber-400/70"}`}>
-                History
-              </button>
+          <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <button 
+              onClick={() => setView("map")} 
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "map" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+              Map
+            </button>
+            <button 
+              onClick={() => setView("vault")} 
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "vault" ? "bg-[#00f0ff] text-black shadow-md" : "text-slate-400"}`}>
+              Vault ({(vaultData.coins || []).length})
+            </button>
+            <button 
+              onClick={() => setView("historical")} 
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${view === "historical" ? "bg-amber-400 text-black shadow-md" : "text-amber-400/70"}`}>
+              History
+            </button>
+          </div>
+        </header>
+
+        {view !== "historical" && (
+          <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800">
+            <div className="flex items-center justify-between text-xs mb-1 font-semibold">
+              <span className="text-emerald-400 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#39ff14] shadow-[0_0_6px_#39ff14]"></span>
+                {sovereignCount} / 195 Sovereign States
+              </span>
+              <span className="text-emerald-400 font-mono">{sovereignPercent}%</span>
             </div>
-          </header>
-
-          {view !== "historical" && (
-            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800">
-              <div className="flex items-center justify-between text-xs mb-1 font-semibold">
-                <span className="text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#39ff14] shadow-[0_0_6px_#39ff14]"></span>
-                  {sovereignCount} / 195 Sovereign States
-                </span>
-                <span className="text-emerald-400 font-mono">{sovereignPercent}%</span>
-              </div>
-              
-              <div className="w-full bg-[#121624] h-2 rounded-full overflow-hidden border border-slate-800">
-                <div 
-                  className="bg-[#39ff14] h-full shadow-[0_0_10px_#39ff14] transition-all duration-500" 
-                  style={{ width: `${sovereignPercent}%` }}>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1.5">
-                <button 
-                  onClick={() => setShowTerritories(!showTerritories)}
-                  className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
-                  <span>Territories & Dependencies ({TERRITORIES_LIST.length})</span>
-                  <span className={`text-[9px] transform transition-transform ${showTerritories ? "rotate-180" : ""}`}>▼</span>
-                </button>
-                <span className="text-[10px] text-slate-500 font-mono">Red Diagonal Striped</span>
-              </div>
-
-              {showTerritories && (
-                <div className="mt-2 pt-2 border-t border-slate-800 flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
-                  {TERRITORIES_LIST.map(t => (
-                    <button
-                      key={t.code}
-                      onClick={() => {
-                        setInspectingCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother, coords: t.coords });
-                      }}
-                      className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300 flex items-center gap-1.5">
-                      <span>{getFlagEmoji(t.a2)}</span>
-                      <span>{t.name} ({t.mother})</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-                <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px]">
-                  <button 
-                    onClick={() => handleRangeChange("all")}
-                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "all" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
-                    All
-                  </button>
-                  <button 
-                    onClick={() => handleRangeChange("ancient")}
-                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "ancient" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
-                    Ancient
-                  </button>
-                  <button 
-                    onClick={() => handleRangeChange("medieval")}
-                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "medieval" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
-                    Medieval
-                  </button>
-                  <button 
-                    onClick={() => handleRangeChange("modern")}
-                    className={`px-2 py-0.5 rounded font-bold ${timelineRange === "modern" ? "bg-amber-400 text-black" : "text-slate-400"}`}>
-                    Modern
-                  </button>
-                </div>
-              </div>
-          )}
-
-          <main className="flex-1 overflow-hidden relative flex flex-col">
-            {view === "map" && (
-              <div className="flex flex-col h-full">
-                <div className="h-[48vh] sm:h-[55vh] relative border-b border-slate-800/80 bg-[#05070d]">
-                  <InteractiveWorldMap 
-                    coins={vaultData.coins || []}
-                    modernCountryColors={modernCountryColors}
-                    focusTarget={mapFocusTarget}
-                    onSelectModernCountry={(info) => {
-                      setInspectingCountry(info);
-                    }}
-                  />
-                </div>
-
-                <div className="flex-1 p-3.5 overflow-y-auto hide-scrollbar bg-[#080b14] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#00f0ff]"></span>
-                        <span>Collection Feed</span>
-                      </h2>
-                      <p className="text-[10px] text-slate-400">Tap any coin below to locate on map</p>
-                    </div>
-                    <button 
-                      onClick={() => { setSelectedCountry(null); setEditingCoin(null); setIsModalOpen(true); }}
-                      className="bg-[#00f0ff] hover:bg-cyan-400 text-black font-extrabold text-[11px] px-2.5 py-1 rounded-xl shadow">
-                      + Quick Add
-                    </button>
-                  </div>
-
-                  <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-1">
-                    {(vaultData.coins || []).slice(0, 10).map(coin => {
-                      const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
-                      const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
-                      const flag = getFlagEmoji(sov?.a2 || ter?.a2);
-
-                      return (
-                        <div 
-                          key={coin.id}
-                          onClick={() => handleNavigateToCoinOnMap(coin)}
-                          className="min-w-[140px] max-w-[150px] p-2.5 bg-[#0f1424] border border-slate-800 hover:border-cyan-400/60 rounded-2xl cursor-pointer transition-all active:scale-95 flex flex-col justify-between space-y-1.5 shadow-md">
-                          <div>
-                            <div className="flex items-center justify-between text-base">
-                              <span className="relative">
-                                {coin.isHistorical ? "🏛️" : flag}
-                                {!coin.isHistorical && !coin.inPossession && (
-                                  <span className="absolute -bottom-1 -right-1 text-[10px]" title="Not in physical possession">🇺🇦</span>
-                                )}
-                              </span>
-                              <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-1 rounded">{coin.grade || "UNC"}</span>
-                            </div>
-                            <h3 className="text-xs font-bold text-white truncate mt-1">{coin.countryName}</h3>
-                            <p className="text-[11px] text-[#00f0ff] font-semibold truncate">{coin.denomination}</p>
-                          </div>
-                          <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800/60 font-mono">
-                            <span>{formatYearDisplay(coin.year)}</span>
-                            <span className="text-cyan-400 text-[10px]">🗺️</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 pt-1">
-                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
-                      <div className="text-[10px] text-slate-400">Total Coins</div>
-                      <div className="text-sm font-black text-white">{(vaultData.coins || []).length}</div>
-                    </div>
-                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
-                      <div className="text-[10px] text-slate-400">Sovereign</div>
-                      <div className="text-sm font-black text-[#39ff14]">{sovereignCount}/195</div>
-                    </div>
-                    <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
-                      <div className="text-[10px] text-slate-400">Empires</div>
-                      <div className="text-sm font-black text-amber-400">{(vaultData.historicalEntities || []).length}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {view === "vault" && (
-              <CollectionVault 
-                coins={vaultData.coins || []} 
-                historicalEntities={vaultData.historicalEntities || []}
-                onDeleteCoin={handleDeleteCoin}
-                onEditCoin={(c) => {
-                  setEditingCoin(c);
-                  setSelectedCountry({ a3: c.countryCode, name: c.countryName });
-                  setIsModalOpen(true);
-                }}
-                onNavigateToCoin={handleNavigateToCoinOnMap}
-                onAddClick={() => {
-                  setEditingCoin(null);
-                  setSelectedCountry(null);
-                  setIsModalOpen(true);
-                }}
-              />
-            )}
-
-            {view === "historical" && (
-              <HistoricalStudio 
-                entities={vaultData.historicalEntities || []}
-                coins={vaultData.coins || []}
             
-                focusTarget={mapFocusTarget}
-                onSaveEntity={handleSaveHistoricalEntity}
-                onDeleteEntity={handleDeleteHistoricalEntity}
-                onAddHistoricalCoin={handleAddHistoricalCoin}
-              />
-            )}
-          </main>
+            <div className="w-full bg-[#121624] h-2 rounded-full overflow-hidden border border-slate-800">
+              <div 
+                className="bg-[#39ff14] h-full shadow-[0_0_10px_#39ff14] transition-all duration-500" 
+                style={{ width: `${sovereignPercent}%` }}>
+              </div>
+            </div>
 
-          {inspectingCountry && (
-            <CountryInspectorModal
-              country={inspectingCountry}
-              coins={vaultData.coins || []}
-              modernCountryColors={modernCountryColors}
-              onSetModernCountryColor={handleSetModernCountryColor}
-              onClose={() => setInspectingCountry(null)}
-              onAddNewCoin={(cntry) => {
-                setInspectingCountry(null);
-                setSelectedCountry(cntry);
-                setEditingCoin(null);
-                setIsModalOpen(true);
-              }}
+            <div className="flex items-center justify-between pt-1.5">
+              <button 
+                onClick={() => setShowTerritories(!showTerritories)}
+                className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
+                <span>Territories & Dependencies ({TERRITORIES_LIST.length})</span>
+                <span className={`text-[9px] transform transition-transform ${showTerritories ? "rotate-180" : ""}`}>▼</span>
+              </button>
+              <span className="text-[10px] text-slate-500 font-mono">Red Diagonal Striped</span>
+            </div>
+
+            {showTerritories && (
+              <div className="mt-2 pt-2 border-t border-slate-800 flex gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                {TERRITORIES_LIST.map(t => (
+                  <button
+                    key={t.code}
+                    onClick={() => {
+                      setInspectingCountry({ a3: t.code, name: t.name, a2: t.a2, isTerritory: true, mother: t.mother, coords: t.coords });
+                    }}
+                    className="px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-medium border bg-[#101424] border-slate-800 text-slate-300 flex items-center gap-1.5">
+                    <span>{getFlagEmoji(t.a2)}</span>
+                    <span>{t.name} ({t.mother})</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <main className="flex-1 overflow-hidden relative flex flex-col">
+          {view === "map" && (
+            <div className="flex flex-col h-full">
+              <div className="h-[48vh] sm:h-[55vh] relative border-b border-slate-800/80 bg-[#05070d]">
+                <InteractiveWorldMap 
+                  coins={vaultData.coins || []}
+                  modernCountryColors={modernCountryColors}
+                  focusTarget={mapFocusTarget}
+                  onSelectModernCountry={(info) => {
+                    setInspectingCountry(info);
+                  }}
+                />
+              </div>
+
+              <div className="flex-1 p-3.5 overflow-y-auto hide-scrollbar bg-[#080b14] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#00f0ff]"></span>
+                      <span>Collection Feed</span>
+                    </h2>
+                    <p className="text-[10px] text-slate-400">Tap any coin below to locate on map</p>
+                  </div>
+                  <button 
+                    onClick={() => { setSelectedCountry(null); setEditingCoin(null); setIsModalOpen(true); }}
+                    className="bg-[#00f0ff] hover:bg-cyan-400 text-black font-extrabold text-[11px] px-2.5 py-1 rounded-xl shadow">
+                    + Quick Add
+                  </button>
+                </div>
+
+                <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-1">
+                  {(vaultData.coins || []).slice(0, 10).map(coin => {
+                    const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
+                    const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
+                    const flag = getFlagEmoji(sov?.a2 || ter?.a2);
+
+                    return (
+                      <div 
+                        key={coin.id}
+                        onClick={() => handleNavigateToCoinOnMap(coin)}
+                        className="min-w-[140px] max-w-[150px] p-2.5 bg-[#0f1424] border border-slate-800 hover:border-cyan-400/60 rounded-2xl cursor-pointer transition-all active:scale-95 flex flex-col justify-between space-y-1.5 shadow-md">
+                        <div>
+                          <div className="flex items-center justify-between text-base">
+                            <span className="relative">
+                              {coin.isHistorical ? "🏛️" : flag}
+                              {!coin.isHistorical && !coin.inPossession && (
+                                <span className="absolute -bottom-1 -right-1 text-[10px]" title="Not in physical possession">🇺🇦</span>
+                              )}
+                            </span>
+                            <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-1 rounded">{coin.grade || "UNC"}</span>
+                          </div>
+                          <h3 className="text-xs font-bold text-white truncate mt-1">{coin.countryName}</h3>
+                          <p className="text-[11px] text-[#00f0ff] font-semibold truncate">{coin.denomination}</p>
+                        </div>
+                        <div className="text-[10px] text-slate-400 flex justify-between items-center pt-1 border-t border-slate-800/60 font-mono">
+                          <span>{formatYearDisplay(coin.year)}</span>
+                          <span className="text-cyan-400 text-[10px]">🗺️</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                    <div className="text-[10px] text-slate-400">Total Coins</div>
+                    <div className="text-sm font-black text-white">{(vaultData.coins || []).length}</div>
+                  </div>
+                  <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                    <div className="text-[10px] text-slate-400">Sovereign</div>
+                    <div className="text-sm font-black text-[#39ff14]">{sovereignCount}/195</div>
+                  </div>
+                  <div className="bg-[#0e1424] border border-slate-800/80 p-2 rounded-xl text-center">
+                    <div className="text-[10px] text-slate-400">Empires</div>
+                    <div className="text-sm font-black text-amber-400">{(vaultData.historicalEntities || []).length}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {view === "vault" && (
+            <CollectionVault 
+              coins={vaultData.coins || []} 
+              historicalEntities={vaultData.historicalEntities || []}
+              onDeleteCoin={handleDeleteCoin}
               onEditCoin={(c) => {
-                setInspectingCountry(null);
                 setEditingCoin(c);
                 setSelectedCountry({ a3: c.countryCode, name: c.countryName });
                 setIsModalOpen(true);
               }}
-              onDeleteCoin={handleDeleteCoin}
+              onNavigateToCoin={handleNavigateToCoinOnMap}
+              onAddClick={() => {
+                setEditingCoin(null);
+                setSelectedCountry(null);
+                setIsModalOpen(true);
+              }}
             />
           )}
 
-          {isModalOpen && (
-            <AddEditCoinModal 
-              initialCountry={selectedCountry}
-              editingCoin={editingCoin}
-              modernCountryColors={modernCountryColors}
-              onSetModernCountryColor={handleSetModernCountryColor}
-              onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
-              onSave={handleSaveCoin}
-            />
+          {view === "historical" && (
+            <div className="flex w-full h-full bg-[#05070d] overflow-hidden">
+              <div className="w-[55%] h-full relative border-r border-slate-800">
+                <HistoricalStudio 
+                  entities={vaultData.historicalEntities || []}
+                  coins={vaultData.coins || []}
+                  focusTarget={mapFocusTarget}
+                  onSaveEntity={handleSaveHistoricalEntity}
+                  onDeleteEntity={handleDeleteHistoricalEntity}
+                  onAddHistoricalCoin={handleAddHistoricalCoin}
+                />
+              </div>
+              <div className="w-[45%] h-full bg-[#080b14] flex flex-col overflow-hidden">
+                <ChronologicalVaultSidebar 
+                  entities={vaultData.historicalEntities || []}
+                  coins={vaultData.coins || []}
+                  onSelectEntity={(entity) => {
+                    const coords = entity.mint?.coords || entity.polygons?.[0]?.points?.[0];
+                    if (coords) setMapFocusTarget({ coords, zoomLevel: 18 });
+                  }}
+                  onEditEntity={(entity) => {
+                    setMetaModalOpen(true);
+                  }}
+                />
+              </div>
+            </div>
           )}
+        </main>
 
-      );
-    }
+        {inspectingCountry && (
+          <CountryInspectorModal
+            country={inspectingCountry}
+            coins={vaultData.coins || []}
+            modernCountryColors={modernCountryColors}
+            onSetModernCountryColor={handleSetModernCountryColor}
+            onClose={() => setInspectingCountry(null)}
+            onAddNewCoin={(cntry) => {
+              setInspectingCountry(null);
+              setSelectedCountry(cntry);
+              setEditingCoin(null);
+              setIsModalOpen(true);
+            }}
+            onEditCoin={(c) => {
+              setInspectingCountry(null);
+              setEditingCoin(c);
+              setSelectedCountry({ a3: c.countryCode, name: c.countryName });
+              setIsModalOpen(true);
+            }}
+            onDeleteCoin={handleDeleteCoin}
+          />
+        )}
 
+        {isModalOpen && (
+          <AddEditCoinModal 
+            initialCountry={selectedCountry}
+            editingCoin={editingCoin}
+            modernCountryColors={modernCountryColors}
+            onSetModernCountryColor={handleSetModernCountryColor}
+            onClose={() => { setIsModalOpen(false); setEditingCoin(null); }}
+            onSave={handleSaveCoin}
+          />
+        )}
+      </div>
+    );
     function InteractiveWorldMap({ coins, modernCountryColors, focusTarget, onSelectModernCountry }) {
       const svgRef = useRef(null);
       const zoomBehaviorRef = useRef(null);
