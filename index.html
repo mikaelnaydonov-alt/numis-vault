@@ -424,8 +424,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [showTerritories, setShowTerritories] = useState(false);
 
-      const [scrubberYear, setScrubberYear] = useState(1600);
-      const [timelineRange, setTimelineRange] = useState("all");
+
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       const [modernCountryColors, setModernCountryColors] = useState({});
@@ -588,41 +587,24 @@ const pushToCloud = async (updated) => {
         setModernCountryColors(updatedColors);
         pushToCloud({ ...vaultData, modernCountryColors: updatedColors });
       };
-
-      const handleNavigateToCoinOnMap = (coin) => {
-        if (coin.isHistorical) {
-          const matchedEntity = (vaultData.historicalEntities || []).find(e => e.id === coin.entityId);
-          if (matchedEntity) {
-            setScrubberYear(parseInt(matchedEntity.startYear, 10));
-            setView("historical");
-            const coords = matchedEntity.mint?.coords || matchedEntity.polygons?.[0]?.points?.[0];
-            if (coords) setMapFocusTarget({ coords: coords, zoomLevel: 25 });
-          } else {
-            setView("historical");
-          }
-        } else {
-          const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
-          const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
-          const coords = sov ? sov.coords : (ter ? ter.coords : [15, 50]);
-          setView("map");
-          setMapFocusTarget({ coords: coords, zoomLevel: 14 });
-        }
-      };
-
-      const sliderConfig = useMemo(() => {
-        if (timelineRange === "ancient") return { min: -3000, max: 500, step: 5 };
-        if (timelineRange === "medieval") return { min: 500, max: 1500, step: 2 };
-        if (timelineRange === "modern") return { min: 1500, max: 2026, step: 1 };
-        return { min: -3000, max: 2026, step: 10 };
-      }, [timelineRange]);
-
-      const handleRangeChange = (newRange) => {
-        setTimelineRange(newRange);
-        if (newRange === "ancient") setScrubberYear(Math.max(-3000, Math.min(500, scrubberYear)));
-        else if (newRange === "medieval") setScrubberYear(Math.max(500, Math.min(1500, scrubberYear)));
-        else if (newRange === "modern") setScrubberYear(Math.max(1500, Math.min(2026, scrubberYear)));
-        else setScrubberYear(Math.max(-3000, Math.min(2026, scrubberYear)));
-      };
+const handleNavigateToCoinOnMap = (coin) => {
+  if (coin.isHistorical) {
+    const matchedEntity = (vaultData.historicalEntities || []).find(e => e.id === coin.entityId);
+    if (matchedEntity) {
+      setView("historical");
+      const coords = matchedEntity.mint?.coords || matchedEntity.polygons?.[0]?.points?.[0];
+      if (coords) setMapFocusTarget({ coords: coords, zoomLevel: 25 });
+    } else {
+      setView("historical");
+    }
+  } else {
+    const sov = SOVEREIGN_LIST.find(s => s.a3 === coin.countryCode);
+    const ter = TERRITORIES_LIST.find(t => t.code === coin.countryCode);
+    const coords = sov ? sov.coords : (ter ? ter.coords : [15, 50]);
+    setView("map");
+    setMapFocusTarget({ coords: coords, zoomLevel: 14 });
+  }
+};
 
       return (
         <div className="flex flex-col h-screen max-w-lg mx-auto md:max-w-5xl bg-[#05070d] border-x border-slate-800">
@@ -706,27 +688,6 @@ const pushToCloud = async (updated) => {
             </div>
           )}
 
-          {view === "historical" && (
-            <div className="bg-[#080b14] px-4 py-2 border-b border-slate-800 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-amber-400 font-mono bg-slate-900 px-2.5 py-1 rounded border border-slate-800">
-                    {formatYearDisplay(scrubberYear)}
-                  </span>
-                  <input 
-                    type="number" 
-                    value={scrubberYear} 
-                    onChange={e => {
-                      const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val)) {
-                        setScrubberYear(val);
-                      }
-                    }}
-                    className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-amber-300 font-mono text-center focus:outline-none focus:border-amber-400"
-                    title="Type exact year"
-                  />
-                </div>
-
                 <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[10px]">
                   <button 
                     onClick={() => handleRangeChange("all")}
@@ -750,17 +711,6 @@ const pushToCloud = async (updated) => {
                   </button>
                 </div>
               </div>
-
-              <input 
-                type="range" 
-                min={sliderConfig.min} 
-                max={sliderConfig.max} 
-                step={sliderConfig.step} 
-                value={scrubberYear} 
-                onChange={e => setScrubberYear(parseInt(e.target.value, 10))}
-                className="w-full accent-amber-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
-              />
-            </div>
           )}
 
           <main className="flex-1 overflow-hidden relative flex flex-col">
@@ -867,7 +817,7 @@ const pushToCloud = async (updated) => {
               <HistoricalStudio 
                 entities={vaultData.historicalEntities || []}
                 coins={vaultData.coins || []}
-                scrubberYear={scrubberYear}
+            
                 focusTarget={mapFocusTarget}
                 onSaveEntity={handleSaveHistoricalEntity}
                 onDeleteEntity={handleDeleteHistoricalEntity}
@@ -1099,7 +1049,7 @@ const pushToCloud = async (updated) => {
       );
     }
 
-    function HistoricalStudio({ entities, coins, scrubberYear, focusTarget, onSaveEntity, onDeleteEntity, onAddHistoricalCoin }) {
+    function HistoricalStudio({ entities, coins, focusTarget, onSaveEntity, onDeleteEntity, onAddHistoricalCoin }) {
       const svgRef = useRef(null);
       const [isVertexMode, setIsVertexMode] = useState(false);
       const isVertexModeRef = useRef(false);
@@ -1153,13 +1103,7 @@ const pushToCloud = async (updated) => {
       useEffect(() => { currentVerticesRef.current = currentVertices; }, [currentVertices]);
       useEffect(() => { placingMintRef.current = placingMint; }, [placingMint]);
 
-      const visibleEntities = useMemo(() => {
-        return (entities || []).filter(e => isEntityActiveInYear(e, scrubberYear));
-      }, [entities, scrubberYear]);
-
-      const isCurrentActiveInScrubber = useMemo(() => {
-        return isEntityActiveInYear(entityMeta, scrubberYear);
-      }, [entityMeta, scrubberYear]);
+     const visibleEntities = entities || [];
 
       useEffect(() => {
         const svgEl = svgRef.current;
@@ -1292,7 +1236,7 @@ const pushToCloud = async (updated) => {
             });
           });
 
-          if (isCurrentActiveInScrubber || activeAppendingEntityId) {
+if (true || activeAppendingEntityId) {
             closedPolygons.forEach((poly, idx) => {
               const pts = poly.points.map(p => projectionRef.current(p));
               const d = d3.line().curve(d3.curveLinearClosed)(pts);
@@ -1355,22 +1299,18 @@ const pushToCloud = async (updated) => {
             gCandidate.append("circle").attr("r", 1.2 / k).attr("fill", "#ffffff");
           }
 
-          if (confirmedMint && !mintCandidate && isCurrentActiveInScrubber) {
+          if (confirmedMint && !mintCandidate) {
             const [cx, cy] = projectionRef.current(confirmedMint.coords);
             const gPin = gActive.append("g").attr("transform", `translate(${cx}, ${cy})`);
             gPin.append("circle").attr("r", 5 / k).attr("fill", "#ff1744");
             gPin.append("circle").attr("r", 1.8 / k).attr("fill", "#ffffff");
           }
         }
-      }, [visibleEntities, isCurrentActiveInScrubber, closedPolygons, currentVertices, mintCandidate, confirmedMint, activeAppendingEntityId, entityMeta]);
-
+      }, [visibleEntities, closedPolygons, currentVertices, mintCandidate, confirmedMint, activeAppendingEntityId, entityMeta]); 
       const updateDynamicOverlay = () => {
         updateDeadOrAliveEmpires();
       };
 
-      useEffect(() => {
-        updateDeadOrAliveEmpires();
-      }, [scrubberYear, updateDeadOrAliveEmpires]);
 
       useEffect(() => {
         if (!focusTarget || !svgRef.current || !zoomBehaviorRef.current) return;
