@@ -2445,7 +2445,7 @@ function CountryInspectorModal({
         return getFlagEmoji(sov?.a2 || ter?.a2);
       }, [formData.countryCode]);
 
-      return (
+     return (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0e1424] border border-slate-800 rounded-3xl w-full max-w-lg p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
             
@@ -2505,7 +2505,7 @@ function CountryInspectorModal({
                         key={color}
                         onClick={() => onSetModernCountryColor(formData.countryCode, color)}
                         style={{ backgroundColor: color }}
-                        className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors?.[formData.countryCode] === color ? "scale-115 ring-2 ring-white" : "hover:scale-105 opacity-90"}`}
+                        className={`w-7 h-7 rounded-lg transition-transform ${modernCountryColors?.[formData.countryCode] === color ? "scale-110 ring-2 ring-white" : "hover:scale-105 opacity-90"}`}
                       />
                     ))}
                   </div>
@@ -2618,7 +2618,7 @@ function CountryInspectorModal({
           </div>
         </div>
       );
-    }
+    } // Closes AddEditCoinModal component properly
 
     // --- MOUNT APP ---
     ReactDOM.render(<App />, document.getElementById("root"));
