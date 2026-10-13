@@ -429,6 +429,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const [mapFocusTarget, setMapFocusTarget] = useState(null);
 
       const [modernCountryColors, setModernCountryColors] = useState({});
+      const [isVaultLoaded, setIsVaultLoaded] = useState(false);
       const [inspectingCountry, setInspectingCountry] = useState(null);
 
 useEffect(() => {
@@ -459,11 +460,12 @@ useEffect(() => {
             : []
         });
 
-        setModernCountryColors(
-          cloudVault.modernCountryColors || {}
-        );
+       setModernCountryColors(
+  cloudVault.modernCountryColors || {}
+);
 
-        setCloudStatus("saved");
+setIsVaultLoaded(true);
+setCloudStatus("saved");
       }
     } catch (err) {
       console.error("Cloud fetch error:", err);
@@ -488,6 +490,10 @@ useEffect(() => {
 }, []);
 
 const pushToCloud = async (updated) => {
+  if (!isVaultLoaded) {
+    console.warn("Save prevented: cloud vault has not loaded yet.");
+    return;
+  }
   setVaultData(updated);
   setIsSyncing(true);
   setCloudStatus("saving");
