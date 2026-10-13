@@ -589,11 +589,24 @@ const pushToCloud = async (updated) => {
         alert(`Saved ${coinInfo.denomination} (${coinInfo.year}) to ${coinInfo.countryName}!`);
       };
 
-      const handleSetModernCountryColor = (countryCode, vibrantColor) => {
-        const updatedColors = { ...modernCountryColors, [countryCode]: vibrantColor };
-        setModernCountryColors(updatedColors);
-        pushToCloud({ ...vaultData, modernCountryColors: updatedColors });
-      };
+     
+const handleSetModernCountryColor = (countryCode, vibrantColor) => {
+  const updatedColors = {
+    ...modernCountryColors,
+    [countryCode]: vibrantColor
+  };
+
+  console.log("COLOUR CHANGE:", countryCode, vibrantColor);
+  console.log("FIJI COLOUR IN MAP:", updatedColors.FJI);
+
+  setModernCountryColors(updatedColors);
+
+  pushToCloud({
+    ...vaultData,
+    modernCountryColors: updatedColors
+  });
+};
+
 
       const handleNavigateToCoinOnMap = (coin) => {
         if (coin.isHistorical) {
