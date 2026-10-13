@@ -499,19 +499,32 @@ const pushToCloud = async (updated) => {
   setCloudStatus("saving");
 
   try {
-    const { error } = await _supabase
-      .from("vault")
-      .upsert({
-        id: 1,
-        data: {
-          coins: updated.coins || [],
-          historicalEntities: updated.historicalEntities || [],
-          modernCountryColors: updated.modernCountryColors || {}
-        },
-        updated_at: new Date().toISOString()
-      });
 
-    if (error) throw error;
+const { data: savedRow, error } = await _supabase
+  .from("vault")
+  .upsert({
+    id: 1,
+    data: {
+      coins: updated.coins || [],
+      historicalEntities: updated.historicalEntities || [],
+      modernCountryColors: updated.modernCountryColors || {}
+    },
+    updated_at: new Date().toISOString()
+  })
+  .select("data")
+  .single();
+
+if (error) throw error;
+
+console.log(
+  "FIJI COLOUR SENT:",
+  updated.modernCountryColors?.FJI
+);
+
+console.log(
+  "FIJI COLOUR RETURNED BY SUPABASE:",
+  savedRow?.data?.modernCountryColors?.FJI
+);
 
     setCloudStatus("saved");
   } catch (err) {
