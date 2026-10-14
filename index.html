@@ -490,6 +490,7 @@ setCloudStatus("saved");
 }, []);
 
 const pushToCloud = async (updated) => {
+  console.log("PUSHTOCLOUD CALLED", updated.modernCountryColors?.FJI);
   if (!isVaultLoaded) {
     console.warn("Save prevented: cloud vault has not loaded yet.");
     return;
